@@ -1,0 +1,25 @@
+name: climsight
+channels:
+    - conda-forge
+    - defaults
+dependencies:
+    - python=3.10
+    - streamlit
+    - xarray
+    - geopy
+    - geopandas
+    - pyproj
+    - requests
+    - pandas
+    - folium
+    - langchain
+    - streamlit-folium
+    - netcdf4
+    - dask
+    - pip
+    pip:
+      - openai
+
+
+
+
