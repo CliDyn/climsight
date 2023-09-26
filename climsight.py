@@ -24,7 +24,8 @@ from langchain.callbacks.base import BaseCallbackHandler
 data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 clicked_coords = None
-model_name = "gpt-3.5-turbo"  # "gpt-4"
+model_name = "gpt-3.5-turbo"
+# model_name = "gpt-4"
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -53,8 +54,8 @@ content_message = "{user_message} \n \
       Current soil type: {soil} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
-      Curent precipitation flux (in kg m-2 s-1): {hist_pr_str} \
-      Future precipitation flux (in kg m-2 s-1): {future_pr_str} \
+      Curent precipitation flux (mm/month): {hist_pr_str} \
+      Future precipitation flux (mm/month): {future_pr_str} \
       Curent u wind component (in m/s): {hist_uas_str} \
       Future u wind component (in m/s): {future_uas_str} \
       Curent v wind component (in m/s): {hist_vas_str} \
@@ -228,6 +229,11 @@ def load_data():
     return hist, future
 
 
+def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
+    days_in_months = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+    return monthly_precip_kg_m2_s1 * 60 * 60 * 24 * days_in_months
+
+
 @st.cache_data
 def extract_climate_data(lat, lon, _hist, _future):
     """
@@ -244,30 +250,47 @@ def extract_climate_data(lat, lon, _hist, _future):
     - data_dict (dict): Dictionary containing string representations of the extracted climate data.
     """
     hist_temp = hist.sel(lat=lat, lon=lon, method="nearest")["tas"].values - 273.15
-    hist_temp_str = np.array2string(hist_temp, precision=3, max_line_width=100)[4:-4]
-
-    hist_pr = hist.sel(lat=lat, lon=lon, method="nearest")["pr"].values
-    hist_pr_str = np.array2string(hist_pr, precision=3, max_line_width=100)[4:-4]
-
-    hist_uas = hist.sel(lat=lat, lon=lon, method="nearest")["uas"].values
-    hist_uas_str = np.array2string(hist_uas, precision=3, max_line_width=100)[4:-4]
-
-    hist_vas = hist.sel(lat=lat, lon=lon, method="nearest")["vas"].values
-    hist_vas_str = np.array2string(hist_vas, precision=3, max_line_width=100)[4:-4]
-
-    future_temp = future.sel(lat=lat, lon=lon, method="nearest")["tas"].values - 273.15
-    future_temp_str = np.array2string(future_temp, precision=3, max_line_width=100)[
-        4:-4
+    hist_temp_str = np.array2string(hist_temp.ravel(), precision=3, max_line_width=100)[
+        1:-1
     ]
 
+    hist_pr = hist.sel(lat=lat, lon=lon, method="nearest")["pr"].values
+    hist_pr = convert_to_mm_per_month(hist_pr)
+
+    hist_pr_str = np.array2string(hist_pr.ravel(), precision=3, max_line_width=100)[
+        1:-1
+    ]
+
+    hist_uas = hist.sel(lat=lat, lon=lon, method="nearest")["uas"].values
+    hist_uas_str = np.array2string(hist_uas.ravel(), precision=3, max_line_width=100)[
+        1:-1
+    ]
+
+    hist_vas = hist.sel(lat=lat, lon=lon, method="nearest")["vas"].values
+    hist_vas_str = np.array2string(hist_vas.ravel(), precision=3, max_line_width=100)[
+        1:-1
+    ]
+
+    future_temp = future.sel(lat=lat, lon=lon, method="nearest")["tas"].values - 273.15
+    future_temp_str = np.array2string(
+        future_temp.ravel(), precision=3, max_line_width=100
+    )[1:-1]
+
     future_pr = future.sel(lat=lat, lon=lon, method="nearest")["pr"].values
-    future_pr_str = np.array2string(future_pr, precision=3, max_line_width=100)[4:-4]
+    future_pr = convert_to_mm_per_month(future_pr)
+    future_pr_str = np.array2string(future_pr.ravel(), precision=3, max_line_width=100)[
+        1:-1
+    ]
 
     future_uas = future.sel(lat=lat, lon=lon, method="nearest")["uas"].values
-    future_uas_str = np.array2string(future_uas, precision=3, max_line_width=100)[4:-4]
+    future_uas_str = np.array2string(
+        future_uas.ravel(), precision=3, max_line_width=100
+    )[1:-1]
 
     future_vas = future.sel(lat=lat, lon=lon, method="nearest")["vas"].values
-    future_vas_str = np.array2string(future_vas, precision=3, max_line_width=100)[4:-4]
+    future_vas_str = np.array2string(
+        future_vas.ravel(), precision=3, max_line_width=100
+    )[1:-1]
     df = pd.DataFrame(
         {
             "Present day Temperature": hist_temp[0, 0, :],
@@ -327,12 +350,10 @@ if not api_key:
     st.error("Please provide an OpenAI API key.")
     st.stop()
 
-# print(api_key)
 
 if st.button("Generate") and user_message:
     with st.spinner("Getting info on a point..."):
         location = get_location(lat, lon)
-        print(location)
         location_str, location_str_for_print = get_adress_string(location)
         st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
         st.markdown(location_str_for_print)
@@ -382,7 +403,6 @@ if st.button("Generate") and user_message:
             y=["Present day Wind speed", "Future Wind speed"],
             color=["#d62728", "#2ca02c"],
         )
-        print(data_dict["hist_temp"])
     policy = ""
     with st.spinner("Generating..."):
         chat_box = st.empty()
@@ -398,7 +418,12 @@ if st.button("Generate") and user_message:
         chat_prompt = ChatPromptTemplate.from_messages(
             [system_message_prompt, human_message_prompt]
         )
-        chain = LLMChain(llm=llm, prompt=chat_prompt, output_key="review")
+        chain = LLMChain(
+            llm=llm,
+            prompt=chat_prompt,
+            output_key="review",
+            verbose=True,
+        )
 
         output = chain.run(
             user_message=user_message,
@@ -418,4 +443,5 @@ if st.button("Generate") and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
+            verbose=True,
         )
