@@ -3,9 +3,25 @@
 Prototype of a system that answers questions about climate change impacts on planned human activities.
 ![screencast](https://github.com/koldunovn/climsight/assets/3407313/1d755b66-fa04-460f-a3ff-8a28569e7b52)
 
+## Running with docker
+
+```bash
+git clone https://github.com/koldunovn/climsight.git
+cd climsight
+./download_data.sh
+docker build -t climsight .
+docker run -p 8501:8501 climsight
+```
+Then open `http://localhost:8501/` in your browser. If you don't want to add OpenAI key every time, you can expose it through:
+
+```bash
+docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
+```
+where `$OPENAI_API_KEY` not necesarelly should be environment variable, you can insert the key directly.
+
 ## Installation
 
-The easiest way is to install it through conda/mamba. We recomend mamba, as it's faster. 
+The easiest way is to install it through conda or mamba. We recomend mamba, as it's faster. 
 
 [Install mamba](https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install) if you don't have it.
 
