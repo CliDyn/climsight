@@ -17,8 +17,8 @@ dependencies:
     - netcdf4
     - dask
     - pip
-    pip:
-      - openai
+    - pip:
+        - openai
 
 
 
