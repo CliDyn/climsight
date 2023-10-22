@@ -19,13 +19,17 @@ from streamlit_folium import st_folium
 import folium
 import os
 from langchain.callbacks.base import BaseCallbackHandler
+from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.tools import DuckDuckGoSearchRun
 
 
 data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 clicked_coords = None
-model_name = "gpt-3.5-turbo"
-# model_name = "gpt-4"
+# model_name = "gpt-3.5-turbo"
+model_name = "gpt-4"
+IPCC_embedings = "/Users/nkolduno/IPCC_all_report/"
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -40,11 +44,12 @@ area related to climate change, environmental use and activity requested by the 
 You don't have to use all variables provided to you, if the effect is insignificant,
 don't use variable in analysis. DON'T just list information about variables, don't 
 just repeat what is given to you as input. I don't want to get the code, 
-I want to receive a narrative, with your assessments and advice. Format 
+I want to receive a narrative, with your assessments and advice. Take into account information from IPCC report
+provided to you. Also take into account infromation from the internet search provided to you. Prioritise examples and concrete advices. Format 
 your response as MARKDOWN, don't use Heading levels 1 and 2.
 """
 
-content_message = "{user_message} \n \
+content_message = """{user_message} \n \
       Location: latitude = {lat}, longitude = {lon} \
       Adress: {location_str} \
       Policy: {policy} \
@@ -60,7 +65,9 @@ content_message = "{user_message} \n \
       Future u wind component (in m/s): {future_uas_str} \
       Curent v wind component (in m/s): {hist_vas_str} \
       Future v wind component (in m/s): {future_vas_str} \
-      "
+      IPCC report information: {ipcc_report} \
+      infromation from the internet search: {duckduckgo_search} \
+      """
 
 
 class StreamHandler(BaseCallbackHandler):
@@ -94,7 +101,7 @@ def get_location(lat, lon):
     Returns:
     dict: A dictionary containing the address information of the location.
     """
-    geolocator = Nominatim(user_agent="myGeocoder")
+    geolocator = Nominatim(user_agent="climsight")
     location = geolocator.reverse((lat, lon), language="en")
     return location.raw["address"]
 
@@ -326,8 +333,11 @@ user_message = st.text_input(
     "Describe activity you would like to evaluate for this location:"
 )
 col1, col2 = st.columns(2)
-lat_default = 52.5240
-lon_default = 13.3700
+# lat_default = 52.5240
+# lon_default = 13.3700
+lat_default = 31.6912
+lon_default = -8.1098
+
 
 m = folium.Map(location=[lat_default, lon_default], zoom_start=13)
 with st.sidebar:
@@ -367,7 +377,8 @@ if st.button("Generate") and user_message:
             current_land_use = "Not known"
         st.markdown(f"**Current land use:** {current_land_use}")
 
-        soil = get_soil_from_api(lat, lon)
+        # soil = get_soil_from_api(lat, lon)
+        soil = "Not known"
         st.markdown(f"**Soil type:** {soil}")
 
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
@@ -413,6 +424,9 @@ if st.button("Generate") and user_message:
             streaming=True,
             callbacks=[stream_handler],
         )
+        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        db = FAISS.load_local(IPCC_embedings, embeddings)
+
         system_message_prompt = SystemMessagePromptTemplate.from_template(system_role)
         human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
@@ -424,6 +438,16 @@ if st.button("Generate") and user_message:
             output_key="review",
             verbose=True,
         )
+        ipcc_query = (
+            f"{user_message} in {location_str_for_print}, what are risks and benifits"
+        )
+        print(ipcc_query)
+        docs = db.similarity_search(ipcc_query, k=5)
+        ipcc_report_str = []
+        for doc in docs:
+            ipcc_report_str.append(doc.page_content)
+        search = DuckDuckGoSearchRun()
+        duckduckgo_search = search.run(ipcc_query)
 
         output = chain.run(
             user_message=user_message,
@@ -443,5 +467,9 @@ if st.button("Generate") and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
+            ipcc_report=ipcc_report_str,
+            duckduckgo_search=duckduckgo_search,
             verbose=True,
         )
+        st.markdown(ipcc_report_str)
+        st.markdown(duckduckgo_search)
