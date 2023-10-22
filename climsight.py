@@ -94,7 +94,7 @@ def get_location(lat, lon):
     Returns:
     dict: A dictionary containing the address information of the location.
     """
-    geolocator = Nominatim(user_agent="myGeocoder")
+    geolocator = Nominatim(user_agent="climsight")
     location = geolocator.reverse((lat, lon), language="en")
     return location.raw["address"]
 
