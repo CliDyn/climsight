@@ -27,9 +27,9 @@ from langchain.tools import DuckDuckGoSearchRun
 data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 clicked_coords = None
-# model_name = "gpt-3.5-turbo"
-model_name = "gpt-4"
-IPCC_embedings = "/Users/nkolduno/IPCC_all_report/"
+model_name = "gpt-3.5-turbo"
+# model_name = "gpt-4"
+IPCC_embedings = "/home/anjost001/Documents/AWI/CLIMAID/IPCC_all_report"
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -57,6 +57,7 @@ content_message = """{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
+      Biodiversity: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Curent precipitation flux (mm/month): {hist_pr_str} \
@@ -230,6 +231,28 @@ def get_soil_from_api(lat, lon):
 
 
 @st.cache_data
+def fetch_biodiversity(lon, lat):
+    """
+    Fetches biodiversity data for a given longitude and latitude using the GBIF API.
+
+    Args:
+    - lon (float): The longitude of the location to fetch biodiversity data for.
+    - lat (float): The latitude of the location to fetch biodiversity data for.
+
+    Returns:
+    - data (dict): A dictionary containing the biodiversity data for the specified location.
+    """
+    gbif_api_url = "https://api.gbif.org/v1/occurrence/search"
+    params = {
+        "decimalLatitude": lat,
+        "decimalLongitude": lon,
+    }
+    response = requests.get(gbif_api_url, params=params)
+    biodiv = response.json()
+    return biodiv
+
+
+@st.cache_data
 def load_data():
     hist = xr.open_mfdataset(f"{data_path}/AWI_CM_mm_historical*.nc", compat="override")
     future = xr.open_mfdataset(f"{data_path}/AWI_CM_mm_ssp585*.nc", compat="override")
@@ -330,7 +353,7 @@ st.title(
 )
 # :umbrella_with_rain_drops: :earth_africa:  :tornado:
 user_message = st.text_input(
-    "Describe activity you would like to evaluate for this location:"
+    "Describe the activity that you would like to evaluate for this location:"
 )
 col1, col2 = st.columns(2)
 # lat_default = 52.5240
@@ -377,9 +400,19 @@ if st.button("Generate") and user_message:
             current_land_use = "Not known"
         st.markdown(f"**Current land use:** {current_land_use}")
 
-        # soil = get_soil_from_api(lat, lon)
-        soil = "Not known"
+        soil = get_soil_from_api(lat, lon)
         st.markdown(f"**Soil type:** {soil}")
+
+        biodiversity = fetch_biodiversity(round(lat), round(lon))
+        biodiv_set = set()
+        for record in biodiversity['results']:
+            if record.get('taxonRank') != 'UNRANKED':
+                biodiv_set.add(record['scientificName'])
+        biodiv = list(biodiv_set)
+        if biodiv == []:
+            biodiv = "Not known"
+        print(biodiv)
+        st.markdown(f"**Biodiversity:** {biodiv}")
 
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
         st.markdown(f"**Distance to the shore:** {round(distance_to_coastline, 2)} m")
@@ -388,7 +421,7 @@ if st.button("Generate") and user_message:
         df, data_dict = extract_climate_data(lat, lon, hist, future)
         # Plot the chart
         st.text(
-            "Near surface temperature [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
+            "Near surface temperature [source: AWI-CM-1-1-MR, historical and SSP5-8.5]",
         )
         st.line_chart(
             df,
@@ -397,7 +430,7 @@ if st.button("Generate") and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.text(
-            "Precipitation [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
+            "Precipitation [source: AWI-CM-1-1-MR, historical and SSP5-8.5]",
         )
         st.line_chart(
             df,
@@ -406,7 +439,7 @@ if st.button("Generate") and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.text(
-            "Wind speed [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
+            "Wind speed [source: AWI-CM-1-1-MR, historical and SSP5-8.5]",
         )
         st.line_chart(
             df,
@@ -439,7 +472,7 @@ if st.button("Generate") and user_message:
             verbose=True,
         )
         ipcc_query = (
-            f"{user_message} in {location_str_for_print}, what are risks and benifits"
+            f"{user_message} in {location_str_for_print}, what are risks and benefits"
         )
         print(ipcc_query)
         docs = db.similarity_search(ipcc_query, k=5)
@@ -459,6 +492,7 @@ if st.button("Generate") and user_message:
             elevation=str(elevation),
             current_land_use=current_land_use,
             soil=soil,
+            biodiv=biodiv,
             hist_temp_str=data_dict["hist_temp"],
             future_temp_str=data_dict["future_temp"],
             hist_pr_str=data_dict["hist_pr"],
@@ -471,5 +505,5 @@ if st.button("Generate") and user_message:
             duckduckgo_search=duckduckgo_search,
             verbose=True,
         )
-        st.markdown(ipcc_report_str)
-        st.markdown(duckduckgo_search)
+        # st.markdown(ipcc_report_str)
+        # st.markdown(duckduckgo_search)
