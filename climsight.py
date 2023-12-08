@@ -18,6 +18,8 @@ import pandas as pd
 from streamlit_folium import st_folium
 import folium
 import os
+import datetime
+import matplotlib.pyplot as plt
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
@@ -30,6 +32,9 @@ clicked_coords = None
 model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4"
 IPCC_embedings = "/home/anjost001/Documents/AWI/CLIMAID/IPCC_all_report"
+# load population data from UN World Population Prospects 2022
+pop_path = './population_data/WPP2022_Demographic_Indicators_Medium.csv'
+pop_dat = pd.read_csv(pop_path)
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -132,7 +137,8 @@ def get_adress_string(location):
         location_str_for_print += f"{location['city']}, "
     if "road" in location:
         location_str_for_print += f"{location['road']}"
-    return location_str, location_str_for_print
+    country = location.get("country", "")
+    return location_str, location_str_for_print, country
 
 
 @st.cache_data
@@ -347,6 +353,74 @@ def extract_climate_data(lat, lon, _hist, _future):
 
 hist, future = load_data()
 
+@st.cache_data
+def get_population_data(country):
+    """
+    Extracts population data (by UN) for a given country.
+
+    Args:
+    - country: Takes the country which is returned by the geolocator
+
+    Returns:
+    - red_pop_data (pandas.DataFrame): reduced DataFrame containing present day and future values for only the following variables:
+        - TPopulation1July (as of 1 July, thousands)
+        - PopDensity (as of 1 July, persons per square km)
+        - PopGrowthRate (percentage)
+        - LEx (Life Expactancy at Birth, both sexes, in years)
+        - NetMigrations (Number of Migrants, thousands)    
+    """
+    today = datetime.date.today()
+    current_year = today.year
+
+    unique_locations = pop_dat['Location'].unique()
+    my_location = country
+
+    # check if data is available for the country that we are currently investigating
+    if my_location in unique_locations:
+        country_data = pop_dat[pop_dat['Location'] == country]
+        red_pop_data = country_data[['Time', 'TPopulation1July', 'PopDensity', 'PopGrowthRate', 'LEx', 'NetMigrations']]
+
+        fig, ax1 = plt.subplots(figsize=(10,6))
+        plt.grid()
+
+        # Total population data
+        ax1.plot(red_pop_data['Time'], red_pop_data['TPopulation1July'], label='Total Population', color='blue')
+        ax1.set_xlabel('Time')
+        ax1.set_ylabel('People in thousands', color='blue')
+        ax1.tick_params(axis='y', labelcolor='blue')
+
+        # life expectancy
+        ax2 = ax1.twinx()
+        ax2.spines.right.set_position(('axes', 1.1))
+        ax2.bar(red_pop_data['Time'], red_pop_data['LEx'], label='Life Expectancy', color='purple', alpha=0.1)
+        ax2.set_ylabel('Life Expectancy in years', color='purple', )
+        ax2.tick_params(axis='y', labelcolor='purple')
+
+        # population growth data
+        ax3 = ax1.twinx()
+        ax3.plot(red_pop_data['Time'], red_pop_data['PopGrowthRate'], label='Population Growth Rate', color='green')
+        ax3.set_ylabel('Population growth rate in %', color='green')
+        ax3.tick_params(axis='y', labelcolor='green')
+
+        # Net Migrations
+        ax4 = ax1.twinx()
+        ax4.spines.right.set_position(('axes', 1.2))
+        ax4.plot(red_pop_data['Time'], red_pop_data['NetMigrations'], label='Net Migrations', color='black', linestyle='dotted')
+        ax4.set_ylabel('Net Migrations in thousands', color='black')
+        ax4.tick_params(axis='y', labelcolor='black')
+        ax4.axvline(x=current_year, color='orange', linestyle='--', label=current_year)
+
+        lines, labels = ax1.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        lines3, labels3 = ax3.get_legend_handles_labels()
+        lines4, labels4 = ax4.get_legend_handles_labels()
+        ax4.legend(lines+lines2+lines3+lines4, labels+labels2+labels3+labels4, loc='center right')
+
+        plt.title(('Population changes in ' + country))
+        return(fig)
+    else:
+        print(f"There is no UN population data available for {my_location}.")
+
 st.title(
     " :cyclone: \
          :ocean: :globe_with_meridians:  Climate Foresight"
@@ -387,11 +461,18 @@ if not api_key:
 if st.button("Generate") and user_message:
     with st.spinner("Getting info on a point..."):
         location = get_location(lat, lon)
-        location_str, location_str_for_print = get_adress_string(location)
+        location_str, location_str_for_print, country = get_adress_string(location)
         st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
         st.markdown(location_str_for_print)
         elevation = get_elevation_from_api(lat, lon)
         st.markdown(f"**Elevation:** {elevation} m")
+
+        population = get_population_data(country)
+        st.markdown("**Population:**")
+        st.pyplot(population)
+        st.text(
+            "Source: UN World Population Prospect 2022"
+        )
 
         land_use_data = fetch_land_use(lon, lat)
         try:
@@ -400,7 +481,7 @@ if st.button("Generate") and user_message:
             current_land_use = "Not known"
         st.markdown(f"**Current land use:** {current_land_use}")
 
-        soil = get_soil_from_api(lat, lon)
+        soil = "Not known" #get_soil_from_api(lat, lon)
         st.markdown(f"**Soil type:** {soil}")
 
         biodiversity = fetch_biodiversity(round(lat), round(lon))

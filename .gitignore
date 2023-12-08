@@ -1,5 +1,4 @@
 data_climate_foresight.tar
 download_data.sh
 data/
-test.py
-test.ipynb
+population_data/
