@@ -12,13 +12,13 @@ dependencies:
     - requests
     - pandas
     - folium
-    - langchain
+    - langchain=0.0.350
     - streamlit-folium
     - netcdf4
     - dask
     - pip
     - pip:
-        - openai
+        - openai==1.5.0
 
 
 
