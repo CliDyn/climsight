@@ -5,6 +5,14 @@ Prototype of a system that answers questions about climate change impacts on pla
 
 ## Running with docker
 
+### You should have the following installed:
+
+- git
+- wget
+- docker
+
+As long as you have them, do:
+
 ```bash
 git clone https://github.com/koldunovn/climsight.git
 cd climsight

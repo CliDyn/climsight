@@ -19,13 +19,14 @@ from streamlit_folium import st_folium
 import folium
 import os
 from langchain.callbacks.base import BaseCallbackHandler
+from requests.exceptions import Timeout
 
 
 data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 clicked_coords = None
-model_name = "gpt-3.5-turbo"
-# model_name = "gpt-4"
+# model_name = "gpt-3.5-turbo"
+model_name = "gpt-4-1106-preview"
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -216,10 +217,13 @@ def get_soil_from_api(lat, lon):
     Returns:
     str: The name of the World Reference Base (WRB) soil class at the given location.
     """
-    url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
-    response = requests.get(url)
-    data = response.json()
-    return data["wrb_class_name"]
+    try:
+        url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
+        response = requests.get(url, timeout=2)  # Set timeout to 2 seconds
+        data = response.json()
+        return data["wrb_class_name"]
+    except Timeout:
+        return "not found"
 
 
 @st.cache_data
