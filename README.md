@@ -8,7 +8,7 @@ Prototype of a system that answers questions about climate change impacts on pla
 
 ### simplest: running prebuild container
 
-You should to have [Docker](https://docs.docker.com/engine/install/) installed. Then execute:
+You should have [Docker](https://docs.docker.com/engine/install/) installed. Then execute:
 
 ```bash
 docker pull koldunovn/climsight:stable
