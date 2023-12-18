@@ -5,7 +5,20 @@ Prototype of a system that answers questions about climate change impacts on pla
 
 ## Running with docker
 
-### You should have the following installed:
+### simplest: running prebuild container
+
+You have to ahve [Docker](https://docs.docker.com/engine/install/) installed. Then execute:
+
+```bash
+docker pull koldunovn/climsight:stable
+docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
+```
+
+Then open `http://localhost:8501/` in your browser.
+
+### Build and run container with the latest code
+
+You should have the following packages installed:
 
 - git
 - wget
