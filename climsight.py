@@ -53,6 +53,7 @@ content_message = "{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
+      Population count for about 1 km radius: {population_count} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Curent precipitation flux (mm/month): {hist_pr_str} \
@@ -232,6 +233,10 @@ def load_data():
     future = xr.open_mfdataset(f"{data_path}/AWI_CM_mm_ssp585*.nc", compat="override")
     return hist, future
 
+@st.cache_data
+def load_population_data():
+    population = xr.open_dataset(f"{data_path}/population/gpw_v4_population_count_rev11_2020_30_sec_compress.nc")
+    return population
 
 def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
     days_in_months = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
@@ -318,8 +323,26 @@ def extract_climate_data(lat, lon, _hist, _future):
     }
     return df, data_dict
 
+@st.cache_data
+def extract_population_data(lat, lon, _population):
+    """
+    Extracts population data for a given latitude and longitude from population dataset.
+    Data source: converted from https://sedac.ciesin.columbia.edu/data/set/gpw-v4-population-count-rev11
+
+    Args:
+    - lat (float): Latitude of the location to extract data for.
+    - lon (float): Longitude of the location to extract data for.
+    - _population (xarray.Dataset): Population dataset.
+
+    Returns:
+    - population count for the location
+    """
+    population = _population.sel(lat=lat, lon=lon, method="nearest")["population"].values
+    
+    return int(population)
 
 hist, future = load_data()
+population = load_population_data()
 
 st.title(
     " :cyclone: \
@@ -376,6 +399,9 @@ if st.button("Generate") and user_message:
 
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
         st.markdown(f"**Distance to the shore:** {round(distance_to_coastline, 2)} m")
+
+        population_count = extract_population_data(lat, lon, population)
+        st.markdown(f"**Population count:** {population_count}")
 
         # create pandas dataframe
         df, data_dict = extract_climate_data(lat, lon, hist, future)
@@ -447,5 +473,6 @@ if st.button("Generate") and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
+            population_count=str(population_count),
             verbose=True,
         )

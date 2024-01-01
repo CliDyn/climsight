@@ -1,0 +1,8 @@
+# Ignore data folder
+data/
+
+# Python-specific ignores
+__pycache__/
+*.py[cod]
+*$py.class
+
