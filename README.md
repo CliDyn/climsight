@@ -1,4 +1,4 @@
-# Climate Forsight
+# Climate Foresight
 
 Prototype of a system that answers questions about climate change impacts on planned human activities.
 ![screencast](https://github.com/koldunovn/climsight/assets/3407313/bf7cd327-c8a9-4a09-bfb5-778269fcd15c)
@@ -39,11 +39,11 @@ Then open `http://localhost:8501/` in your browser. If you don't want to add Ope
 ```bash
 docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
 ```
-where `$OPENAI_API_KEY` not necesarelly should be environment variable, you can insert the key directly.
+where `$OPENAI_API_KEY` not necessarily should be environment variable, you can insert the key directly.
 
 ## Installation
 
-The easiest way is to install it through conda or mamba. We recomend mamba, as it's faster. 
+The easiest way is to install it through conda or mamba. We recommend mamba, as it's faster. 
 
 [Install mamba](https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install) if you don't have it.
 
@@ -67,13 +67,13 @@ conda activate climsight
 
 ## Before you run
 
-You have to download example climate data and NaturalEarth coastlines. Change to the To do it simply run:
+You have to download example climate data and NaturalEarth coastlines. To do it simply run:
 
 ```bash
 ./download_data.sh
 ```
 
-You would also need an [OpenAI API key](https://platform.openai.com/docs/api-reference) to run the prototype. You can provide it as environment varaible:
+You would also need an [OpenAI API key](https://platform.openai.com/docs/api-reference) to run the prototype. You can provide it as environment variable:
 
 ```bash
 export OPENAI_API_KEY="???????"
@@ -90,7 +90,7 @@ cd climsight
 streamlit run climsight.py
 ```
 
-The browser window should pop up, with the app running. Ask the questions and dont' forget to press "Generate".
+The browser window should pop up, with the app running. Ask the questions and don't forget to press "Generate".
 
 <img width="800" alt="Screenshot 2023-09-26 at 15 26 51" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
 
