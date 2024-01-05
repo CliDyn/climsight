@@ -361,17 +361,26 @@ if st.button("Generate") and user_message:
         location_str, location_str_for_print = get_adress_string(location)
         st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
         st.markdown(location_str_for_print)
-        elevation = get_elevation_from_api(lat, lon)
+        try:
+            elevation = get_elevation_from_api(lat, lon)
+        except:
+            elevation = "Not known"
         st.markdown(f"**Elevation:** {elevation} m")
 
-        land_use_data = fetch_land_use(lon, lat)
+        try:
+            land_use_data = fetch_land_use(lon, lat)
+        except:
+            land_use_data = "Not known"
         try:
             current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
         except:
             current_land_use = "Not known"
         st.markdown(f"**Current land use:** {current_land_use}")
 
-        soil = get_soil_from_api(lat, lon)
+        try:
+            soil = get_soil_from_api(lat, lon)
+        except:
+            soil = "Not known"
         st.markdown(f"**Soil type:** {soil}")
 
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
