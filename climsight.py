@@ -30,7 +30,7 @@ data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 clicked_coords = None
 model_name = "gpt-3.5-turbo"
-# model_name = "gpt-4"
+#model_name = "gpt-4"
 IPCC_embedings = "/home/anjost001/Documents/AWI/CLIMAID/IPCC_all_report"
 # load population data from UN World Population Prospects 2022
 pop_path = './population_data/WPP2022_Demographic_Indicators_Medium.csv'
@@ -63,13 +63,14 @@ content_message = """{user_message} \n \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
       Biodiversity: {biodiv} \
+      Population: {population} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Curent precipitation flux (mm/month): {hist_pr_str} \
       Future precipitation flux (mm/month): {future_pr_str} \
       Curent u wind component (in m/s): {hist_uas_str} \
       Future u wind component (in m/s): {future_uas_str} \
-      Curent v wind component (in m/s): {hist_vas_str} \
+      Current v wind component (in m/s): {hist_vas_str} \
       Future v wind component (in m/s): {future_vas_str} \
       IPCC report information: {ipcc_report} \
       infromation from the internet search: {duckduckgo_search} \
@@ -417,9 +418,10 @@ def get_population_data(country):
         ax4.legend(lines+lines2+lines3+lines4, labels+labels2+labels3+labels4, loc='center right')
 
         plt.title(('Population changes in ' + country))
-        return(fig)
+        return red_pop_data, fig 
     else:
         print(f"There is no UN population data available for {my_location}.")
+        return None, None
 
 st.title(
     " :cyclone: \
@@ -467,9 +469,10 @@ if st.button("Generate") and user_message:
         elevation = get_elevation_from_api(lat, lon)
         st.markdown(f"**Elevation:** {elevation} m")
 
-        population = get_population_data(country)
+        population, pop_fig = get_population_data(country)
+        #print(population)
         st.markdown("**Population:**")
-        st.pyplot(population)
+        st.pyplot(pop_fig)
         st.text(
             "Source: UN World Population Prospect 2022"
         )
@@ -574,6 +577,7 @@ if st.button("Generate") and user_message:
             current_land_use=current_land_use,
             soil=soil,
             biodiv=biodiv,
+            population = population,
             hist_temp_str=data_dict["hist_temp"],
             future_temp_str=data_dict["future_temp"],
             hist_pr_str=data_dict["hist_pr"],
