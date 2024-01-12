@@ -19,6 +19,7 @@ from streamlit_folium import st_folium
 import folium
 import os
 import datetime
+import seaborn as sns
 import matplotlib.pyplot as plt
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
@@ -35,6 +36,9 @@ IPCC_embedings = "/home/anjost001/Documents/AWI/CLIMAID/IPCC_all_report"
 # load population data from UN World Population Prospects 2022
 pop_path = './population_data/WPP2022_Demographic_Indicators_Medium.csv'
 pop_dat = pd.read_csv(pop_path)
+# load natural hazard data from EM-DAT 
+haz_path = './natural_hazard_data/public_emdat.xlsx'
+nat_haz_dat = pd.read_excel(haz_path)
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -72,6 +76,7 @@ content_message = """{user_message} \n \
       Future u wind component (in m/s): {future_uas_str} \
       Current v wind component (in m/s): {hist_vas_str} \
       Future v wind component (in m/s): {future_vas_str} \
+      Natural hazards: {nat_hazards} \
       IPCC report information: {ipcc_report} \
       infromation from the internet search: {duckduckgo_search} \
       """
@@ -423,6 +428,92 @@ def get_population_data(country):
         print(f"There is no UN population data available for {my_location}.")
         return None, None
 
+@st.cache_data
+def natural_hazard_data(country):
+    """
+    Extracts natural hazard data (by EM-DAT) for a given country.
+
+    Args:
+    - country: Takes the country which is returned by the geolocator
+
+    Returns:
+    - local_haz (pandas.DataFrame): DataFrame containing values for the following variables from 2001 until today:
+        - DisNo. (unique 8-digit identifier including the year (4 digits) and a sequential number (4 digits) for each disaster event)
+        - Classification Key (nique 15-character string identifying disasters in terms of the Group, Subgroup, Type and Subtype classification hierarchy)
+        - Disaster Subgroup (geophysical, hydrological, meteorological, climatological, biological, extra-terrestrial)
+        - Disaster Type
+        - Disaster Subtype
+        - Event Name
+        - ISO
+        - Country
+        - Subregion
+        - Region
+        - Location
+        - Origin
+        - Associated Types (list of secondary disaster types)
+        - Declaration (whether a state of emergency was declared by country)
+        - Magnitude
+        - Magnitude Scale
+        - Start Year
+        - Start Month
+        - Start Day
+        - End Year
+        - End Month
+        - End Day
+        - Total Deaths
+        - No. Injured
+        - No. Affected
+        - No. Homeless
+        - Total Affacted (sum of previous 3)
+        - Reconstruction Costs, Adjusted ('000 US$) (adjusted for inflation using Consumer Price Index)
+        - Insured Damage, Adjusted ('000 US$)
+        - Total Damage, Adjusted ('000  US$)
+    """
+    # create sub data set to only keep the relevant columnss
+    selected_columns = [
+        'DisNo.', 'Classification Key', 'Disaster Subgroup', 'Disaster Type',
+        'Disaster Subtype', 'Event Name', 'ISO', 'Country', 'Subregion', 'Region',
+        'Location', 'Origin', 'Associated Types', 'Declaration', 'Magnitude',
+        'Magnitude Scale', 'Start Year', 'Start Month', 'Start Day', 'End Year',
+        'End Month', 'End Day', 'Total Deaths', 'No. Injured', 'No. Affected',
+        'No. Homeless', 'Total Affected', """Reconstruction Costs, Adjusted ('000 US$)""",
+        """Insured Damage, Adjusted ('000 US$)""", """Total Damage, Adjusted ('000 US$)"""
+    ]
+    haz_dat = nat_haz_dat[selected_columns]
+
+    unique_locs = haz_dat['Country'].unique()
+    my_loc = country
+
+    # check if data is available for the country that we are currently investigating
+    if my_loc in unique_locs:
+        local_haz = haz_dat[haz_dat['Country'] == country]
+
+        # Filter out rows with NaN values
+        local_haz_woNan = local_haz.dropna(subset=['Disaster Type'])
+
+        # Color-blind friendly color palette
+        colors = sns.color_palette('colorblind')
+        sns.set(style='whitegrid')
+
+        # Count occurrences of each disaster type
+        disaster_counts = local_haz_woNan['Disaster Type'].value_counts()
+
+        # get time span
+        min = str(local_haz_woNan['Start Year'].min())
+        max = str(local_haz['End Year'].max())
+
+        # Plot for Disaster Type
+        fig, ax = plt.subplots(figsize=(4,4))
+
+        ax.pie(disaster_counts, labels=disaster_counts.index, autopct='%1.1f%%', colors=colors, startangle=90, pctdistance=0.85, wedgeprops=dict(width=0.3), textprops=dict(rotation=25, va='center', fontsize=6))
+        ax.set_title('Distribution of disaster types in ' + country + ' between ' + min + ' and ' + max, fontsize=8)
+
+######################## save plot into fig so it can be returned!
+        return local_haz, fig
+    else:
+        print(f"There is no data available about natural hazards in {my_loc}.")
+        return None, None
+
 st.title(
     " :cyclone: \
          :ocean: :globe_with_meridians:  Climate Foresight"
@@ -531,6 +622,14 @@ if st.button("Generate") and user_message:
             y=["Present day Wind speed", "Future Wind speed"],
             color=["#d62728", "#2ca02c"],
         )
+
+        nat_hazards, haz_fig = natural_hazard_data(country)
+        #print(nat_hazards)
+        st.markdown("**Natural hazards:**")
+        st.pyplot(haz_fig)
+        st.text(
+            "Source: EM-DAT"
+        )
     policy = ""
     with st.spinner("Generating..."):
         chat_box = st.empty()
@@ -586,6 +685,7 @@ if st.button("Generate") and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
+            nat_hazards = nat_hazards,
             ipcc_report=ipcc_report_str,
             duckduckgo_search=duckduckgo_search,
             verbose=True,
