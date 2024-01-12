@@ -50,7 +50,9 @@ You have to download example climate data and NaturalEarth coastlines. Change to
 ```bash
 ./download_data.sh
 ```
-Moreover, you need to download the current [population data](https://population.un.org/wpp/Download/Standard/CSV/) from the UN. You need the **'Demorgaphic Indicators' 1950-2100, medium CSV file**. Please download it into a folder named 'population_data' within this folder and extract the file. Don't change the file's name.
+Moreover, you need to download the current [population data](https://population.un.org/wpp/Download/Standard/CSV/) from the UN. You need the **'Demographic Indicators' 1950-2100, medium CSV file**. Please download it into a folder named 'population_data' within this folder and extract the file. Don't change the file's name.
+
+You also need to download the [natural hazard data](https://public.emdat.be/data) (for which you have to create a free account). Please select **Natural** for classification and leave all the other options the way they are. Download it into a folder named 'natural_hazard_data' and **rename the file to 'public_emdat.xlsx'**.
 
 You would also need an [OpenAI API key](https://platform.openai.com/docs/api-reference) to run the prototype. You can provide it as environment varaible:
 
