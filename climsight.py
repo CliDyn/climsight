@@ -504,12 +504,10 @@ def natural_hazard_data(country):
 
         # Plot for Disaster Type
         fig, ax = plt.subplots(figsize=(4,4))
-
         ax.pie(disaster_counts, labels=disaster_counts.index, autopct='%1.1f%%', colors=colors, startangle=90, pctdistance=0.85, wedgeprops=dict(width=0.3), textprops=dict(rotation=25, va='center', fontsize=6))
         ax.set_title('Distribution of disaster types in ' + country + ' between ' + min + ' and ' + max, fontsize=8)
-
-######################## save plot into fig so it can be returned!
         return local_haz, fig
+    
     else:
         print(f"There is no data available about natural hazards in {my_loc}.")
         return None, None
@@ -519,39 +517,43 @@ st.title(
          :ocean: :globe_with_meridians:  Climate Foresight"
 )
 # :umbrella_with_rain_drops: :earth_africa:  :tornado:
-user_message = st.text_input(
-    "Describe the activity that you would like to evaluate for this location:"
-)
-col1, col2 = st.columns(2)
-# lat_default = 52.5240
-# lon_default = 13.3700
-lat_default = 31.6912
-lon_default = -8.1098
 
-
-m = folium.Map(location=[lat_default, lon_default], zoom_start=13)
-with st.sidebar:
-    api_key_input = st.text_input(
-        "OpenAI API key",
-        placeholder="Provide here or as OPENAI_API_KEY in your environment",
+with st.form("query_form"):
+    user_message = st.text_input(
+        "Describe the activity that you would like to evaluate for this location:"
     )
-    map_data = st_folium(m)
-if map_data:
-    clicked_coords = map_data["last_clicked"]
-    if clicked_coords:
-        lat_default = clicked_coords["lat"]
-        lon_default = clicked_coords["lng"]
-
-lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
-lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
-
-api_key = api_key_input or os.environ.get("OPENAI_API_KEY")
-if not api_key:
-    st.error("Please provide an OpenAI API key.")
-    st.stop()
+    col1, col2 = st.columns(2)
+    # lat_default = 52.5240
+    # lon_default = 13.3700
+    lat_default = 31.6912
+    lon_default = -8.1098
 
 
-if st.button("Generate") and user_message:
+    m = folium.Map(location=[lat_default, lon_default], zoom_start=13)
+    with st.sidebar:
+        api_key_input = st.text_input(
+            "OpenAI API key",
+            placeholder="Provide here or as OPENAI_API_KEY in your environment",
+        )
+        map_data = st_folium(m)
+    if map_data:
+        clicked_coords = map_data["last_clicked"]
+        if clicked_coords:
+            lat_default = clicked_coords["lat"]
+            lon_default = clicked_coords["lng"]
+
+    lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
+    lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
+
+    api_key = api_key_input or os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        st.error("Please provide an OpenAI API key.")
+        st.stop()    
+
+    generate_button = st.form_submit_button("Generate")
+
+if generate_button and user_message:
+# if st.button("Generate") and user_message:
     with st.spinner("Getting info on a point..."):
         location = get_location(lat, lon)
         location_str, location_str_for_print, country = get_adress_string(location)
