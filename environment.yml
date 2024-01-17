@@ -17,6 +17,9 @@ dependencies:
     - netcdf4
     - dask
     - pip
+    - datetime
+    - seaborn
+    - matplotlib.pyplot
     - pip:
         - openai
 
