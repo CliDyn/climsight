@@ -298,7 +298,7 @@ def extract_climate_data(lat, lon, _hist, _future):
     df = pd.DataFrame(
         {
             "Present day Temperature": hist_temp[0, 0, :],
-            "Future Temeprature": future_temp[0, 0, :],
+            "Future Temperature": future_temp[0, 0, :],
             "Present day Precipitation": hist_pr[0, 0, :],
             "Future Precipitation": future_pr[0, 0, :],
             "Present day Wind speed": np.hypot(hist_uas[0, 0, :], hist_vas[0, 0, :]),
