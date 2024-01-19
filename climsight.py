@@ -21,6 +21,7 @@ import os
 import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from langchain.callbacks.base import BaseCallbackHandler
 
 
@@ -32,9 +33,10 @@ model_name = "gpt-3.5-turbo"
 # load population data from UN World Population Prospects 2022
 pop_path = './population_data/WPP2022_Demographic_Indicators_Medium.csv'
 pop_dat = pd.read_csv(pop_path)
-# load natural hazard data from EM-DAT 
-haz_path = './natural_hazard_data/public_emdat.xlsx'
-nat_haz_dat = pd.read_excel(haz_path)
+# load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
+haz_path = './natural_hazard_data/pend-gdis-1960-2018-disasterlocations.csv'
+haz_dat = pd.read_csv(haz_path)
+distance_from_event = 5.0 # radius within which natural hazard events shall be considered [in km]
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -421,89 +423,88 @@ def get_population_data(country):
         print(f"There is no UN population data available for {my_location}.")
         return None, None
 
+# Radius of the Earth in kilometers
+earth_radius_km = 6371.0
+
 @st.cache_data
-def natural_hazard_data(country):
+def filter_events_within_radius(lat, lon, haz_dat):
     """
-    Extracts natural hazard data (by EM-DAT) for a given country.
+    Filter events within a 5 km radius of the given latitude and longitude.
 
     Args:
-    - country: Takes the country which is returned by the geolocator
+    - lat (float): Latitude of the center point (rounded to 3 decimal place)
+    - lon (float): Longitude of the center point (rounded to 3 decimal place)
+    - haz_dat (pandas.DataFrame): Original dataset.
 
     Returns:
-    - local_haz (pandas.DataFrame): DataFrame containing values for the following variables from 2001 until today:
-        - DisNo. (unique 8-digit identifier including the year (4 digits) and a sequential number (4 digits) for each disaster event)
-        - Classification Key (nique 15-character string identifying disasters in terms of the Group, Subgroup, Type and Subtype classification hierarchy)
-        - Disaster Subgroup (geophysical, hydrological, meteorological, climatological, biological, extra-terrestrial)
-        - Disaster Type
-        - Disaster Subtype
-        - Event Name
-        - ISO
-        - Country
-        - Subregion
-        - Region
-        - Location
-        - Origin
-        - Associated Types (list of secondary disaster types)
-        - Declaration (whether a state of emergency was declared by country)
-        - Magnitude
-        - Magnitude Scale
-        - Start Year
-        - Start Month
-        - Start Day
-        - End Year
-        - End Month
-        - End Day
-        - Total Deaths
-        - No. Injured
-        - No. Affected
-        - No. Homeless
-        - Total Affacted (sum of previous 3)
-        - Reconstruction Costs, Adjusted ('000 US$) (adjusted for inflation using Consumer Price Index)
-        - Insured Damage, Adjusted ('000 US$)
-        - Total Damage, Adjusted ('000  US$)
+    - pandas.DataFrame: Reduced dataset containing only events within a 5 km radius.
     """
-    # create sub data set to only keep the relevant columnss
-    selected_columns = [
-        'DisNo.', 'Classification Key', 'Disaster Subgroup', 'Disaster Type',
-        'Disaster Subtype', 'Event Name', 'ISO', 'Country', 'Subregion', 'Region',
-        'Location', 'Origin', 'Associated Types', 'Declaration', 'Magnitude',
-        'Magnitude Scale', 'Start Year', 'Start Month', 'Start Day', 'End Year',
-        'End Month', 'End Day', 'Total Deaths', 'No. Injured', 'No. Affected',
-        'No. Homeless', 'Total Affected', """Reconstruction Costs, Adjusted ('000 US$)""",
-        """Insured Damage, Adjusted ('000 US$)""", """Total Damage, Adjusted ('000 US$)"""
-    ]
-    haz_dat = nat_haz_dat[selected_columns]
 
-    unique_locs = haz_dat['Country'].unique()
-    my_loc = country
+    # Calculate the Haversine distances
+    haz_dat['distance'] = haz_dat.apply(
+        lambda row: haversine(round(lat,3), round(lon,3), round(row['latitude'],3), round(row['longitude'],3)),
+        axis=1
+    )
 
-    # check if data is available for the country that we are currently investigating
-    if my_loc in unique_locs:
-        local_haz = haz_dat[haz_dat['Country'] == country]
+    # Filter events within 5 km radius
+    filtered_haz_dat = haz_dat[haz_dat['distance'] <= distance_from_event]
 
-        # Filter out rows with NaN values
-        local_haz_woNan = local_haz.dropna(subset=['Disaster Type'])
+    # Drop the temporary 'distance' column
+    filtered_haz_dat = filtered_haz_dat.drop(columns=['distance'])
 
-        # Color-blind friendly color palette
-        colors = sns.color_palette('colorblind')
-        sns.set(style='whitegrid')
+    return filtered_haz_dat
 
-        # Count occurrences of each disaster type
-        disaster_counts = local_haz_woNan['Disaster Type'].value_counts()
+@st.cache_data
+def haversine(lat1, lon1, lat2, lon2):
+    """
+    Calculate the Haversine distance between two sets of latitude and longitude.
 
-        # get time span
-        min = str(local_haz_woNan['Start Year'].min())
-        max = str(local_haz['End Year'].max())
+    Args:
+    - lat1, lon1, lat2, lon2 (float): Coordinates in decimal degrees.
 
-        # Plot for Disaster Type
-        fig, ax = plt.subplots(figsize=(4,4))
-        ax.pie(disaster_counts, labels=disaster_counts.index, autopct='%1.1f%%', colors=colors, startangle=90, pctdistance=0.85, wedgeprops=dict(width=0.3), textprops=dict(rotation=25, va='center', fontsize=6))
-        ax.set_title('Distribution of disaster types in ' + country + ' between ' + min + ' and ' + max, fontsize=8)
-        return local_haz, fig
+    Returns:
+    - float: Haversine distance in kilometers.
+    """
+    # Convert decimal degrees to radians
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = np.sin(dlat / 2.0) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.0) ** 2
+    c = 2 * np.arcsin(np.sqrt(a))
+
+    # Distance in kilometers
+    distance = earth_radius_km * c
+
+    return distance
+
+@st.cache_data
+def plot_disaster_counts(filtered_events):
+    """
+    Plot the number of different disaster types over a time period for the selected location (within 5km radius).
+
+    Args:
+    - filtered_events: Only those natural hazard events that were within a 5 km (or whatever other value is set for distance_from_event) radius of the clicked location.
+    Returns:
+    - figure: bar plot with results
+    """
+    # Group by 'year' and 'disastertype' and count occurrences
+    disaster_counts = filtered_events.groupby(['year', 'disastertype']).size().unstack(fill_value=0)
+    place = filtered_events['geolocation'].unique()
+
+    # create figure and axes
+    fig, ax = plt.subplots(figsize=(10,6))
     
-    else:
-        print(f"There is no data available about natural hazards in {my_loc}.")
-        return None, None
+    # Plotting the bar chart
+    disaster_counts.plot(kind='bar', stacked=False, ax=ax, figsize=(10,6), colormap='viridis')
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.title('Count of different disaster types in ' + place[0] + ' over time')
+    plt.xlabel('Year')
+    plt.ylabel('Count')
+    plt.legend(title='Disaster Type')
+
+    return fig
 
 st.title(
     " :cyclone: \
@@ -615,13 +616,23 @@ if generate_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
 
-        nat_hazards, haz_fig = natural_hazard_data(country)
-        #print(nat_hazards)
+        filtered_events = filter_events_within_radius(lat, lon, haz_dat)
+        haz_fig = plot_disaster_counts(filtered_events)
         st.markdown("**Natural hazards:**")
         st.pyplot(haz_fig)
-        st.text(
-            "Source: EM-DAT"
-        )
+        with st.expander("Source"):
+            st.markdown('''
+                *The GDIS data descriptor*  
+                Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                *The GDIS dataset*  
+                Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                Accessed DAY MONTH YEAR.  
+                *The EM-DAT dataset*  
+                Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+            ''')
     policy = ""
     with st.spinner("Generating..."):
         chat_box = st.empty()
@@ -665,6 +676,6 @@ if generate_button and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
-            nat_hazards = nat_hazards,
+            nat_hazards = filtered_events,
             verbose=True,
         )

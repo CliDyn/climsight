@@ -19,7 +19,7 @@ dependencies:
     - pip
     - datetime
     - seaborn
-    - matplotlib.pyplot
+    - matplotlib
     - pip:
         - openai
 
