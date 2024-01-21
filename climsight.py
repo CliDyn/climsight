@@ -395,7 +395,7 @@ if st.button("Generate") and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Temperature", "Future Temeprature"],
+            y=["Present day Temperature", "Future Temperature"],
             color=["#d62728", "#2ca02c"],
         )
         st.text(
