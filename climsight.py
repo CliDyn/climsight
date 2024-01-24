@@ -25,8 +25,8 @@ from requests.exceptions import Timeout
 data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 clicked_coords = None
-# model_name = "gpt-3.5-turbo"
-model_name = "gpt-4-1106-preview"
+model_name = "gpt-3.5-turbo"
+# model_name = "gpt-4-1106-preview"
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -53,6 +53,7 @@ content_message = "{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
+      Biodiversity: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Curent precipitation flux (mm/month): {hist_pr_str} \
@@ -224,6 +225,28 @@ def get_soil_from_api(lat, lon):
         return data["wrb_class_name"]
     except Timeout:
         return "not found"
+    
+
+@st.cache_data
+def fetch_biodiversity(lon, lat):
+    """
+    Fetches biodiversity data for a given longitude and latitude using the GBIF API.
+
+    Args:
+    - lon (float): The longitude of the location to fetch biodiversity data for.
+    - lat (float): The latitude of the location to fetch biodiversity data for.
+
+    Returns:
+    - data (dict): A dictionary containing the biodiversity data for the specified location.
+    """
+    gbif_api_url = "https://api.gbif.org/v1/occurrence/search"
+    params = {
+        "decimalLatitude": lat,
+        "decimalLongitude": lon,
+    }
+    response = requests.get(gbif_api_url, params=params)
+    biodiv = response.json()
+    return biodiv
 
 
 @st.cache_data
@@ -383,6 +406,16 @@ if st.button("Generate") and user_message:
             soil = "Not known"
         st.markdown(f"**Soil type:** {soil}")
 
+        biodiversity = fetch_biodiversity(round(lat), round(lon))
+        biodiv_set = set()
+        for record in biodiversity['results']:
+            if record.get('taxonRank') != 'UNRANKED':
+                biodiv_set.add(record['genericName'])
+        biodiv = ', '.join(list(biodiv_set))
+        if biodiv == []:
+            biodiv = "Not known"
+        st.markdown(f"**Biodiversity:** {biodiv}")
+
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
         st.markdown(f"**Distance to the shore:** {round(distance_to_coastline, 2)} m")
 
@@ -448,6 +481,7 @@ if st.button("Generate") and user_message:
             elevation=str(elevation),
             current_land_use=current_land_use,
             soil=soil,
+            biodiv = biodiv,
             hist_temp_str=data_dict["hist_temp"],
             future_temp_str=data_dict["future_temp"],
             hist_pr_str=data_dict["hist_pr"],
