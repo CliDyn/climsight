@@ -53,7 +53,7 @@ content_message = "{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
-      Biodiversity: {biodiv} \
+      Occuring species: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Curent precipitation flux (mm/month): {hist_pr_str} \
@@ -246,7 +246,14 @@ def fetch_biodiversity(lon, lat):
     }
     response = requests.get(gbif_api_url, params=params)
     biodiv = response.json()
-    return biodiv
+    biodiv_set = set()
+    for record in biodiv['results']:
+        if record.get('taxonRank') != 'UNRANKED':
+            biodiv_set.add(record['genericName'])
+    biodiversity = ', '.join(list(biodiv_set))
+    if biodiversity == []:
+        biodiversity = "Not known"
+    return biodiversity
 
 
 @st.cache_data
@@ -406,15 +413,8 @@ if st.button("Generate") and user_message:
             soil = "Not known"
         st.markdown(f"**Soil type:** {soil}")
 
-        biodiversity = fetch_biodiversity(round(lat), round(lon))
-        biodiv_set = set()
-        for record in biodiversity['results']:
-            if record.get('taxonRank') != 'UNRANKED':
-                biodiv_set.add(record['genericName'])
-        biodiv = ', '.join(list(biodiv_set))
-        if biodiv == []:
-            biodiv = "Not known"
-        st.markdown(f"**Biodiversity:** {biodiv}")
+        biodiv = fetch_biodiversity(round(lat), round(lon))
+        st.markdown(f"**Occuring species:** {biodiv}")
 
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
         st.markdown(f"**Distance to the shore:** {round(distance_to_coastline, 2)} m")
