@@ -29,8 +29,8 @@ coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
 # load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
 haz_path = './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 clicked_coords = None
-# model_name = "gpt-3.5-turbo"
-model_name = "gpt-4-1106-preview"
+model_name = "gpt-3.5-turbo"
+# model_name = "gpt-4-1106-preview"
 distance_from_event = 5.0 # frame within which natural hazard events shall be considered [in km]
 
 system_role = """
