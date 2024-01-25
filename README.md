@@ -72,6 +72,7 @@ You have to download example climate data and NaturalEarth coastlines. To do it 
 ```bash
 ./download_data.sh
 ```
+You also need to download the [natural hazard data](https://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download) (for which you have to create a free account). Please download the **CSV - Disaster Location Centroids [zip file]** and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly. 
 
 You would also need an [OpenAI API key](https://platform.openai.com/docs/api-reference) to run the prototype. You can provide it as environment variable:
 
