@@ -94,3 +94,17 @@ The browser window should pop up, with the app running. Ask the questions and do
 
 <img width="800" alt="Screenshot 2023-09-26 at 15 26 51" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
 
+
+## Scientific Publication
+
+ClimSight is grounded in research conducted by Nikolay Koldunov and Thomas Jung, presented in the paper titled "Local climate services for all, courtesy of large language models." The paper was published in the Communications Earth & Environment journal, Volume 5, Article number: 13 (2024). You can access the full publication [here](https://www.nature.com/articles/s43247-023-01199-1).
+
+The research explores the capability of large language models to democratize climate information by summarizing and conveying localized climate-related data in a cost-effective and efficient manner. ClimSight, as a simple prototype, demonstrates the potential of this approach to provide actionable climate information globally.
+
+For more in-depth insights into the methodology, findings, and the potential impact of ClimSight, we recommend referring to the original scientific publication.
+
+### Citation
+
+If you use or refer to ClimSight in your work, please cite the following publication:
+
+Koldunov, N., Jung, T. Local climate services for all, courtesy of large language models. _Commun Earth Environ_ **5**, 13 (2024). https://doi.org/10.1038/s43247-023-01199-1 
