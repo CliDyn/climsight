@@ -94,3 +94,8 @@ The browser window should pop up, with the app running. Ask the questions and do
 
 <img width="800" alt="Screenshot 2023-09-26 at 15 26 51" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
 
+## Citation
+
+If you use or refer to ClimSight in your work, please cite the following publication:
+
+Koldunov, N., Jung, T. Local climate services for all, courtesy of large language models. _Commun Earth Environ_ **5**, 13 (2024). https://doi.org/10.1038/s43247-023-01199-1 
