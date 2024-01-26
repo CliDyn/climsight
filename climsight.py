@@ -374,7 +374,9 @@ def filter_events_within_square(lat, lon, haz_path, distance_from_event):
         (haz_dat['longitude'] >= lon_min) & (haz_dat['longitude'] <= lon_max)
     ]
 
-    return filtered_haz_dat
+    prompt_haz_dat = filtered_haz_dat.drop(columns=['country', 'geolocation', 'latitude', 'longitude'])
+
+    return filtered_haz_dat, prompt_haz_dat
 
 @st.cache_data
 def plot_disaster_counts(filtered_events):
@@ -502,7 +504,7 @@ if st.button("Generate") and user_message:
             color=["#d62728", "#2ca02c"],
         )
 
-        filtered_events_square = filter_events_within_square(lat, lon, haz_path, distance_from_event)
+        filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
 
     policy = ""
     with st.spinner("Generating..."):
@@ -544,7 +546,7 @@ if st.button("Generate") and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
-            nat_hazards = filtered_events_square,
+            nat_hazards = promt_hazard_data,
             verbose=True,
         )
 
