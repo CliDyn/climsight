@@ -253,11 +253,12 @@ def fetch_biodiversity(lon, lat):
     response = requests.get(gbif_api_url, params=params)
     biodiv = response.json()
     biodiv_set = set()
-    for record in biodiv['results']:
-        if record.get('taxonRank') != 'UNRANKED':
-            biodiv_set.add(record['genericName'])
-    biodiversity = ', '.join(list(biodiv_set))
-    if biodiversity == []:
+    if biodiv['results']:
+        for record in biodiv['results']:
+            if 'genericName' in record and record.get('taxonRank') != 'UNRANKED':
+                biodiv_set.add(record['genericName'])
+        biodiversity = ', '.join(list(biodiv_set))
+    else:
         biodiversity = "Not known"
     return biodiversity
 
