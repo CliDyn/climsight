@@ -20,13 +20,18 @@ import folium
 import os
 from langchain.callbacks.base import BaseCallbackHandler
 from requests.exceptions import Timeout
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 
 
 data_path = "./data/"
 coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
+# load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
+haz_path = './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 clicked_coords = None
 model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
+distance_from_event = 5.0 # frame within which natural hazard events shall be considered [in km]
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -62,6 +67,7 @@ content_message = "{user_message} \n \
       Future u wind component (in m/s): {future_uas_str} \
       Curent v wind component (in m/s): {hist_vas_str} \
       Future v wind component (in m/s): {future_vas_str} \
+      Natural hazards: {nat_hazards} \
       "
 
 
@@ -351,6 +357,87 @@ def extract_climate_data(lat, lon, _hist, _future):
 
 hist, future = load_data()
 
+@st.cache_data
+def load_nat_haz_data(haz_path):
+    """
+    Load natural hazard data from a CSV file and filter relevant columns.
+
+    Args:
+    - haz_path (str): File path to the CSV file containing natural hazard data.
+
+    Returns:
+    - pandas.DataFrame: Dataset with selected columns ('country', 'year', 'geolocation', 'disastertype', 'latitude', 'longitude').
+    """
+
+    haz_dat = pd.read_csv(haz_path)
+
+    # reduce data set to only contain relevant columns
+    columns_to_keep = ['country', 'year', 'geolocation', 'disastertype', 'latitude', 'longitude']
+    haz_dat = haz_dat.loc[:, columns_to_keep]
+
+    return(haz_dat)
+
+@st.cache_data
+def filter_events_within_square(lat, lon, haz_path, distance_from_event):
+    """
+    Filter events within a square of given distance from the center point.
+
+    Args:
+    - lat (float): Latitude of the center point (rounded to 3 decimal places)
+    - lon (float): Longitude of the center point (rounded to 3 decimal places)
+    - haz_dat (pandas.DataFrame): Original dataset.
+    - distance_from_event (float): Distance in kilometers to form a square.
+
+    Returns:
+    - pandas.DataFrame: Reduced dataset containing only events within the square.
+    """
+
+    haz_dat = load_nat_haz_data(haz_path)
+
+    # Calculate the boundaries of the square
+    lat_min, lat_max = lat - (distance_from_event / 111), lat + (distance_from_event / 111)
+    lon_min, lon_max = lon - (distance_from_event / (111 * np.cos(np.radians(lat)))), lon + (distance_from_event / (111 * np.cos(np.radians(lat))))
+
+    # Filter events within the square
+    filtered_haz_dat = haz_dat[
+        (haz_dat['latitude'] >= lat_min) & (haz_dat['latitude'] <= lat_max) &
+        (haz_dat['longitude'] >= lon_min) & (haz_dat['longitude'] <= lon_max)
+    ]
+
+    prompt_haz_dat = filtered_haz_dat.drop(columns=['country', 'geolocation', 'latitude', 'longitude'])
+
+    return filtered_haz_dat, prompt_haz_dat
+
+@st.cache_data
+def plot_disaster_counts(filtered_events):
+    """
+    Plot the number of different disaster types over a time period for the selected location (within 5km radius).
+
+    Args:
+    - filtered_events: Only those natural hazard events that were within a 5 km (or whatever other value is set for distance_from_event) radius of the clicked location.
+    Returns:
+    - figure: bar plot with results
+    """
+    if not filtered_events.empty:
+        # Group by 'year' and 'disastertype' and count occurrences
+        disaster_counts = filtered_events.groupby(['year', 'disastertype']).size().unstack(fill_value=0)
+        place = filtered_events['geolocation'].unique()
+
+        # create figure and axes
+        fig, ax = plt.subplots(figsize=(10,6))
+        
+        # Plotting the bar chart
+        disaster_counts.plot(kind='bar', stacked=False, ax=ax, figsize=(10,6), colormap='viridis')
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.title('Count of different disaster types in ' + place[0] + ' over time')
+        plt.xlabel('Year')
+        plt.ylabel('Count')
+        plt.legend(title='Disaster Type')
+
+        return fig
+    else:
+        return None
+
 st.title(
     " :cyclone: \
          :ocean: :globe_with_meridians:  Climate Foresight"
@@ -449,6 +536,9 @@ if st.button("Generate") and user_message:
             y=["Present day Wind speed", "Future Wind speed"],
             color=["#d62728", "#2ca02c"],
         )
+
+        filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
+
     policy = ""
     with st.spinner("Generating..."):
         chat_box = st.empty()
@@ -490,5 +580,26 @@ if st.button("Generate") and user_message:
             future_uas_str=data_dict["future_uas"],
             hist_vas_str=data_dict["hist_vas"],
             future_vas_str=data_dict["future_vas"],
+            nat_hazards = promt_hazard_data,
             verbose=True,
         )
+
+# Adding additional information after AI report
+    haz_fig = plot_disaster_counts(filtered_events_square)
+    if haz_fig is not None:
+        st.subheader("Additional information", divider='rainbow')
+        st.markdown("**Natural hazards:**")
+        st.pyplot(haz_fig)
+        with st.expander("Source"):
+            st.markdown('''
+                *The GDIS data descriptor*  
+                Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                *The GDIS dataset*  
+                Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                Accessed DAY MONTH YEAR.  
+                *The EM-DAT dataset*  
+                Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+            ''')
