@@ -32,6 +32,9 @@ clicked_coords = None
 model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
 distance_from_event = 5.0 # frame within which natural hazard events shall be considered [in km]
+lat_default = 52.5240 # initial default latitude
+lon_default = 13.3700 # initial default longitde
+api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
 
 system_role = """
 You are the system that should help people to evaluate the impact of climate change
@@ -443,19 +446,10 @@ st.title(
          :ocean: :globe_with_meridians:  Climate Foresight"
 )
 # :umbrella_with_rain_drops: :earth_africa:  :tornado:
-user_message = st.text_input(
-    "Describe activity you would like to evaluate for this location:"
-)
-col1, col2 = st.columns(2)
-lat_default = 52.5240
-lon_default = 13.3700
 
+# Define map and handle map clicks
 m = folium.Map(location=[lat_default, lon_default], zoom_start=13)
 with st.sidebar:
-    api_key_input = st.text_input(
-        "OpenAI API key",
-        placeholder="Provide here or as OPENAI_API_KEY in your environment",
-    )
     map_data = st_folium(m)
 if map_data:
     clicked_coords = map_data["last_clicked"]
@@ -463,16 +457,33 @@ if map_data:
         lat_default = clicked_coords["lat"]
         lon_default = clicked_coords["lng"]
 
-lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
-lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
+# Wrap the input fields and the submit button in a form
+with st.form(key='my_form'):
+    user_message = st.text_input(
+        "Describe activity you would like to evaluate for this location:"
+    )
+    col1, col2 = st.columns(2)
+    lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
+    lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
 
-api_key = api_key_input or os.environ.get("OPENAI_API_KEY")
-if not api_key:
-    st.error("Please provide an OpenAI API key.")
-    st.stop()
+    # Include the API key input within the form only if it's not found in the environment
+    if not api_key:
+        api_key_input = st.text_input(
+            "OpenAI API key",
+            placeholder="Enter your OpenAI API key here"
+        )
+
+    # Replace the st.button with st.form_submit_button
+    submit_button = st.form_submit_button(label='Generate')
 
 
-if st.button("Generate") and user_message:
+if submit_button and user_message:
+    if not api_key:
+        api_key = api_key_input
+    if not api_key:
+        st.error("Please provide an OpenAI API key.")
+        st.stop()
+
     with st.spinner("Getting info on a point..."):
         location = get_location(lat, lon)
         location_str, location_str_for_print = get_adress_string(location)
