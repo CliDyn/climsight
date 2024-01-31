@@ -583,10 +583,14 @@ def x_year_mean_population(pop_path, country, year_step=1, start_year=None, end_
         return None
     
     population_xY_mean = get_population(pop_path, country)
+    if population_xY_mean is None:
+        print(f"No population data available for {country}.")
+        return None
     column_to_remove = ['LEx', 'NetMigrations'] # change here if less / other columns are wanted
-    population_xY_mean = population_xY_mean.drop(columns=column_to_remove)
+    
 
     if not population_xY_mean.empty:
+        population_xY_mean = population_xY_mean.drop(columns=column_to_remove)
 
         population_xY_mean['Time'] = pd.to_datetime(population_xY_mean['Time'], format='%Y')
 
