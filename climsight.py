@@ -36,7 +36,11 @@ pop_path = './data/population/WPP2022_Demographic_Indicators_Medium.csv'
 clicked_coords = None
 
 distance_from_event = 5.0 # frame within which natural hazard events shall be considered [in km]
-# specifications for population data
+
+lat_default = 52.5240 # initial default latitude
+lon_default = 13.3700 # initial default longitde
+api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
+
 year_step = 10 # indicates over how many years the population data is being averaged
 start_year = 1980 # time period that one is interested in (min: 1950, max: 2100)
 end_year = None # same for end year (min: 1950, max: 2100)
@@ -264,11 +268,12 @@ def fetch_biodiversity(lon, lat):
     response = requests.get(gbif_api_url, params=params)
     biodiv = response.json()
     biodiv_set = set()
-    for record in biodiv['results']:
-        if record.get('taxonRank') != 'UNRANKED':
-            biodiv_set.add(record['genericName'])
-    biodiversity = ', '.join(list(biodiv_set))
-    if biodiversity == []:
+    if biodiv['results']:
+        for record in biodiv['results']:
+            if 'genericName' in record and record.get('taxonRank') != 'UNRANKED':
+                biodiv_set.add(record['genericName'])
+        biodiversity = ', '.join(list(biodiv_set))
+    else:
         biodiversity = "Not known"
     return biodiversity
 
@@ -578,10 +583,14 @@ def x_year_mean_population(pop_path, country, year_step=1, start_year=None, end_
         return None
     
     population_xY_mean = get_population(pop_path, country)
+    if population_xY_mean is None:
+        print(f"No population data available for {country}.")
+        return None
     column_to_remove = ['LEx', 'NetMigrations'] # change here if less / other columns are wanted
-    population_xY_mean = population_xY_mean.drop(columns=column_to_remove)
+    
 
     if not population_xY_mean.empty:
+        population_xY_mean = population_xY_mean.drop(columns=column_to_remove)
 
         population_xY_mean['Time'] = pd.to_datetime(population_xY_mean['Time'], format='%Y')
 
@@ -625,19 +634,10 @@ st.title(
          :ocean: :globe_with_meridians:  Climate Foresight"
 )
 # :umbrella_with_rain_drops: :earth_africa:  :tornado:
-user_message = st.text_input(
-    "Describe activity you would like to evaluate for this location:"
-)
-col1, col2 = st.columns(2)
-lat_default = 52.5240
-lon_default = 13.3700
 
+# Define map and handle map clicks
 m = folium.Map(location=[lat_default, lon_default], zoom_start=13)
 with st.sidebar:
-    api_key_input = st.text_input(
-        "OpenAI API key",
-        placeholder="Provide here or as OPENAI_API_KEY in your environment",
-    )
     map_data = st_folium(m)
 if map_data:
     clicked_coords = map_data["last_clicked"]
@@ -645,16 +645,33 @@ if map_data:
         lat_default = clicked_coords["lat"]
         lon_default = clicked_coords["lng"]
 
-lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
-lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
+# Wrap the input fields and the submit button in a form
+with st.form(key='my_form'):
+    user_message = st.text_input(
+        "Describe activity you would like to evaluate for this location:"
+    )
+    col1, col2 = st.columns(2)
+    lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
+    lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
 
-api_key = api_key_input or os.environ.get("OPENAI_API_KEY")
-if not api_key:
-    st.error("Please provide an OpenAI API key.")
-    st.stop()
+    # Include the API key input within the form only if it's not found in the environment
+    if not api_key:
+        api_key_input = st.text_input(
+            "OpenAI API key",
+            placeholder="Enter your OpenAI API key here"
+        )
+
+    # Replace the st.button with st.form_submit_button
+    submit_button = st.form_submit_button(label='Generate')
 
 
-if st.button("Generate") and user_message:
+if submit_button and user_message:
+    if not api_key:
+        api_key = api_key_input
+    if not api_key:
+        st.error("Please provide an OpenAI API key.")
+        st.stop()
+
     with st.spinner("Getting info on a point..."):
         location = get_location(lat, lon)
         location_str, location_str_for_print, country = get_adress_string(location)
