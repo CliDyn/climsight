@@ -23,6 +23,7 @@ from requests.exceptions import Timeout
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import datetime
+import time
 
 model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
@@ -113,17 +114,41 @@ def get_location(lat, lon):
     lon (float): The longitude of the location.
 
     Returns:
-    dict: A dictionary containing the address information of the location.
+    dict: A dictionary containing information about the location.
     """
-    geolocator = Nominatim(user_agent="climsight")
-    location = geolocator.reverse((lat, lon), language="en")
-    return location.raw["address"]
+    # URL for Nominatim API reverse geocoding endpoint
+    url = "https://nominatim.openstreetmap.org/reverse"
+
+    params = {
+        "lat": lat,
+        "lon": lon,
+        "format": "geojson",
+        "extratags": 1,
+        "namedetails": 1,
+        "zoom": 18
+    }
+    headers = {
+        "User-Agent": "climsight",
+        "accept-language": "en"
+    }
+    response = requests.get(url, params=params, headers=headers)
+    location = response.json()
+
+    # Wait before making the next request (according to terms of use)
+    time.sleep(1)  # Sleep for 1 second
+
+    if response.status_code == 200:
+        location = response.json()        
+        return location
+    else:
+        print("Error:", response.status_code, response.reason)
+        return None
 
 
 @st.cache_data
 def get_adress_string(location):
     """
-    Returns a tuple containing two strings:
+    Returns a tuple containing three strings:
     1. A string representation of the location address with all the key-value pairs in the location dictionary.
     2. A string representation of the location address with only the country, state, city and road keys in the location dictionary.
     3. Returning the country within in which the location has been clicked by user as a string.
@@ -134,19 +159,29 @@ def get_adress_string(location):
     Returns:
     tuple: A tuple containing three strings.
     """
-    location_str = "Adress: "
-    for key in location:
-        location_str = location_str + f"{key}:{location[key]}, "
+    address = location['features'][0]['properties']['address']
+
+    location_str = "Address: "
+    for key, value in address.items():
+        location_str += f"{key}: {value}, "
+
+    location_str = location_str.rstrip(', ') # remove the trailing comma and space
+
     location_str_for_print = "**Address:** "
-    if "country" in location:
-        location_str_for_print += f"{location['country']}, "
-    if "state" in location:
-        location_str_for_print += f"{location['state']}, "
-    if "city" in location:
-        location_str_for_print += f"{location['city']}, "
-    if "road" in location:
-        location_str_for_print += f"{location['road']}"
-    country = location.get("country","")
+    if "country" in address:
+        location_str_for_print += f"{address['country']}, "
+    if "state" in address:
+        location_str_for_print += f"{address['state']}, "
+    if "city" in address:
+        location_str_for_print += f"{address['city']}, "
+    if "road" in address:
+        location_str_for_print += f"{address['road']} "
+    if "house_number" in address:
+        location_str_for_print += f"{address['house_number']}"
+
+    location_str_for_print = location_str_for_print.rstrip(', ')
+    country = address.get("country", "")
+
     return location_str, location_str_for_print, country
 
 
