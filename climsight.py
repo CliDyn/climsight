@@ -30,7 +30,7 @@ model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
 
 data_path = "./data/"
-coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
+coastline_shapefile = "./data/natural_earth/coastlines/ne_10m_coastline.shp"
 # load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
 haz_path = './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 # load population data from UN World Population Prospects 2022
