@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import datetime
 import time
+from shapely.geometry import Point, Polygon, LineString
 
 model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
@@ -103,6 +104,67 @@ class StreamHandler(BaseCallbackHandler):
         else:
             raise ValueError(f"Invalid display_method: {self.display_method}")
 
+@st.cache_data
+def where_is_point(lat, lon):
+    """
+    Checks if a given point (latitude and longitude) is on land or water, and identifies the water body's name if applicable.
+
+
+    Args:
+    lat (float): Latitude of the point.
+    lon (float): Longitude of the point.
+    land_shapefile_path (str): Path to the land shapefile.
+
+    Returns:
+    Tuple: Indicates if the point is on land, in a lake, near a river, and the name of the lake or river if applicable.
+    """
+
+    point = Point(lon, lat)
+
+    land_shp = gpd.read_file('./data/natural_earth/land/ne_10m_land.shp')
+    is_on_land = land_shp.contains(point).any()
+    print(f"Is the point on land? {'Yes.' if is_on_land else 'No.'}")
+    if not is_on_land: # If point is not on land, no need to check for lakes or rivers
+        return is_on_land, False, None, False, None
+
+    water_shp_files = [
+    './data/natural_earth/rivers/ne_10m_rivers_lake_centerlines.shp',
+    './data/natural_earth/lakes/ne_10m_lakes.shp',
+    './data/natural_earth/lakes/ne_10m_lakes_australia.shp',
+    './data/natural_earth/lakes/ne_10m_lakes_europe.shp',
+    './data/natural_earth/lakes/ne_10m_lakes_north_america.shp'
+    ]
+    water_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(shp) for shp in water_shp_files], ignore_index=True))
+
+    # Initialize flags to check if the point is in water
+    in_lake = False
+    near_river = False
+    lake_name = None 
+    river_name = None
+
+    for index, feature in water_shp.iterrows():
+        geometry = feature.geometry
+
+        if isinstance(geometry, Polygon) and geometry.contains(point):
+            in_lake = True
+            if 'name' in feature and pd.notnull(feature['name']):
+                lake_name = feature.get('name')
+            else:
+                lake_name = None #"Water body name not known"
+            break  # Stop the loop if the point is in a lake
+
+        # create a buffer (in degree) awater_body_nameround the river (line) and check if the point is within it
+        elif isinstance(geometry, LineString) and geometry.buffer(0.005).contains(point):
+            near_river = True
+            if 'name' in feature and pd.notnull(feature['name']):
+                river_name = feature.get('name')
+            else:
+                river_name = None #"Water body name not known"
+
+    print(f"Is the point in a lake? {'Yes.' if in_lake else 'No.'} {'Name: ' + lake_name if lake_name else ''}")
+    print(f"Is the point near a river? {'Yes.' if near_river else 'No.'} {'Name: ' + river_name if river_name else ''}")
+
+    return is_on_land, in_lake, lake_name, near_river, river_name
 
 @st.cache_data
 def get_location(lat, lon):
@@ -516,7 +578,7 @@ def get_population(pop_path, country):
         red_pop_data = country_data[['Time', 'TPopulation1July', 'PopDensity', 'PopGrowthRate', 'LEx', 'NetMigrations']]
         return red_pop_data
     else:
-        print("No population data available for " + country + ".")
+        print(f"No population data available {'for' +  country if country else ''}.")
         return None
     
 def plot_population(pop_path, country):
@@ -708,10 +770,24 @@ if submit_button and user_message:
         st.stop()
 
     with st.spinner("Getting info on a point..."):
-        location = get_location(lat, lon)
-        location_str, location_str_for_print, country = get_adress_string(location)
+
         st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
-        st.markdown(location_str_for_print)
+
+        is_on_land, in_lake, lake_name, near_river, river_name = where_is_point(lat, lon)
+        if is_on_land:
+            location = get_location(lat, lon)
+            location_str, location_str_for_print, country = get_adress_string(location)
+            if not in_lake or not near_river:
+                st.markdown(location_str_for_print)
+            if in_lake:
+                st.warning(f"You have clicked on {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")
+            if near_river:
+                st.warning(f"You have clicked on a place that might be in {'the river ' + river_name if river_name else 'a river'}. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")              
+        else:
+            st.warning("You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")
+            country = None
+            location_str = None
+            
         try:
             elevation = get_elevation_from_api(lat, lon)
         except:
