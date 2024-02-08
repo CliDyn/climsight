@@ -132,10 +132,15 @@ def where_is_point(lat, lon):
     './data/natural_earth/lakes/ne_10m_lakes.shp',
     './data/natural_earth/lakes/ne_10m_lakes_australia.shp',
     './data/natural_earth/lakes/ne_10m_lakes_europe.shp',
-    './data/natural_earth/lakes/ne_10m_lakes_north_america.shp'
+    './data/natural_earth/lakes/ne_10m_lakes_north_america.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_lake_centerlines.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_australia.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_europe.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_north_america.shp',
     ]
     water_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(shp) for shp in water_shp_files], ignore_index=True))
 
+    
     # Initialize flags to check if the point is in water
     in_lake = False
     near_river = False
