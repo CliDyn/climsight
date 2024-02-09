@@ -28,7 +28,7 @@ model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
 
 data_path = "./data/"
-coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
+coastline_shapefile = "./data/natural_earth/coastlines/ne_10m_coastline.shp"
 # load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
 haz_path = './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 # load population data from UN World Population Prospects 2022
@@ -653,7 +653,8 @@ with st.form(key='my_form'):
     col1, col2 = st.columns(2)
     lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
     lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
-
+    show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
+                               that were taken into account for the analysis as well as some plots.""")
     # Include the API key input within the form only if it's not found in the environment
     if not api_key:
         api_key_input = st.text_input(
@@ -673,15 +674,14 @@ if submit_button and user_message:
         st.stop()
 
     with st.spinner("Getting info on a point..."):
+        # CALCULATIONS / RUNNING FUNCTIONS
         location = get_location(lat, lon)
         location_str, location_str_for_print, country = get_adress_string(location)
-        st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
-        st.markdown(location_str_for_print)
+
         try:
             elevation = get_elevation_from_api(lat, lon)
         except:
             elevation = "Not known"
-        st.markdown(f"**Elevation:** {elevation} m")
 
         try:
             land_use_data = fetch_land_use(lon, lat)
@@ -691,54 +691,25 @@ if submit_button and user_message:
             current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
         except:
             current_land_use = "Not known"
-        st.markdown(f"**Current land use:** {current_land_use}")
 
         try:
             soil = get_soil_from_api(lat, lon)
         except:
             soil = "Not known"
-        st.markdown(f"**Soil type:** {soil}")
 
         biodiv = fetch_biodiversity(round(lat), round(lon))
-        st.markdown(f"**Occuring species:** {biodiv}")
 
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
-        st.markdown(f"**Distance to the shore:** {round(distance_to_coastline, 2)} m")
 
         # create pandas dataframe
         df, data_dict = extract_climate_data(lat, lon, hist, future)
-        # Plot the chart
-        st.text(
-            "Near surface temperature [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present day Temperature", "Future Temperature"],
-            color=["#d62728", "#2ca02c"],
-        )
-        st.text(
-            "Precipitation [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present day Precipitation", "Future Precipitation"],
-            color=["#d62728", "#2ca02c"],
-        )
-        st.text(
-            "Wind speed [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present day Wind speed", "Future Wind speed"],
-            color=["#d62728", "#2ca02c"],
-        )
-
+  
         filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
 
         population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
+
+        haz_fig = plot_disaster_counts(filtered_events_square)
+        population_plot = plot_population(pop_path, country)
 
     policy = ""
     with st.spinner("Generating..."):
@@ -786,38 +757,74 @@ if submit_button and user_message:
             verbose=True,
         )
 
-# Adding additional information after AI report
-    haz_fig = plot_disaster_counts(filtered_events_square)
-    population_plot = plot_population(pop_path, country)
-
-    if haz_fig is not None or population_plot is not None:
+    # PLOTTING ADDITIONAL INFORMATION
+    if show_add_info: 
         st.subheader("Additional information", divider='rainbow')
-
-    # Natural Hazards
-    if haz_fig is not None:
-        st.markdown("**Natural hazards:**")
-        st.pyplot(haz_fig)
+        st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
+        st.markdown(location_str_for_print) 
+        st.markdown(f"**Elevation:** {elevation} m")
+        st.markdown(f"**Current land use:** {current_land_use}")
+        st.markdown(f"**Soil type:** {soil}")
+        st.markdown(f"**Occuring species:** {biodiv}")
+        st.markdown(f"**Distance to the shore:** {round(distance_to_coastline, 2)} m")
+        
+        # Climate Data
+        st.markdown("**Climate data:**")
+        st.markdown(
+            "Near surface temperature",
+        )
+        st.line_chart(
+            df,
+            x="Month",
+            y=["Present day Temperature", "Future Temperature"],
+            color=["#d62728", "#2ca02c"],
+        )
+        st.markdown(
+            "Precipitation",
+        )
+        st.line_chart(
+            df,
+            x="Month",
+            y=["Present day Precipitation", "Future Precipitation"],
+            color=["#d62728", "#2ca02c"],
+        )
+        st.markdown(
+            "Wind speed",
+        )
+        st.line_chart(
+            df,
+            x="Month",
+            y=["Present day Wind speed", "Future Wind speed"],
+            color=["#d62728", "#2ca02c"],
+        )
         with st.expander("Source"):
-            st.markdown('''
-                *The GDIS data descriptor*  
-                Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
-                61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
-                *The GDIS dataset*  
-                Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
-                Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
-                Accessed DAY MONTH YEAR.  
-                *The EM-DAT dataset*  
-                Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
-                disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
-            ''')
+            st.markdown('AWI-CM-1-1-MR, historical, and SSP5-8.5')
 
-    # Population Data
-    if population_plot is not None:
-        st.markdown("**Population Data:**")
-        st.pyplot(population_plot)
-        with st.expander("Source"):
-            st.markdown('''
-            United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
-            Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
-            ''')
-    
+        # Natural Hazards
+        if haz_fig is not None:
+            st.markdown("**Natural hazards:**")
+            st.pyplot(haz_fig)
+            with st.expander("Source"):
+                st.markdown('''
+                    *The GDIS data descriptor*  
+                    Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                    61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                    *The GDIS dataset*  
+                    Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                    Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                    Accessed DAY MONTH YEAR.  
+                    *The EM-DAT dataset*  
+                    Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                    disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+                ''')
+
+        # Population Data
+        if population_plot is not None:
+            st.markdown("**Population Data:**")
+            st.pyplot(population_plot)
+            with st.expander("Source"):
+                st.markdown('''
+                United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
+                Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
+                ''')
+        
