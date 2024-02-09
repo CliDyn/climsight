@@ -51,8 +51,14 @@ system_role = """
 You are the system that should help people to evaluate the impact of climate change
 on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
 parking lot, open a shop, buy crop land). You are working with data on a local level,
-and decisions also should be given for particular locations. You will be given information 
-about the location as well as changes in environmental variables for particular location, and how they will 
+and decisions also should be given for particular locations. There is one variable being passed to
+you about possible water bodies. If this tells you that the point the user has clicked is either
+in the ocean, a lake or near a river, please use this information over the address, which is 
+possibly wrong. Also take this into account for your further analysis that you might be dealing with
+water instead of land where you clearly can't build an office, cultivate crops or anything similar.
+Please use, in the case that a water body has been clicked, the surrounding of it as the basis for 
+your following analysis and let the user know that you did so and why. Do NOT use the wording "is on land". 
+Moreover, you will be given information about the location as well as changes in environmental variables for particular location, and how they will 
 change in a changing climate. Your task is to provide assessment of potential risks 
 and/or benefits for the planned activity related to change in climate. Use information 
 about the country to retrieve information about policies and regulations in the 
@@ -67,6 +73,7 @@ your response as MARKDOWN, don't use Heading levels 1 and 2.
 content_message = "{user_message} \n \
       Location: latitude = {lat}, longitude = {lon} \
       Adress: {location_str} \
+      Where is this point?: {water_body_status} \
       Policy: {policy} \
       Additional location information: {add_properties} \
       Distance to the closest coastline: {distance_to_coastline} \
@@ -126,7 +133,8 @@ def where_is_point(lat, lon):
     is_on_land = land_shp.contains(point).any()
     print(f"Is the point on land? {'Yes.' if is_on_land else 'No.'}")
     if not is_on_land: # If point is not on land, no need to check for lakes or rivers
-        return is_on_land, False, None, False, None
+        water_body_status = "The selected point is in the ocean."
+        return is_on_land, False, None, False, None, water_body_status
 
     water_shp_files = [
     './data/natural_earth/rivers/ne_10m_rivers_lake_centerlines.shp',
@@ -156,21 +164,32 @@ def where_is_point(lat, lon):
             if 'name' in feature and pd.notnull(feature['name']):
                 lake_name = feature.get('name')
             else:
-                lake_name = None #"Water body name not known"
+                lake_name = None 
             break  # Stop the loop if the point is in a lake
 
-        # create a buffer (in degree) awater_body_nameround the river (line) and check if the point is within it
+        # create a buffer (in degree) around the river (line) and check if the point is within it
         elif isinstance(geometry, LineString) and geometry.buffer(0.005).contains(point):
             near_river = True
             if 'name' in feature and pd.notnull(feature['name']):
                 river_name = feature.get('name')
             else:
-                river_name = None #"Water body name not known"
+                river_name = None 
 
     print(f"Is the point in a lake? {'Yes.' if in_lake else 'No.'} {'Name: ' + lake_name if lake_name else ''}")
     print(f"Is the point near a river? {'Yes.' if near_river else 'No.'} {'Name: ' + river_name if river_name else ''}")
 
-    return is_on_land, in_lake, lake_name, near_river, river_name
+    water_body_status = ""  # Initialize an empty string to store the status
+
+    if is_on_land:
+        water_body_status = "The selected point is on land"
+        if in_lake:
+            water_body_status = water_body_status + f" and in {'lake ' + lake_name if lake_name else 'a lake'}."
+        elif near_river:
+            water_body_status = water_body_status + f" and is near {'river ' + river_name if river_name else 'a river'}."
+        else:
+            water_body_status = water_body_status + "."
+
+    return is_on_land, in_lake, lake_name, near_river, river_name, water_body_status
 
 @st.cache_data
 def get_location(lat, lon):
@@ -260,7 +279,7 @@ def get_location_details(location):
     2. category (e.g. amenity, leisure, man_made, railway)
     3. type (e.g. outdoor_seating, hunting_stand, groyne, platform, nature_reserve)
     4. extratags (any additional information that is available, e.g. wikipeida links or opening hours)
-    5. namedetails (full list of names, may include language variants, older names, references and brands)
+    # 5. namedetails (full list of names, may include language variants, older names, references and brands) - currently excluded
 
     Parameters:
     location (dict): A dictionary containing the location address information.
@@ -269,7 +288,7 @@ def get_location_details(location):
     extracted_properties: A dictionary containing five elements.
     """
     properties = location['features'][0]['properties']
-    extracted_properties = {key: properties[key] for key in ['osm_type', 'category', 'type', 'extratags', 'namedetails']}
+    extracted_properties = {key: properties[key] for key in ['osm_type', 'category', 'type', 'extratags']} #, 'namedetails']}
 
     return extracted_properties
 
@@ -799,10 +818,11 @@ if submit_button and user_message:
 
         st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
 
-        is_on_land, in_lake, lake_name, near_river, river_name = where_is_point(lat, lon)
+        is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = where_is_point(lat, lon)
         if is_on_land:
             location = get_location(lat, lon)
             location_str, location_str_for_print, country = get_adress_string(location)
+            add_properties = get_location_details(location)
             if not in_lake or not near_river:
                 st.markdown(location_str_for_print)
             if in_lake:
@@ -813,8 +833,7 @@ if submit_button and user_message:
             st.warning("You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")
             country = None
             location_str = None
-
-        add_properties = get_location_details(location)
+            add_properties = None
    
         try:
             elevation = get_elevation_from_api(lat, lon)
@@ -906,7 +925,8 @@ if submit_button and user_message:
             lat=str(lat),
             lon=str(lon),
             location_str=location_str,
-            add_properties = add_properties,
+            water_body_status=water_body_status,
+            add_properties=add_properties,
             policy=policy,
             distance_to_coastline=str(distance_to_coastline),
             elevation=str(elevation),
