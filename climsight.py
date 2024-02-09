@@ -52,7 +52,7 @@ You are the system that should help people to evaluate the impact of climate cha
 on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
 parking lot, open a shop, buy crop land). You are working with data on a local level,
 and decisions also should be given for particular locations. You will be given information 
-about changes in environmental variables for particular location, and how they will 
+about the location as well as changes in environmental variables for particular location, and how they will 
 change in a changing climate. Your task is to provide assessment of potential risks 
 and/or benefits for the planned activity related to change in climate. Use information 
 about the country to retrieve information about policies and regulations in the 
@@ -68,6 +68,7 @@ content_message = "{user_message} \n \
       Location: latitude = {lat}, longitude = {lon} \
       Adress: {location_str} \
       Policy: {policy} \
+      Additional location information: {add_properties} \
       Distance to the closest coastline: {distance_to_coastline} \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
@@ -251,6 +252,26 @@ def get_adress_string(location):
 
     return location_str, location_str_for_print, country
 
+@st.cache_data
+def get_location_details(location):
+    """"
+    Returns a dictionary containing:
+    1. osm_type (e.g. way, node, relation)
+    2. category (e.g. amenity, leisure, man_made, railway)
+    3. type (e.g. outdoor_seating, hunting_stand, groyne, platform, nature_reserve)
+    4. extratags (any additional information that is available, e.g. wikipeida links or opening hours)
+    5. namedetails (full list of names, may include language variants, older names, references and brands)
+
+    Parameters:
+    location (dict): A dictionary containing the location address information.
+
+    Returns:
+    extracted_properties: A dictionary containing five elements.
+    """
+    properties = location['features'][0]['properties']
+    extracted_properties = {key: properties[key] for key in ['osm_type', 'category', 'type', 'extratags', 'namedetails']}
+
+    return extracted_properties
 
 @st.cache_data
 def closest_shore_distance(lat: float, lon: float, coastline_shapefile: str) -> float:
@@ -792,7 +813,9 @@ if submit_button and user_message:
             st.warning("You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")
             country = None
             location_str = None
-            
+
+        add_properties = get_location_details(location)
+   
         try:
             elevation = get_elevation_from_api(lat, lon)
         except:
@@ -883,6 +906,7 @@ if submit_button and user_message:
             lat=str(lat),
             lon=str(lon),
             location_str=location_str,
+            add_properties = add_properties,
             policy=policy,
             distance_to_coastline=str(distance_to_coastline),
             elevation=str(elevation),
