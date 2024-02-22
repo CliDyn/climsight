@@ -23,44 +23,26 @@ from requests.exceptions import Timeout
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import datetime
+import yaml
 
-model_name = "gpt-3.5-turbo"
-# model_name = "gpt-4-1106-preview"
+with open('config.yml', 'r') as file:
+    config = yaml.safe_load(file)
 
-data_path = "./data/"
-coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
-# load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
-haz_path = './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
-# load population data from UN World Population Prospects 2022
-pop_path = './data/population/WPP2022_Demographic_Indicators_Medium.csv'
+model_name = config['model_name']
+data_path = config['data_path']
+coastline_shapefile = config['coastline_shapefile']
+haz_path = config['haz_path']
+pop_path = config['pop_path']
+distance_from_event = config['distance_from_event']
+lat_default = config['lat_default']
+lon_default = config['lon_default']
+year_step = config['year_step']
+start_year = config['start_year']
+end_year = config['end_year']
+system_role = config['system_role']
+
 clicked_coords = None
-
-distance_from_event = 5.0 # frame within which natural hazard events shall be considered [in km]
-
-lat_default = 52.5240 # initial default latitude
-lon_default = 13.3700 # initial default longitde
 api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
-
-year_step = 10 # indicates over how many years the population data is being averaged
-start_year = 1980 # time period that one is interested in (min: 1950, max: 2100)
-end_year = None # same for end year (min: 1950, max: 2100)
-
-system_role = """
-You are the system that should help people to evaluate the impact of climate change
-on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
-parking lot, open a shop, buy crop land). You are working with data on a local level,
-and decisions also should be given for particular locations. You will be given information 
-about changes in environmental variables for particular location, and how they will 
-change in a changing climate. Your task is to provide assessment of potential risks 
-and/or benefits for the planned activity related to change in climate. Use information 
-about the country to retrieve information about policies and regulations in the 
-area related to climate change, environmental use and activity requested by the user.
-You don't have to use all variables provided to you, if the effect is insignificant,
-don't use variable in analysis. DON'T just list information about variables, don't 
-just repeat what is given to you as input. I don't want to get the code, 
-I want to receive a narrative, with your assessments and advice. Format 
-your response as MARKDOWN, don't use Heading levels 1 and 2.
-"""
 
 content_message = "{user_message} \n \
       Location: latitude = {lat}, longitude = {lon} \
@@ -714,7 +696,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Temperature", "Future Temperature"],
+            y=["Present Day Temperature", "Future Temperature"],
             color=["#d62728", "#2ca02c"],
         )
         st.text(
@@ -723,7 +705,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Precipitation", "Future Precipitation"],
+            y=["Present Day Precipitation", "Future Precipitation"],
             color=["#d62728", "#2ca02c"],
         )
         st.text(
@@ -732,7 +714,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Wind speed", "Future Wind speed"],
+            y=["Present Day Wind Speed", "Future Wind Speed"],
             color=["#d62728", "#2ca02c"],
         )
 
