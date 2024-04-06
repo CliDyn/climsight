@@ -23,12 +23,14 @@ from requests.exceptions import Timeout
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import datetime
+import time
+from shapely.geometry import Point, Polygon, LineString
 
 model_name = "gpt-3.5-turbo"
 # model_name = "gpt-4-1106-preview"
 
 data_path = "./data/"
-coastline_shapefile = "./data/natural_earth/coastlines/ne_50m_coastline.shp"
+coastline_shapefile = "./data/natural_earth/coastlines/ne_10m_coastline.shp"
 # load natural hazard data from Socioeconomic Data and Applications Center (sedac), based on EM-DAT 
 haz_path = './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 # load population data from UN World Population Prospects 2022
@@ -49,8 +51,14 @@ system_role = """
 You are the system that should help people to evaluate the impact of climate change
 on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
 parking lot, open a shop, buy crop land). You are working with data on a local level,
-and decisions also should be given for particular locations. You will be given information 
-about changes in environmental variables for particular location, and how they will 
+and decisions also should be given for particular locations. There is one variable being passed to
+you about possible water bodies. If this tells you that the point the user has clicked is either
+in the ocean, a lake or near a river, please use this information over the address, which is 
+possibly wrong. Also take this into account for your further analysis that you might be dealing with
+water instead of land where you clearly can't build an office, cultivate crops or anything similar.
+Please use, in the case that a water body has been clicked, the surrounding of it as the basis for 
+your following analysis and let the user know that you did so and why. Do NOT use the wording "is on land". 
+Moreover, you will be given information about the location as well as changes in environmental variables for particular location, and how they will 
 change in a changing climate. Your task is to provide assessment of potential risks 
 and/or benefits for the planned activity related to change in climate. Use information 
 about the country to retrieve information about policies and regulations in the 
@@ -65,7 +73,9 @@ your response as MARKDOWN, don't use Heading levels 1 and 2.
 content_message = "{user_message} \n \
       Location: latitude = {lat}, longitude = {lon} \
       Adress: {location_str} \
+      Where is this point?: {water_body_status} \
       Policy: {policy} \
+      Additional location information: {add_properties} \
       Distance to the closest coastline: {distance_to_coastline} \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
@@ -102,6 +112,84 @@ class StreamHandler(BaseCallbackHandler):
         else:
             raise ValueError(f"Invalid display_method: {self.display_method}")
 
+@st.cache_data
+def where_is_point(lat, lon):
+    """
+    Checks if a given point (latitude and longitude) is on land or water, and identifies the water body's name if applicable.
+
+
+    Args:
+    lat (float): Latitude of the point.
+    lon (float): Longitude of the point.
+    land_shapefile_path (str): Path to the land shapefile.
+
+    Returns:
+    Tuple: Indicates if the point is on land, in a lake, near a river, and the name of the lake or river if applicable.
+    """
+
+    point = Point(lon, lat)
+
+    land_shp = gpd.read_file('./data/natural_earth/land/ne_10m_land.shp')
+    is_on_land = land_shp.contains(point).any()
+    print(f"Is the point on land? {'Yes.' if is_on_land else 'No.'}")
+    if not is_on_land: # If point is not on land, no need to check for lakes or rivers
+        water_body_status = "The selected point is in the ocean."
+        return is_on_land, False, None, False, None, water_body_status
+
+    water_shp_files = [
+    './data/natural_earth/rivers/ne_10m_rivers_lake_centerlines.shp',
+    './data/natural_earth/lakes/ne_10m_lakes.shp',
+    './data/natural_earth/lakes/ne_10m_lakes_australia.shp',
+    './data/natural_earth/lakes/ne_10m_lakes_europe.shp',
+    './data/natural_earth/lakes/ne_10m_lakes_north_america.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_lake_centerlines.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_australia.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_europe.shp',
+    './data/natural_earth/rivers/ne_10m_rivers_north_america.shp',
+    ]
+    water_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(shp) for shp in water_shp_files], ignore_index=True))
+
+    
+    # Initialize flags to check if the point is in water
+    in_lake = False
+    near_river = False
+    lake_name = None 
+    river_name = None
+
+    for index, feature in water_shp.iterrows():
+        geometry = feature.geometry
+
+        if isinstance(geometry, Polygon) and geometry.contains(point):
+            in_lake = True
+            if 'name' in feature and pd.notnull(feature['name']):
+                lake_name = feature.get('name')
+            else:
+                lake_name = None 
+            break  # Stop the loop if the point is in a lake
+
+        # create a buffer (in degree) around the river (line) and check if the point is within it
+        elif isinstance(geometry, LineString) and geometry.buffer(0.005).contains(point):
+            near_river = True
+            if 'name' in feature and pd.notnull(feature['name']):
+                river_name = feature.get('name')
+            else:
+                river_name = None 
+
+    print(f"Is the point in a lake? {'Yes.' if in_lake else 'No.'} {'Name: ' + lake_name if lake_name else ''}")
+    print(f"Is the point near a river? {'Yes.' if near_river else 'No.'} {'Name: ' + river_name if river_name else ''}")
+
+    water_body_status = ""  # Initialize an empty string to store the status
+
+    if is_on_land:
+        water_body_status = "The selected point is on land"
+        if in_lake:
+            water_body_status = water_body_status + f" and in {'lake ' + lake_name if lake_name else 'a lake'}."
+        elif near_river:
+            water_body_status = water_body_status + f" and is near {'river ' + river_name if river_name else 'a river'}."
+        else:
+            water_body_status = water_body_status + "."
+
+    return is_on_land, in_lake, lake_name, near_river, river_name, water_body_status
 
 @st.cache_data
 def get_location(lat, lon):
@@ -113,17 +201,41 @@ def get_location(lat, lon):
     lon (float): The longitude of the location.
 
     Returns:
-    dict: A dictionary containing the address information of the location.
+    dict: A dictionary containing information about the location.
     """
-    geolocator = Nominatim(user_agent="climsight")
-    location = geolocator.reverse((lat, lon), language="en")
-    return location.raw["address"]
+    # URL for Nominatim API reverse geocoding endpoint
+    url = "https://nominatim.openstreetmap.org/reverse"
+
+    params = {
+        "lat": lat,
+        "lon": lon,
+        "format": "geojson",
+        "extratags": 1,
+        "namedetails": 1,
+        "zoom": 18
+    }
+    headers = {
+        "User-Agent": "climsight",
+        "accept-language": "en"
+    }
+    response = requests.get(url, params=params, headers=headers, timeout=3)
+    location = response.json()
+
+    # Wait before making the next request (according to terms of use)
+    # time.sleep(1)  # Sleep for 1 second
+
+    if response.status_code == 200:
+        location = response.json()        
+        return location
+    else:
+        print("Error:", response.status_code, response.reason)
+        return None
 
 
 @st.cache_data
 def get_adress_string(location):
     """
-    Returns a tuple containing two strings:
+    Returns a tuple containing three strings:
     1. A string representation of the location address with all the key-value pairs in the location dictionary.
     2. A string representation of the location address with only the country, state, city and road keys in the location dictionary.
     3. Returning the country within in which the location has been clicked by user as a string.
@@ -134,21 +246,51 @@ def get_adress_string(location):
     Returns:
     tuple: A tuple containing three strings.
     """
-    location_str = "Adress: "
-    for key in location:
-        location_str = location_str + f"{key}:{location[key]}, "
+    address = location['features'][0]['properties']['address']
+
+    location_str = "Address: "
+    for key, value in address.items():
+        location_str += f"{key}: {value}, "
+
+    location_str = location_str.rstrip(', ') # remove the trailing comma and space
+
     location_str_for_print = "**Address:** "
-    if "country" in location:
-        location_str_for_print += f"{location['country']}, "
-    if "state" in location:
-        location_str_for_print += f"{location['state']}, "
-    if "city" in location:
-        location_str_for_print += f"{location['city']}, "
-    if "road" in location:
-        location_str_for_print += f"{location['road']}"
-    country = location.get("country","")
+    if "country" in address:
+        location_str_for_print += f"{address['country']}, "
+    if "state" in address:
+        location_str_for_print += f"{address['state']}, "
+    if "city" in address:
+        location_str_for_print += f"{address['city']}, "
+    if "road" in address:
+        location_str_for_print += f"{address['road']} "
+    if "house_number" in address:
+        location_str_for_print += f"{address['house_number']}"
+
+    location_str_for_print = location_str_for_print.rstrip(', ')
+    country = address.get("country", "")
+
     return location_str, location_str_for_print, country
 
+@st.cache_data
+def get_location_details(location):
+    """"
+    Returns a dictionary containing:
+    1. osm_type (e.g. way, node, relation)
+    2. category (e.g. amenity, leisure, man_made, railway)
+    3. type (e.g. outdoor_seating, hunting_stand, groyne, platform, nature_reserve)
+    4. extratags (any additional information that is available, e.g. wikipeida links or opening hours)
+    # 5. namedetails (full list of names, may include language variants, older names, references and brands) - currently excluded
+
+    Parameters:
+    location (dict): A dictionary containing the location address information.
+
+    Returns:
+    extracted_properties: A dictionary containing five elements.
+    """
+    properties = location['features'][0]['properties']
+    extracted_properties = {key: properties[key] for key in ['osm_type', 'category', 'type', 'extratags']} #, 'namedetails']}
+
+    return extracted_properties
 
 @st.cache_data
 def closest_shore_distance(lat: float, lon: float, coastline_shapefile: str) -> float:
@@ -198,7 +340,7 @@ def get_elevation_from_api(lat, lon):
     float: The elevation of the location in meters.
     """
     url = f"https://api.opentopodata.org/v1/etopo1?locations={lat},{lon}"
-    response = requests.get(url)
+    response = requests.get(url, timeout=3)
     data = response.json()
     return data["results"][0]["elevation"]
 
@@ -222,7 +364,7 @@ def fetch_land_use(lon, lat):
     area.a["landuse"];
     out tags;
     """
-    response = requests.get(overpass_url, params={"data": overpass_query})
+    response = requests.get(overpass_url, params={"data": overpass_query}, timeout=3)
     data = response.json()
     return data
 
@@ -241,7 +383,7 @@ def get_soil_from_api(lat, lon):
     """
     try:
         url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
-        response = requests.get(url, timeout=2)  # Set timeout to 2 seconds
+        response = requests.get(url, timeout=3)  # Set timeout to 2 seconds
         data = response.json()
         return data["wrb_class_name"]
     except Timeout:
@@ -265,7 +407,7 @@ def fetch_biodiversity(lon, lat):
         "decimalLatitude": lat,
         "decimalLongitude": lon,
     }
-    response = requests.get(gbif_api_url, params=params)
+    response = requests.get(gbif_api_url, params=params, timeout=3)
     biodiv = response.json()
     biodiv_set = set()
     if biodiv['results']:
@@ -481,7 +623,7 @@ def get_population(pop_path, country):
         red_pop_data = country_data[['Time', 'TPopulation1July', 'PopDensity', 'PopGrowthRate', 'LEx', 'NetMigrations']]
         return red_pop_data
     else:
-        print("No population data available for " + country + ".")
+        print(f"No population data available {'for' +  country if country else ''}.")
         return None
     
 def plot_population(pop_path, country):
@@ -673,10 +815,26 @@ if submit_button and user_message:
         st.stop()
 
     with st.spinner("Getting info on a point..."):
-        location = get_location(lat, lon)
-        location_str, location_str_for_print, country = get_adress_string(location)
+
         st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
-        st.markdown(location_str_for_print)
+
+        is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = where_is_point(lat, lon)
+        if is_on_land:
+            location = get_location(lat, lon)
+            location_str, location_str_for_print, country = get_adress_string(location)
+            add_properties = get_location_details(location)
+            if not in_lake or not near_river:
+                st.markdown(location_str_for_print)
+            if in_lake:
+                st.warning(f"You have clicked on {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")
+            if near_river:
+                st.warning(f"You have clicked on a place that might be in {'the river ' + river_name if river_name else 'a river'}. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")              
+        else:
+            st.warning("You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result.", icon="⚠️")
+            country = None
+            location_str = None
+            add_properties = None
+   
         try:
             elevation = get_elevation_from_api(lat, lon)
         except:
@@ -767,6 +925,8 @@ if submit_button and user_message:
             lat=str(lat),
             lon=str(lon),
             location_str=location_str,
+            water_body_status=water_body_status,
+            add_properties=add_properties,
             policy=policy,
             distance_to_coastline=str(distance_to_coastline),
             elevation=str(elevation),
