@@ -945,7 +945,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Temperature", "Future Temperature"],
+            y=["Present Day Temperature", "Future Temperature"],
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
@@ -954,7 +954,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Precipitation", "Future Precipitation"],
+            y=["Present Day Precipitation", "Future Precipitation"],
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
@@ -963,7 +963,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present day Wind speed", "Future Wind speed"],
+            y=["Present Day Wind Speed", "Future Wind Speed"],
             color=["#d62728", "#2ca02c"],
         )
         with st.expander("Source"):
