@@ -12,7 +12,7 @@ dependencies:
     - requests
     - pandas
     - folium
-    - langchain=0.0.350
+    - langchain
     - streamlit-folium
     - netcdf4
     - dask

@@ -83,11 +83,11 @@ content_message = "{user_message} \n \
       Occuring species: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
-      Curent precipitation flux (mm/month): {hist_pr_str} \
+      Current precipitation flux (mm/month): {hist_pr_str} \
       Future precipitation flux (mm/month): {future_pr_str} \
-      Curent u wind component (in m/s): {hist_uas_str} \
+      Current u wind component (in m/s): {hist_uas_str} \
       Future u wind component (in m/s): {future_uas_str} \
-      Curent v wind component (in m/s): {hist_vas_str} \
+      Current v wind component (in m/s): {hist_vas_str} \
       Future v wind component (in m/s): {future_vas_str} \
       Natural hazards: {nat_hazards} \
       Population data: {population} \
@@ -491,12 +491,12 @@ def extract_climate_data(lat, lon, _hist, _future):
     )[1:-1]
     df = pd.DataFrame(
         {
-            "Present day Temperature": hist_temp[0, 0, :],
+            "Present Day Temperature": hist_temp[0, 0, :],
             "Future Temperature": future_temp[0, 0, :],
-            "Present day Precipitation": hist_pr[0, 0, :],
+            "Present Day Precipitation": hist_pr[0, 0, :],
             "Future Precipitation": future_pr[0, 0, :],
-            "Present day Wind speed": np.hypot(hist_uas[0, 0, :], hist_vas[0, 0, :]),
-            "Future Wind speed": np.hypot(future_uas[0, 0, :], future_vas[0, 0, :]),
+            "Present Day Wind Speed": np.hypot(hist_uas[0, 0, :], hist_vas[0, 0, :]),
+            "Future Wind Speed": np.hypot(future_uas[0, 0, :], future_vas[0, 0, :]),
             "Month": range(1, 13),
         }
     )
@@ -656,7 +656,7 @@ def plot_population(pop_path, country):
         ax2 = ax1.twinx()
         ax2.spines.right.set_position(('axes', 1.1))
         ax2.bar(reduced_pop_data['Time'], reduced_pop_data['LEx'], label='Life Expectancy', color='purple', alpha=0.1)
-        ax2.set_ylabel('Life Expectancy in years', color='purple', )
+        ax2.set_ylabel('Life expectancy in years', color='purple', )
         ax2.tick_params(axis='y', labelcolor='purple')
 
         # population growth data
@@ -669,7 +669,7 @@ def plot_population(pop_path, country):
         ax4 = ax1.twinx()
         ax4.spines.right.set_position(('axes', 1.2))
         ax4.plot(reduced_pop_data['Time'], reduced_pop_data['NetMigrations'], label='Net Migrations', color='black', linestyle='dotted')
-        ax4.set_ylabel('Net Migrations in thousands', color='black')
+        ax4.set_ylabel('Net migrations in thousands', color='black')
         ax4.tick_params(axis='y', labelcolor='black')
         ax4.axvline(x=current_year, color='orange', linestyle='--', label=current_year)
 
@@ -790,7 +790,7 @@ if map_data:
 # Wrap the input fields and the submit button in a form
 with st.form(key='my_form'):
     user_message = st.text_input(
-        "Describe activity you would like to evaluate for this location:"
+        "Describe the activity that you would like to evaluate for this location:"
     )
     col1, col2 = st.columns(2)
     lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
@@ -867,7 +867,7 @@ if submit_button and user_message:
         df, data_dict = extract_climate_data(lat, lon, hist, future)
         # Plot the chart
         st.text(
-            "Near surface temperature [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
+            "Near surface temperature [source: AWI-CM-1-1-MR, historical, and SSP5-8.5]",
         )
         st.line_chart(
             df,
@@ -876,7 +876,7 @@ if submit_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.text(
-            "Precipitation [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
+            "Precipitation [source: AWI-CM-1-1-MR, historical, and SSP5-8.5]",
         )
         st.line_chart(
             df,
@@ -885,7 +885,7 @@ if submit_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.text(
-            "Wind speed [souce: AWI-CM-1-1-MR, historical and SSP5-8.5]",
+            "Wind speed [source: AWI-CM-1-1-MR, historical, and SSP5-8.5]",
         )
         st.line_chart(
             df,
