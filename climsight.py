@@ -218,11 +218,11 @@ def get_location(lat, lon):
         "User-Agent": "climsight",
         "accept-language": "en"
     }
-    response = requests.get(url, params=params, headers=headers)
+    response = requests.get(url, params=params, headers=headers, timeout=3)
     location = response.json()
 
     # Wait before making the next request (according to terms of use)
-    time.sleep(1)  # Sleep for 1 second
+    # time.sleep(1)  # Sleep for 1 second
 
     if response.status_code == 200:
         location = response.json()        
@@ -340,7 +340,7 @@ def get_elevation_from_api(lat, lon):
     float: The elevation of the location in meters.
     """
     url = f"https://api.opentopodata.org/v1/etopo1?locations={lat},{lon}"
-    response = requests.get(url)
+    response = requests.get(url, timeout=3)
     data = response.json()
     return data["results"][0]["elevation"]
 
@@ -364,7 +364,7 @@ def fetch_land_use(lon, lat):
     area.a["landuse"];
     out tags;
     """
-    response = requests.get(overpass_url, params={"data": overpass_query})
+    response = requests.get(overpass_url, params={"data": overpass_query}, timeout=3)
     data = response.json()
     return data
 
@@ -383,7 +383,7 @@ def get_soil_from_api(lat, lon):
     """
     try:
         url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
-        response = requests.get(url, timeout=2)  # Set timeout to 2 seconds
+        response = requests.get(url, timeout=3)  # Set timeout to 2 seconds
         data = response.json()
         return data["wrb_class_name"]
     except Timeout:
@@ -407,7 +407,7 @@ def fetch_biodiversity(lon, lat):
         "decimalLatitude": lat,
         "decimalLongitude": lon,
     }
-    response = requests.get(gbif_api_url, params=params)
+    response = requests.get(gbif_api_url, params=params, timeout=3)
     biodiv = response.json()
     biodiv_set = set()
     if biodiv['results']:
