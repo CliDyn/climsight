@@ -26,6 +26,7 @@ import datetime
 import yaml
 import time
 from shapely.geometry import Point, Polygon, LineString
+import sys
 
 with open('config.yml', 'r') as file:
     config = yaml.safe_load(file)
@@ -45,6 +46,9 @@ system_role = config['system_role']
 
 clicked_coords = None
 api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
+
+# Check if 'skipLLMCall' argument is provided
+skip_llm_call = 'skipLLMCall' in sys.argv
 
 content_message = "{user_message} \n \
       Location: latitude = {lat}, longitude = {lon} \
@@ -899,32 +903,33 @@ if submit_button and user_message:
             output_key="review",
             verbose=True,
         )
-
-        output = chain.run(
-            user_message=user_message,
-            lat=str(lat),
-            lon=str(lon),
-            location_str=location_str,
-            water_body_status=water_body_status,
-            add_properties=add_properties,
-            policy=policy,
-            distance_to_coastline=str(distance_to_coastline),
-            elevation=str(elevation),
-            current_land_use=current_land_use,
-            soil=soil,
-            biodiv = biodiv,
-            hist_temp_str=data_dict["hist_temp"],
-            future_temp_str=data_dict["future_temp"],
-            hist_pr_str=data_dict["hist_pr"],
-            future_pr_str=data_dict["future_pr"],
-            hist_uas_str=data_dict["hist_uas"],
-            future_uas_str=data_dict["future_uas"],
-            hist_vas_str=data_dict["hist_vas"],
-            future_vas_str=data_dict["future_vas"],
-            nat_hazards = promt_hazard_data,
-            population = population,
-            verbose=True,
-        )
+        # Only proceed with the LLM call if 'skipLLMCall' is NOT provided
+        if not skip_llm_call:  
+            output = chain.run(
+                user_message=user_message,
+                lat=str(lat),
+                lon=str(lon),
+                location_str=location_str,
+                water_body_status=water_body_status,
+                add_properties=add_properties,
+                policy=policy,
+                distance_to_coastline=str(distance_to_coastline),
+                elevation=str(elevation),
+                current_land_use=current_land_use,
+                soil=soil,
+                biodiv = biodiv,
+                hist_temp_str=data_dict["hist_temp"],
+                future_temp_str=data_dict["future_temp"],
+                hist_pr_str=data_dict["hist_pr"],
+                future_pr_str=data_dict["future_pr"],
+                hist_uas_str=data_dict["hist_uas"],
+                future_uas_str=data_dict["future_uas"],
+                hist_vas_str=data_dict["hist_vas"],
+                future_vas_str=data_dict["future_vas"],
+                nat_hazards = promt_hazard_data,
+                population = population,
+                verbose=True,
+            )
 
     # PLOTTING ADDITIONAL INFORMATION
     if show_add_info: 
