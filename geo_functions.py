@@ -2,8 +2,7 @@
 Collection of functions for geographic data processing. 
 These functions handle tasks such as location lookup, 
 distance calculations, and geographic attributes 
-extraction, facilitating the analysis and understanding of
-spatial data.
+extraction.
 """
 import streamlit as st
 import requests
