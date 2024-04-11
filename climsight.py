@@ -216,35 +216,6 @@ if submit_button and user_message:
         # create pandas dataframe
         df, data_dict = extract_climate_data(lat, lon, hist, future)
 
-        # Plot the chart
-        st.text(
-            "Near surface temperature [source: AWI-CM-1-1-MR, historical, and SSP5-8.5]",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present Day Temperature", "Future Temperature"],
-            color=["#d62728", "#2ca02c"],
-        )
-        st.text(
-            "Precipitation [source: AWI-CM-1-1-MR, historical, and SSP5-8.5]",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present Day Precipitation", "Future Precipitation"],
-            color=["#d62728", "#2ca02c"],
-        )
-        st.text(
-            "Wind speed [source: AWI-CM-1-1-MR, historical, and SSP5-8.5]",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present Day Wind Speed", "Future Wind Speed"],
-            color=["#d62728", "#2ca02c"],
-        )
-
         filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
 
         population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
