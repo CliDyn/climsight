@@ -41,6 +41,11 @@ docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
 ```
 where `$OPENAI_API_KEY` not necessarily should be environment variable, you can insert the key directly.
 
+If you do not have an OpenAI key but want to test Climsight without sending requests to OpenAI, you can run Climsight with the `skipLLMCall` argument:
+```bash
+docker run -p 8501:8501 -e STREAMLIT_ARGS="skipLLMCall" climsight
+```
+
 ## Installation
 
 The easiest way is to install it through conda or mamba. We recommend mamba, as it's faster. 
