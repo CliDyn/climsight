@@ -12,8 +12,6 @@ ENV STREAMLIT_SERVER_PORT 8501
 
 # Expose port
 EXPOSE 8501
-# Run Streamlit app
-# CMD ["streamlit", "run", "src/climsight/climsight.py","$ARG"]
 
 # Set an environment variable for optional arguments, default is empty
 ENV STREAMLIT_ARGS=""
