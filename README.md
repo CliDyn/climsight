@@ -93,12 +93,18 @@ Change to the `climsight` folder:
 
 ```bash
 cd climsight
-streamlit run climsight.py
+streamlit run src/climsight/climsight.py
 ```
 
 The browser window should pop up, with the app running. Ask the questions and don't forget to press "Generate".
 
 <img width="800" alt="Screenshot 2023-09-26 at 15 26 51" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
+
+If you do not have an OpenAI key but want to test Climsight without sending requests to OpenAI, you can run Climsight with the `skipLLMCall` argument:
+```bash
+streamlit run src/climsight/climsight.py skipLLMCall
+```
+
 
 ## Citation
 
