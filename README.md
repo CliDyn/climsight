@@ -69,6 +69,12 @@ Activate the environment:
 ```bash
 conda activate climsight
 ```
+## Climsight package installation 
+```bash
+pip install climsight
+```
+
+For installation, use either pip alone for all packages and dependencies in a pure Python setup, or use mamba for dependencies followed by pip for Climsight in a Conda environment. Mixing package sources can lead to conflicts and is generally not recommended.
 
 ## Before you run
 
@@ -94,6 +100,11 @@ Change to the `climsight` folder:
 ```bash
 cd climsight
 streamlit run src/climsight/climsight.py
+```
+
+If you install climsight via pip, make sure to run it in the directory where the data folder has been downloaded:
+```bash
+climsight
 ```
 
 The browser window should pop up, with the app running. Ask the questions and don't forget to press "Generate".
