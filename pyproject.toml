@@ -1,6 +1,7 @@
 [project]
 name = "climsight"
-version = "0.0.1"
+version = "0.2.0"
+readme = "README.md"
 dependencies = [
     "streamlit",
     "xarray",
@@ -23,7 +24,6 @@ dependencies = [
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
-
 #[tool.setuptools.packages]
 #find = {}  # Scan the project directory with the default parameters
 
