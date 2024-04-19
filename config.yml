@@ -1,6 +1,18 @@
 model_name: "gpt-3.5-turbo"
 # model_name: "gpt-4-1106-preview"
-data_path: "./data/"
+data_settings:
+    data_path: "./data/"
+    historical: "historical"
+    projection: "ssp585"
+variable_mappings:
+    t2m: "tas"
+    precip: "pr"
+    u_wind: "uas" 
+    v_wind: "vas"
+dimension_mappings:
+    latitude: "lat"
+    longitude: "lon"
+    time: "month"
 coastline_shapefile: "./data/natural_earth/coastlines/ne_10m_coastline.shp"
 haz_path: './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 pop_path: './data/population/WPP2022_Demographic_Indicators_Medium.csv'

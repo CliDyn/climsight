@@ -6,6 +6,9 @@ import streamlit as st
 import xarray as xr
 import numpy as np
 import pandas as pd
+import glob
+import os
+import warnings
 
 #from climate_functions import (
 #    load_data,
@@ -13,102 +16,142 @@ import pandas as pd
 #)
 
 @st.cache_data
-def load_data(data_path):
+def load_data(config):
     """
-    load climate model data 
+    load climate model data from specified directory patterns
 
     Args:
-        data_path (str): path to the data with model runs (historical and projection)
+        config (dict): configuration dictionary containing data path and file name patterns
 
     Returns:
         xarray.core.dataset.Dataset, xarray.core.dataset.Dataset : data from historical (hindacst) runs and climate projection
-    """    
-    hist = xr.open_mfdataset(f"{data_path}/AWI_CM_mm_historical*.nc", compat="override")
-    future = xr.open_mfdataset(f"{data_path}/AWI_CM_mm_ssp585*.nc", compat="override")
-    return hist, future
+    """   
+    try:
+        data_path = config['data_settings']['data_path']
+        historical_pattern = config['data_settings']['historical']
+        projection_pattern = config['data_settings']['projection']
+
+        hist_files = glob.glob(os.path.join(data_path, f"*{historical_pattern}*.nc"))
+        future_files = glob.glob(os.path.join(data_path, f"*{projection_pattern}*.nc"))
+
+        if hist_files:
+            hist = xr.open_mfdataset(hist_files, combine='by_coords', compat='override')
+        else:
+            raise FileNotFoundError(f"No historical files found matching pattern {historical_pattern} in {data_path}")
+
+        if future_files:
+            future = xr.open_mfdataset(future_files, combine='by_coords', compat='override')
+        else:
+            raise FileNotFoundError(f"No projection files found matching pattern {projection_pattern} in {data_path}")
+
+        return hist, future
+    
+    except Exception as e:
+        st.error(f"Failed to load data: {str(e)}")
+        return None, None
 
 def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
     days_in_months = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
     return monthly_precip_kg_m2_s1 * 60 * 60 * 24 * days_in_months
 
-
-@st.cache_data
-def extract_climate_data(lat, lon, _hist, _future):
+def extract_climate_data(lat, lon, hist, future, config):
     """
     Extracts climate data for a given latitude and longitude from historical and future datasets.
-
+    This function then handles different climatic variables and specifically calculates wind speed from u and v wind components.
+    
     Args:
-    - lat (float): Latitude of the location to extract data for.
-    - lon (float): Longitude of the location to extract data for.
-    - hist (xarray.Dataset): Historical climate dataset.
-    - future (xarray.Dataset): Future climate dataset.
+        - lat (float): Latitude of the location to extract data for.
+        - lon (float): Longitude of the location to extract data for.
+        - hist (xarray.Dataset): Historical climate dataset.
+        - future (xarray.Dataset): Future climate dataset.
+        - config (dict): Configuration dictionary containing variable mappings and dimension settings.
 
     Returns:
-    - df (pandas.DataFrame): DataFrame containing present day and future temperature, precipitation, and wind speed data for each month of the year.
-    - data_dict (dict): Dictionary containing string representations of the extracted climate data.
+        - df (pandas.DataFrame): DataFrame containing present day and future data for temperature, precipitation, and wind speed for each month of the year, with 'Month' as a column.
+        - data_dict (dict): Dictionary containing string representations of the extracted climate data for all variables including historical and future datasets.
+    
+    In more detail:
+    The function processes each variable defined in the configuration, checks unit consistency, applies necessary transformations (e.g., temperature from Kelvin to Celsius, precipitation conversion), and calculates wind speed using the u and v wind components. Data for each variable, except wind components, is added directly to the DataFrame and a data dictionary. Wind speed is calculated from the wind components and added to the DataFrame.
     """
-    hist_temp = _hist.sel(lat=lat, lon=lon, method="nearest")["tas"].values - 273.15
-    hist_temp_str = np.array2string(hist_temp.ravel(), precision=3, max_line_width=100)[
-        1:-1
-    ]
+    variables = config['variable_mappings']
+    dimensions = config['dimension_mappings']
+    df = pd.DataFrame({'Month': range(1, 13)})
 
-    hist_pr = _hist.sel(lat=lat, lon=lon, method="nearest")["pr"].values
-    hist_pr = convert_to_mm_per_month(hist_pr)
+    data_dict = {}
+    # Initialize wind variables
+    hist_wind_u = hist_wind_v = future_wind_u = future_wind_v = None
 
-    hist_pr_str = np.array2string(hist_pr.ravel(), precision=3, max_line_width=100)[
-        1:-1
-    ]
+    for key, nc_var in variables.items():
+        
+        hist_data = hist[nc_var].sel(**{
+            dimensions['latitude']: lat,
+            dimensions['longitude']: lon
+        }, method="nearest")
+        future_data = future[nc_var].sel(**{
+            dimensions['latitude']: lat,
+            dimensions['longitude']: lon
+        }, method="nearest")
 
-    hist_uas = _hist.sel(lat=lat, lon=lon, method="nearest")["uas"].values
-    hist_uas_str = np.array2string(hist_uas.ravel(), precision=3, max_line_width=100)[
-        1:-1
-    ]
+        # THIS IS ONLY A BROAD IDEA - NOT TESTED YET! 
+        # Ensure data covers all 12 months, potentially using groupby if data spans multiple years
+        # if 'time' in hist_data.dims:
+        #     hist_data = hist_data.groupby('time.month').mean('time')  # Averaging over 'time' assuming data includes multiple years
+        #     future_data = future_data.groupby('time.month').mean('time')
 
-    hist_vas = _hist.sel(lat=lat, lon=lon, method="nearest")["vas"].values
-    hist_vas_str = np.array2string(hist_vas.ravel(), precision=3, max_line_width=100)[
-        1:-1
-    ]
+        # Check if data is in unusual format and reshape if necessary (only for AWI_CM files currently neccessary)
+        if hist_data.values.shape == (1, 1, 12):
+            hist_data = hist_data.squeeze()  # this removes dimensions of size 1
+            future_data = future_data.squeeze()
 
-    future_temp = _future.sel(lat=lat, lon=lon, method="nearest")["tas"].values - 273.15
-    future_temp_str = np.array2string(
-        future_temp.ravel(), precision=3, max_line_width=100
-    )[1:-1]
+        # Apply unit-specific transformations and check if units are identical for all projections (they should be)
+        hist_units = hist_data.attrs.get('units', '')
+        future_units = future_data.attrs.get('units', '')
+        if hist_units != future_units:
+            warnings.warn(f"Unit mismatch for {key}: historical units '{hist_units}' vs future units '{future_units}'. Please verify consistency.")
+            print(f"Units mismatch found in variable {key}: Historical '{hist_units}', Future '{future_units}'.")
 
-    future_pr = _future.sel(lat=lat, lon=lon, method="nearest")["pr"].values
-    future_pr = convert_to_mm_per_month(future_pr)
-    future_pr_str = np.array2string(future_pr.ravel(), precision=3, max_line_width=100)[
-        1:-1
-    ]
+        # unit-specific transformations 
+        if key == 't2m': 
+            if 'K' in hist_units: # transformation to Celsius if data in Kelvin (using only hist_units form here on as hist_units and future_units are identical if no error was thrown before)
+                hist_data -= 273.15
+                future_data -= 273.15
+                print(f"Converted temperature from Kelvin to Celsius for variable {key}.")
+            elif 'C' not in hist_units:  # Check if not already in Celsius
+                warnings.warn(f"Unexpected temperature units for {key}: {hist_units}. Please check the unit manually.")
+                print(f"Units found: {hist_units}")
 
-    future_uas = _future.sel(lat=lat, lon=lon, method="nearest")["uas"].values
-    future_uas_str = np.array2string(
-        future_uas.ravel(), precision=3, max_line_width=100
-    )[1:-1]
+        if key == 'precip': 
+            if 'kg m-2 s-1' in hist_units:
+                hist_data = convert_to_mm_per_month(hist_data)
+                future_data = convert_to_mm_per_month(future_data)
+                print(f"Converted precipitation from kg/m^2/s to mm/month for variable {key}.")
+            elif 'm' in hist_units:
+                hist_data /= 100
+                future_data /= 100
+                print(f"Converted precipitation from m/month to mm/month for variable {key}.")
+            elif 'mm' not in hist_units:  # Check if not already in Celsius
+                warnings.warn(f"Unexpected precipitation units for {key}: {hist_units}. Please check the unit manually.")
+                print(f"Units found: {hist_units}")
 
-    future_vas = _future.sel(lat=lat, lon=lon, method="nearest")["vas"].values
-    future_vas_str = np.array2string(
-        future_vas.ravel(), precision=3, max_line_width=100
-    )[1:-1]
-    df = pd.DataFrame(
-        {
-            "Present Day Temperature": hist_temp[0, 0, :],
-            "Future Temperature": future_temp[0, 0, :],
-            "Present Day Precipitation": hist_pr[0, 0, :],
-            "Future Precipitation": future_pr[0, 0, :],
-            "Present Day Wind Speed": np.hypot(hist_uas[0, 0, :], hist_vas[0, 0, :]),
-            "Future Wind Speed": np.hypot(future_uas[0, 0, :], future_vas[0, 0, :]),
-            "Month": range(1, 13),
-        }
-    )
-    data_dict = {
-        "hist_temp": hist_temp_str,
-        "hist_pr": hist_pr_str,
-        "hist_uas": hist_uas_str,
-        "hist_vas": hist_vas_str,
-        "future_temp": future_temp_str,
-        "future_pr": future_pr_str,
-        "future_uas": future_uas_str,
-        "future_vas": future_vas_str,
-    }
+        if key == 'u_wind':
+            hist_wind_u = hist_data
+            future_wind_u = future_data
+        elif key == 'v_wind':
+            hist_wind_v = hist_data
+            future_wind_v = future_data
+        else: 
+            df[f"Present Day {key.capitalize()}"] = hist_data.values
+            df[f"Future {key.capitalize()}"] = future_data.values
+            
+        # Calculate wind speed if both components are present and add to DataFrame
+        if hist_wind_u is not None and hist_wind_v is not None:
+            hist_wind_speed = np.hypot(hist_wind_u, hist_wind_v)
+            future_wind_speed = np.hypot(future_wind_u, future_wind_v)
+            df['Present Day Wind Speed'] = hist_wind_speed.values
+            df['Future Wind Speed'] = future_wind_speed.values
+
+
+        data_dict[f"hist_{key}"] = np.array2string(hist_data.values.ravel(), precision=3)
+        data_dict[f"future_{key}"] = np.array2string(future_data.values.ravel(), precision=3)
+
     return df, data_dict
-
