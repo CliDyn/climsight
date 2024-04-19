@@ -90,8 +90,10 @@ You would also need an [OpenAI API key](https://platform.openai.com/docs/api-ref
 ```bash
 export OPENAI_API_KEY="???????"
 ```
+<ins>config settings</ins>
+There is a possibility to also provide it in the running app. The cost of each request (status September 2023) is about 6 cents with `gpt-4` and about 0.3 cents with `gpt-3.5-turbo` (you can change it in the config file).
+Moreover, if you want to use your own climate data, please adjust the data_settings, variable_mappings, and dimension_mappings according to the structure of your NetCDF files.
 
-There is a possibility to also provide it in the running app. The cost of each request (status September 2023) is about 6 cents with `gpt-4` and about 0.3 cents with `gpt-3.5-turbo` (you can change it in the beggining of `climsight.py` script).
 
 ### Running 
 
