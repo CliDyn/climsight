@@ -111,7 +111,7 @@ def extract_climate_data(lat, lon, hist, future, config):
             print(f"Units mismatch found in variable {key}: Historical '{hist_units}', Future '{future_units}'.")
 
         # unit-specific transformations 
-        if key == 't2m': 
+        if key == 'Temperature': 
             if 'K' in hist_units: # transformation to Celsius if data in Kelvin (using only hist_units form here on as hist_units and future_units are identical if no error was thrown before)
                 hist_data -= 273.15
                 future_data -= 273.15
@@ -120,7 +120,7 @@ def extract_climate_data(lat, lon, hist, future, config):
                 warnings.warn(f"Unexpected temperature units for {key}: {hist_units}. Please check the unit manually.")
                 print(f"Units found: {hist_units}")
 
-        if key == 'precip': 
+        if key == 'Precipitation': 
             if 'kg m-2 s-1' in hist_units:
                 hist_data = convert_to_mm_per_month(hist_data)
                 future_data = convert_to_mm_per_month(future_data)

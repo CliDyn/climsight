@@ -260,10 +260,10 @@ if submit_button and user_message:
                 current_land_use=current_land_use,
                 soil=soil,
                 biodiv = biodiv,
-                hist_temp_str=data_dict["hist_t2m"],
-                future_temp_str=data_dict["future_t2m"],
-                hist_pr_str=data_dict["hist_precip"],
-                future_pr_str=data_dict["future_precip"],
+                hist_temp_str=data_dict["hist_Temperature"],
+                future_temp_str=data_dict["future_Temperature"],
+                hist_pr_str=data_dict["hist_Precipitation"],
+                future_pr_str=data_dict["future_Precipitation"],
                 hist_uas_str=data_dict["hist_u_wind"],
                 future_uas_str=data_dict["future_u_wind"],
                 hist_vas_str=data_dict["hist_v_wind"],
@@ -292,7 +292,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present Day T2m", "Future T2m"],
+            y=["Present Day Temperature", "Future Temperature"],
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
@@ -301,7 +301,7 @@ if submit_button and user_message:
         st.line_chart(
             df,
             x="Month",
-            y=["Present Day Precip", "Future Precip"],
+            y=["Present Day Precipitation", "Future Precipitation"],
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(

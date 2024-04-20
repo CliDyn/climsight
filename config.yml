@@ -5,8 +5,8 @@ data_settings:
     historical: "historical"
     projection: "ssp585"
 variable_mappings:
-    t2m: "tas"
-    precip: "pr"
+    Temperature: "tas"
+    Precipitation: "pr"
     u_wind: "uas" 
     v_wind: "vas"
 dimension_mappings:
