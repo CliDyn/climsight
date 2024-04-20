@@ -50,9 +50,61 @@ def load_data(config):
         st.error(f"Failed to load data: {str(e)}")
         return None, None
 
+# functions used in extract_climate_data
+def select_data(dataset, variable, dimensions, lat, lon):
+    """
+    Selects data for a given variable at specified latitude and longitude.
+    """
+    return dataset[variable].sel(**{
+        dimensions['latitude']: lat,
+        dimensions['longitude']: lon},
+        method="nearest") 
+
+def verify_shape(hist_units, future_units, variable):
+    """
+    Sanity check if dimensions of historical and future data set are fine (mainly relevant for using AWI_CM data)
+    """
+    if hist_units != future_units:
+        warning_msg = f"Shape / Dimension mismatch for {variable}: historical units '{hist_units}' vs future units '{future_units}'."
+        warnings.warn(warning_msg)
+        print(warning_msg)
+
+def convert_temperature(hist_units, hist_data, future_data):
+    """"
+    Converts temperature from Kelvin into C and checks for any units beyond K and C (not compatible).
+    """
+    if 'K' in hist_units: # transformation to Celsius if data in Kelvin (using only hist_units form here on as hist_units and future_units are identical if no error was thrown before)
+        hist_data -= 273.15
+        future_data -= 273.15
+        print(f"Converted temperature from Kelvin to Celsius.")
+    elif 'C' not in hist_units:  # Check if not already in Celsius
+        warnings.warn(f"Unexpected temperature units: {hist_units}. Please check the unit manually.")
+        print(f"Units found: {hist_units}")
+    return hist_data, future_data
+
 def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
+    """"
+    Converts kg_m2_s1 to mm per month
+    """
     days_in_months = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
     return monthly_precip_kg_m2_s1 * 60 * 60 * 24 * days_in_months
+
+def convert_precipitation(hist_units, hist_data, future_data):
+    """
+    Converts precipitation data from any unit to mm or throws error if unknown unit.
+    """
+    if 'kg m-2 s-1' in hist_units:
+        hist_data = convert_to_mm_per_month(hist_data)
+        future_data = convert_to_mm_per_month(future_data)
+        print(f"Converted precipitation from kg/m^2/s to mm/month.")
+    elif 'm' in hist_units:
+        hist_data /= 100
+        future_data /= 100
+        print(f"Converted precipitation from m/month to mm/month.")
+    elif 'mm' not in hist_units:  # Check if not already in Celsius
+        warnings.warn(f"Unexpected precipitation units: {hist_units}. Please check the unit manually.")
+        print(f"Units found: {hist_units}")
+    return hist_data, future_data
 
 def extract_climate_data(lat, lon, hist, future, config):
     """
@@ -69,28 +121,19 @@ def extract_climate_data(lat, lon, hist, future, config):
     Returns:
         - df (pandas.DataFrame): DataFrame containing present day and future data for temperature, precipitation, and wind speed for each month of the year, with 'Month' as a column.
         - data_dict (dict): Dictionary containing string representations of the extracted climate data for all variables including historical and future datasets.
-    
-    In more detail:
-    The function processes each variable defined in the configuration, checks unit consistency, applies necessary transformations (e.g., temperature from Kelvin to Celsius, precipitation conversion), and calculates wind speed using the u and v wind components. Data for each variable, except wind components, is added directly to the DataFrame and a data dictionary. Wind speed is calculated from the wind components and added to the DataFrame.
     """
     variables = config['variable_mappings']
     dimensions = config['dimension_mappings']
     df = pd.DataFrame({'Month': range(1, 13)})
-
     data_dict = {}
+
     # Initialize wind variables
     hist_wind_u = hist_wind_v = future_wind_u = future_wind_v = None
 
     for key, nc_var in variables.items():
         
-        hist_data = hist[nc_var].sel(**{
-            dimensions['latitude']: lat,
-            dimensions['longitude']: lon
-        }, method="nearest")
-        future_data = future[nc_var].sel(**{
-            dimensions['latitude']: lat,
-            dimensions['longitude']: lon
-        }, method="nearest")
+        hist_data = select_data(hist, nc_var, dimensions, lat, lon)
+        future_data = select_data(future, nc_var, dimensions, lat, lon)
 
         # THIS IS ONLY A BROAD IDEA - NOT TESTED YET! 
         # Ensure data covers all 12 months, potentially using groupby if data spans multiple years
@@ -101,37 +144,22 @@ def extract_climate_data(lat, lon, hist, future, config):
         # Check if data is in unusual format and reshape if necessary (only for AWI_CM files currently neccessary)
         if hist_data.values.shape == (1, 1, 12):
             hist_data = hist_data.squeeze()  # this removes dimensions of size 1
+        if future_data.values.shape == (1, 1,12):
             future_data = future_data.squeeze()
 
-        # Apply unit-specific transformations and check if units are identical for all projections (they should be)
+        # Get units for both projections
         hist_units = hist_data.attrs.get('units', '')
         future_units = future_data.attrs.get('units', '')
-        if hist_units != future_units:
-            warnings.warn(f"Unit mismatch for {key}: historical units '{hist_units}' vs future units '{future_units}'. Please verify consistency.")
-            print(f"Units mismatch found in variable {key}: Historical '{hist_units}', Future '{future_units}'.")
 
-        # unit-specific transformations 
+        # check their shape for potential mismatch
+        verify_shape(hist_units, future_units, key)
+
+        # perform unit-specific transformations 
         if key == 'Temperature': 
-            if 'K' in hist_units: # transformation to Celsius if data in Kelvin (using only hist_units form here on as hist_units and future_units are identical if no error was thrown before)
-                hist_data -= 273.15
-                future_data -= 273.15
-                print(f"Converted temperature from Kelvin to Celsius for variable {key}.")
-            elif 'C' not in hist_units:  # Check if not already in Celsius
-                warnings.warn(f"Unexpected temperature units for {key}: {hist_units}. Please check the unit manually.")
-                print(f"Units found: {hist_units}")
+            hist_data, future_data = convert_temperature(hist_units, hist_data, future_data)
 
         if key == 'Precipitation': 
-            if 'kg m-2 s-1' in hist_units:
-                hist_data = convert_to_mm_per_month(hist_data)
-                future_data = convert_to_mm_per_month(future_data)
-                print(f"Converted precipitation from kg/m^2/s to mm/month for variable {key}.")
-            elif 'm' in hist_units:
-                hist_data /= 100
-                future_data /= 100
-                print(f"Converted precipitation from m/month to mm/month for variable {key}.")
-            elif 'mm' not in hist_units:  # Check if not already in Celsius
-                warnings.warn(f"Unexpected precipitation units for {key}: {hist_units}. Please check the unit manually.")
-                print(f"Units found: {hist_units}")
+            hist_data, future_data = convert_precipitation(hist_units, hist_data, future_data)
 
         if key == 'u_wind':
             hist_wind_u = hist_data
