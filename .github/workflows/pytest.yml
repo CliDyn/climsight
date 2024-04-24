@@ -35,4 +35,5 @@ jobs:
     - name: Run tests
       run: |
         cd test
-        pytest
+        # we run pytest without local data
+        pytest -m "not local_data"
