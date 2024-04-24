@@ -1,0 +1,51 @@
+test_location:
+  lat: 52.5240
+  lon: 13.3700
+  closest_shore_distance: 143240.00374445764
+  elevation: 36.0
+  lat_land_use: 52.5240
+  lon_land_use: 14.3700  
+  current_land_use: 'forest'
+  soil: 'Cambisols'
+  expected_address:
+    railway: Berlin Hauptbahnhof (Tief)
+    road: Invalidenstraße
+    quarter: Europacity
+    suburb: Moabit
+    borough: Mitte
+    city: Berlin
+    ISO3166-2-lvl4: DE-BE
+    postcode: '10557'
+    country: Germany
+    country_code: de
+  expected_address_string:
+    - 'Address: railway: Berlin Hauptbahnhof (Tief), road: Invalidenstraße, quarter: Europacity, suburb: Moabit, borough: Mitte, city: Berlin, ISO3166-2-lvl4: DE-BE, postcode: 10557, country: Germany, country_code: de'
+    - '**Address:** Germany, Berlin, Invalidenstraße'
+    - 'Germany'
+  expected_location_details:
+    osm_type: relation
+    category: railway
+    type: platform
+    extratags:
+      bin: 'yes'
+      area: 'yes'
+      bench: 'yes'
+      layer: '-2'
+      level: '-2'
+      train: 'yes'
+      location: underground
+      ref:IFOPT: 'de:11000:900003200:2'
+      wheelchair: 'yes'
+      tactile_paving: 'yes'   
+      public_transport: platform
+
+
+test_wetdry:
+  lat_dry: 52.5240
+  lon_dry: 13.3700  
+  lat_oce: -18.0
+  lon_oce: 0.0
+  lat_lake: 47.57983
+  lon_lake: 9.47596
+
+  
