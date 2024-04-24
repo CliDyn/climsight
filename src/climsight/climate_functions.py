@@ -35,12 +35,12 @@ def load_data(config):
         future_files = glob.glob(os.path.join(data_path, f"*{projection_pattern}*.nc"))
 
         if hist_files:
-            hist = xr.open_mfdataset(hist_files, combine='by_coords', compat='override')
+            hist = xr.open_mfdataset(hist_files, concat_dim='time_counter', combine='nested') #combine='by_coords', compat='override')
         else:
             raise FileNotFoundError(f"No historical files found matching pattern {historical_pattern} in {data_path}")
 
         if future_files:
-            future = xr.open_mfdataset(future_files, combine='by_coords', compat='override')
+            future = xr.open_mfdataset(future_files, concat_dim='time_counter', combine='nested') #combine='by_coords', compat='override')
         else:
             raise FileNotFoundError(f"No projection files found matching pattern {projection_pattern} in {data_path}")
 

@@ -1,14 +1,14 @@
-model_name: "gpt-3.5-turbo"
-# model_name: "gpt-4-1106-preview"
+# model_name: "gpt-3.5-turbo"
+model_name: "gpt-4-1106-preview"
 data_settings:
     data_path: "./data/"
-    historical: "historical"
-    projection: "ssp585"
+    historical: "2000" #"historical"
+    projection: "2090" #"ssp585"
 variable_mappings:
-    Temperature: "tas"
-    Precipitation: "pr"
-    u_wind: "uas" 
-    v_wind: "vas"
+    Temperature: "2t" #"tas"
+    # Precipitation: "pr"
+    u_wind: "10u" #"uas" 
+    v_wind: "10v" #"vas"
 dimension_mappings:
     latitude: "lat"
     longitude: "lon"

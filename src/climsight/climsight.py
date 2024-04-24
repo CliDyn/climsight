@@ -91,8 +91,6 @@ content_message = "{user_message} \n \
       Occuring species: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
-      Current precipitation flux (mm/month): {hist_pr_str} \
-      Future precipitation flux (mm/month): {future_pr_str} \
       Current u wind component (in m/s): {hist_uas_str} \
       Future u wind component (in m/s): {future_uas_str} \
       Current v wind component (in m/s): {hist_vas_str} \
@@ -262,8 +260,8 @@ if submit_button and user_message:
                 biodiv = biodiv,
                 hist_temp_str=data_dict["hist_Temperature"],
                 future_temp_str=data_dict["future_Temperature"],
-                hist_pr_str=data_dict["hist_Precipitation"],
-                future_pr_str=data_dict["future_Precipitation"],
+                # hist_pr_str=data_dict["hist_Precipitation"],
+                # future_pr_str=data_dict["future_Precipitation"],
                 hist_uas_str=data_dict["hist_u_wind"],
                 future_uas_str=data_dict["future_u_wind"],
                 hist_vas_str=data_dict["hist_v_wind"],
@@ -295,15 +293,15 @@ if submit_button and user_message:
             y=["Present Day Temperature", "Future Temperature"],
             color=["#d62728", "#2ca02c"],
         )
-        st.markdown(
-            "Precipitation (in mm)",
-        )
-        st.line_chart(
-            df,
-            x="Month",
-            y=["Present Day Precipitation", "Future Precipitation"],
-            color=["#d62728", "#2ca02c"],
-        )
+        # st.markdown(
+        #     "Precipitation (in mm)",
+        # )
+        # st.line_chart(
+        #     df,
+        #     x="Month",
+        #     y=["Present Day Precipitation", "Future Precipitation"],
+        #     color=["#d62728", "#2ca02c"],
+        # )
         st.markdown(
             "Wind speed (in m*s-1)",
         )
