@@ -1,0 +1,40 @@
+# model_name: "gpt-3.5-turbo"
+model_name: "gpt-4-1106-preview"
+climatemodel_name: "tco319"
+data_settings:
+    data_path: "../climsight/data/"
+    historical: "2000"
+    projection: "2090"
+variable_mappings:
+    Temperature: "2t" 
+    Precipitation: "precip"
+    u_wind: "10u"  
+    v_wind: "10v" 
+dimension_mappings:
+    latitude: "lat"
+    longitude: "lon"
+    time: "time_counter"
+coastline_shapefile: "../climsight/data/natural_earth/coastlines/ne_10m_coastline.shp"
+haz_path: '../climsight/data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
+pop_path: '../climsight/data/population/WPP2022_Demographic_Indicators_Medium.csv'
+distance_from_event: 5.0
+lat_default: 52.5240
+lon_default: 13.3700
+year_step: 10
+start_year: 1980
+end_year: null
+system_role: |
+    You are the system that should help people to evaluate the impact of climate change
+    on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
+    parking lot, open a shop, buy crop land). You are working with data on a local level,
+    and decisions also should be given for particular locations. You will be given information 
+    about changes in environmental variables for particular location, and how they will 
+    change in a changing climate. Your task is to provide assessment of potential risks 
+    and/or benefits for the planned activity related to change in climate. Use information 
+    about the country to retrieve information about policies and regulations in the 
+    area related to climate change, environmental use and activity requested by the user.
+    You don't have to use all variables provided to you, if the effect is insignificant,
+    don't use variable in analysis. DON'T just list information about variables, don't 
+    just repeat what is given to you as input. I don't want to get the code, 
+    I want to receive a narrative, with your assessments and advice. Format 
+    your response as MARKDOWN, don't use Heading levels 1 and 2.
