@@ -57,6 +57,7 @@ from environmental_functions import (
 )
 
 config_path = os.getenv('CONFIG_PATH', 'config*.yml')
+
 # print(config_path)
 with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
