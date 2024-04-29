@@ -31,6 +31,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
         python -m pip install pytest
+    
+    - name: Download data
+      run: |
+        chmod +x download_data.sh
+        ./download_data.sh
 
     - name: Run tests
       run: |

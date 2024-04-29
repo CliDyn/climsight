@@ -86,6 +86,7 @@ def are_dataframes_equal(df1, df2, tol=1e-6):
     except AssertionError:
         return False
 
+@pytest.mark.hazard
 @pytest.mark.env
 @pytest.mark.local_data    
 def test_filter_events_within_square(config_test, config_main, expected_biodiv):
@@ -95,7 +96,13 @@ def test_filter_events_within_square(config_test, config_main, expected_biodiv):
     haz_path = config_main['haz_path']
     distance_from_event = config_main['distance_from_event']
     lat, lon = config_test['test_location']['lat'], config_test['test_location']['lon']
-    filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
+    try:
+        filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
+    except Exception as e:
+        warnings.warn(f"Failed to filter_events_within_square: {str(e)}", RuntimeWarning)
+        # Explicitly fail the test with a message
+        pytest.fail(f"Test failed due to an error in filter_events_within_square: {str(e)}, no files in data ?")        
+            
     expected_promt_hazard_data = pd.DataFrame(config_test['test_location']['promt_hazard_data'])    
     expected_filtered_events_square = pd.DataFrame(config_test['test_location']['filtered_events_square'])    
     expected_filtered_events_square['latitude'] = pd.to_numeric(expected_filtered_events_square['latitude'], errors='coerce')
