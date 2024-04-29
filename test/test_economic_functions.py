@@ -7,6 +7,7 @@ It uses pytest to test
 The tests validate both the 
 presence of essential config files and the accuracy of data fetched from 
 external geocoding services. 
+here wi do all the test in : test_population
 '''
 
 import pytest
@@ -69,7 +70,7 @@ def are_dataframes_equal(df1, df2, tol=1e-6):
     
 @pytest.mark.economic    
 @pytest.mark.local_data  
-def test_x_year_mean_population(config_main, config_test):
+def test_population(config_main, config_test):
     lat, lon   = config_test['test_location']['lat'], config_test['test_location']['lon']
     country    = config_test['test_location']['country']
     year_step  = config_test['test_location']['year_step']
@@ -77,15 +78,25 @@ def test_x_year_mean_population(config_main, config_test):
     end_year   = config_test['test_location']['end_year']
     
     pop_path   = config_main['pop_path']
-    expected_population = pd.read_csv('expected_x_year_mean_population.csv')
+    expected_mean_population = pd.read_csv('expected_x_year_mean_population.csv')
+    expected_reduced_pop_data = pd.read_csv('expected_population.csv', index_col=0)    
+    
     
     #I do not like it (we need to eliminate hardcode paths)
     os.chdir('..')  
-     
-    population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
+
+    # --- test x_year_mean_population 
+    mean_population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
+    reduced_pop_data = get_population(pop_path, country)
+    population_plot = plot_population(pop_path, country)
+    
     #I do not like it (we need to eliminate hardcode paths)
     os.chdir('test')
-    assert are_dataframes_equal(population,expected_population,tol=1e-6), f'dataframe x_year_mean_population not the same' 
-    
-#    population_plot = plot_population(pop_path, country)
-    
+    assert are_dataframes_equal(mean_population,expected_mean_population,tol=1e-6), f'dataframe x_year_mean_population not the same' 
+    assert are_dataframes_equal(reduced_pop_data,expected_reduced_pop_data,tol=1e-6), f'dataframe _population not the same'     
+    #try to plot
+    assert isinstance(population_plot, plt.Figure), f'error, It is not a Figure'
+    plt.close(population_plot)    
+        
+        
+        
