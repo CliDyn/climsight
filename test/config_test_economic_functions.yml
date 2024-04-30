@@ -1,0 +1,7 @@
+test_location:
+  lat: 52.5240
+  lon: 13.3700
+  country: 'Germany'
+  year_step: 10
+  start_year: 1980
+  end_year: null
