@@ -1,0 +1,45 @@
+# This workflow will install Python dependencies and climsight, run tests 
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+name: Install and Test Package
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - make_tests
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .
+        python -m pip install pytest
+    
+    - name: Download data
+      run: |
+        # download data is not working now due to https://population.un.org/wpp/Download/... issues unsafe legacy renegotiation disabled
+        # chmod +x download_data.sh
+        # ./download_data.sh
+
+    - name: Run tests
+      run: |
+        cd test
+        # we run pytest without local data
+        pytest -m "not local_data"
