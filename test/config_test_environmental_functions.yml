@@ -1,0 +1,79 @@
+test_location:
+  lat: 52.5240
+  lon: 13.3700
+  biodiv: 'Pristurus'
+  promt_hazard_data:
+    - year: 2002
+      disastertype: storm
+    - year: 2006
+      disastertype: storm
+    - year: 2010
+      disastertype: storm
+    - year: 2003
+      disastertype: 'extreme temperature '
+    - year: 2006
+      disastertype: 'extreme temperature '
+    - year: 2009
+      disastertype: 'extreme temperature '
+    - year: 2009
+      disastertype: 'extreme temperature '
+    - year: 2012
+      disastertype: 'extreme temperature '
+    - year: 2012
+      disastertype: 'extreme temperature '
+  filtered_events_square:
+    - country: Germany
+      year: 2002
+      geolocation: Berlin
+      disastertype: storm
+      latitude: 52.501332
+      longitude: 13.40144
+    - country: Germany
+      year: 2006
+      geolocation: Berlin
+      disastertype: storm
+      latitude: 52.501332
+      longitude: 13.40144
+    - country: Germany
+      year: 2010
+      geolocation: Berlin
+      disastertype: storm
+      latitude: 52.501332
+      longitude: 13.40144
+    - country: Germany
+      year: 2003
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2006
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2009
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2009
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2012
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2012
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+
