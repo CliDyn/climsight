@@ -143,7 +143,7 @@ def test_where_is_point(config_geo, config_main):
     lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
     coastline_shapefile = config_main['coastline_shapefile']
     dist = closest_shore_distance(lat, lon, coastline_shapefile)
-    assert dist == config_geo['test_location']['closest_shore_distance'], f"error in distance to shore"
+    assert dist == pytest.approx(config_geo['test_location']['closest_shore_distance']), f"error in distance to shore"
 
     #I do not like it (we need to eliminate hardcode paths)
     os.chdir('test')
