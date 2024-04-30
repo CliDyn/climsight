@@ -5,7 +5,7 @@ You have to download example climate data and NaturalEarth coastlines. To do it 
 
 .. code-block:: bash
 
-    ./download_data.sh
+    python download_data.py
 
 You also need to download the `natural hazard data <https://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download>`_ (for which you have to create a free account). Please download the **CSV - Disaster Location Centroids [zip file]** and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly.
 
