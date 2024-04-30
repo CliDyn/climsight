@@ -70,12 +70,18 @@ def main():
     
     ## Download firts main file 
     files_downloaded = []
+    files_skiped = []
+    urls_skiped = []    
+    
 
     file = 'data_climate_foresight.tar'
     url  = 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/clisight/data_climate_foresight.tar'
     if download_file(url, file):
         extract_tar(file)
         files_downloaded.append(file)        
+    else:
+        files_skiped.append(file)
+        urls_skiped.append(url)
 
     ## Delete folders and files that we do not need !!!! this should be resolved by removing these files in archive
     
@@ -100,6 +106,9 @@ def main():
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/coastlines')
         files_downloaded.append(file)
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     ###  -------------  land
     file = 'ne_10m_land.zip'
@@ -107,6 +116,9 @@ def main():
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/land')
         files_downloaded.append(file)
+    else:
+        files_skiped.append(file)       
+        urls_skiped.append(url)        
 
     ###  -------------  rivers
     file = 'ne_10m_rivers_lake_centerlines.zip'
@@ -114,54 +126,81 @@ def main():
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/rivers')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
         
     file = 'ne_10m_rivers_australia.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_australia.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/rivers')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     file = 'ne_10m_rivers_europe.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_europe.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/rivers')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     file = 'ne_10m_rivers_north_america.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/rivers')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
     ###  -------------  Lakes
     file = 'ne_10m_lakes.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/lakes')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     file = 'ne_10m_lakes_australia.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_australia.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/lakes')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     file = 'ne_10m_lakes_europe.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_europe.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/lakes')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     file = 'ne_10m_lakes_north_america.zip'
     url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_north_america.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/natural_earth/lakes')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
     ###  -------------  popolation
     file = 'WPP2022_Demographic_Indicators_Medium.zip'
     url  = 'https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/CSV_FILES/WPP2022_Demographic_Indicators_Medium.zip'
     if download_file(url, file):
         extract_zip(file, base_path+'/population')
         files_downloaded.append(file)    
+    else:
+        files_skiped.append(file)        
+        urls_skiped.append(url)       
 
     ## Add similar blocks for other files
     #file = ''
@@ -170,11 +209,20 @@ def main():
     #    extract_zip(file, base_path+'/natural_earth/coastlines/lakes')
     #    files_downloaded.append(file)    
     
+    if (files_skiped):
+        print('\n')                      
+        print('----------------------------------------------')                      
+        print(f"\033[91mFiles not downloaded, please download manualy:\033[0m")
+        for i,file in enumerate(files_skiped):
+            print('--------')               
+            print(f"\033[93mFile:\033[0m",file)
+            print(f"\033[93mUrl:\033[0m",urls_skiped[i])        
+            print('--------')        
 
-    # Check downloaded files
-    print("Files downloaded successfully:")
-    for file in files_downloaded:
-        print(file)
-
+    print('\n')                      
+    print('----------------------------------------------')                      
+    print("You also need to download the natural hazard data (for which you have to create a free account). Please download the CSV - Disaster Location Centroids [zip file] and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly.")
+    print(f"\033[93mhttps://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download\033[0m")
+    print('-------------------')                      
 if __name__ == "__main__":
     main()
