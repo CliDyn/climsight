@@ -126,9 +126,7 @@ def main():
             files_skiped.append(file)
             urls_skiped.append(url)
             subdirs_skiped.append(subdir)
-
-    ## Delete folders and files that we do not need !!!! this should be resolved by removing these files in archive
-    
+ 
     if (files_skiped):
         print('\n')                      
         print('----------------------------------------------')                      
@@ -140,10 +138,12 @@ def main():
             print(f"\033[93munpack it into the:\033[0m ", subdirs_skiped[i])            
             print('--------')        
 
-    print('\n')                      
-    print('----------------------------------------------')                      
-    print("You also need to download the natural hazard data (for which you have to create a free account). Please download the CSV - Disaster Location Centroids [zip file] and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly.")
-    print(f"\033[93mhttps://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download\033[0m")
-    print('-------------------')                      
+    # I would leave it for a while
+    #print('\n')                      
+    #print('----------------------------------------------')                      
+    #print("You also need to download the natural hazard data (for which you have to create a free account). Please download the CSV - Disaster Location Centroids [zip file] and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly.")
+    #print(f"\033[93mhttps://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download\033[0m")
+    #print('-------------------')                      
+    
 if __name__ == "__main__":
     main()
