@@ -1,0 +1,61 @@
+base_path: './data'
+sources:
+  - filename: 'data_climate_foresight.tar'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/clisight/data_climate_foresight.tar'
+    archive_type: 'tar'
+    subdir: './../.'
+
+  - filename: 'ne_10m_coastline.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_coastline.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/coastlines'
+
+  - filename: 'ne_10m_land.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/land'
+
+  - filename: 'ne_10m_rivers_lake_centerlines.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+
+  - filename: 'ne_10m_rivers_australia.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_australia.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+
+  - filename: 'ne_10m_rivers_europe.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_europe.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+
+  - filename: 'ne_10m_rivers_north_america.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+
+  - filename: 'ne_10m_lakes.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+
+  - filename: 'ne_10m_lakes_australia.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_australia.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+
+  - filename: 'ne_10m_lakes_europe.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_europe.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+
+  - filename: 'ne_10m_lakes_north_america.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_north_america.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+
+  - filename: 'WPP2022_Demographic_Indicators_Medium.zip'
+    url: 'https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/CSV_FILES/WPP2022_Demographic_Indicators_Medium.zip'
+    archive_type: 'zip'
+    subdir: 'population'

@@ -4,6 +4,7 @@ import zipfile
 import os
 import shutil
 import sys
+import yaml 
 
 def download_file(url, local_filename):
     """Attempt to download a file from a URL and save it locally, with a progress indicator."""
@@ -54,6 +55,31 @@ def extract_zip(file_path, extract_to='.'):
     except Exception as e:
         print(f"\033[93mWarning: Failed to extract {file_path}.\033[0m")
 
+def extract_arch(file_path, extract_to='.', archive_type=''):
+    """Extract tar/zip file and handle errors.
+        if archive_type='' (default) file will be moved
+    """
+    if not archive_type:
+        _, file_extension = os.path.splitext(file_path)
+        if file_extension in ['.zip']:
+            archive_type = 'zip'
+        elif file_extension in ['.tar']:
+            archive_type = 'tar'
+    try:
+        if archive_type=='zip':
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_to)
+        elif archive_type=='tar':
+            with tarfile.open(file_path) as tar:
+                tar.extractall(path=extract_to)
+        else:
+            #cp file to     
+            destination_file = os.path.join(extract_to, os.path.basename(file_path))   
+            shutil.copyfile(file_path,destination_file)    
+        os.remove(file_path)
+    except Exception as e:
+        print(f"\033[93mWarning: Failed to extract {file_path}.\033[0m")        
+
 def create_dir(path):
     """Create a directory if it doesn't exist."""
     os.makedirs(path, exist_ok=True)
@@ -64,150 +90,42 @@ def remove_dir(path):
         shutil.rmtree(path)
 
 def main():
-    base_path = './data'
+    # Load the YAML file
+    with open('data_sources.yml', 'r') as file:
+        data_config = yaml.safe_load(file)
 
-    # Download and extract files
-    
-    ## Download firts main file 
-    files_downloaded = []
-    files_skiped = []
-    urls_skiped = []    
-    
+    base_path = data_config['base_path']
+    sources = data_config['sources']
 
-    file = 'data_climate_foresight.tar'
-    url  = 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/clisight/data_climate_foresight.tar'
-    if download_file(url, file):
-        extract_tar(file)
-        files_downloaded.append(file)        
-    else:
-        files_skiped.append(file)
-        urls_skiped.append(url)
+    #make subdirs list and clean it
+    subdirs = []
+    for entry in sources:
+        subdirs.append(entry['subdir'])
+    subdirs = set(subdirs)
+    subdirs = list(subdirs)
+    subdirs = [folder for folder in subdirs if folder not in ['.', './']]
 
-    ## Delete folders and files that we do not need !!!! this should be resolved by removing these files in archive
-    
-    # Remove duplicates directory
-    remove_dir(os.path.join(base_path, 'natural_earth'))
-
-    # Create necessary directories
-    subdirs = ['natural_earth/coastlines',
-               'natural_earth/land',
-               'natural_earth/rivers',
-               'natural_earth/lakes',
-               'natural_hazards',
-               'population']
-    
     for subdir in subdirs:
         create_dir(os.path.join(base_path, subdir))
 
-    ## Download and extract other files
-    ###  -------------  coastline
-    file = 'ne_10m_coastline.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_coastline.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/coastlines')
-        files_downloaded.append(file)
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
+    # Download and extract files
+    
+    files_downloaded = []
+    files_skiped = []
+    urls_skiped = []
 
-    ###  -------------  land
-    file = 'ne_10m_land.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/land')
-        files_downloaded.append(file)
-    else:
-        files_skiped.append(file)       
-        urls_skiped.append(url)        
+    for entry in sources:
+        file = entry['filename']
+        url  = entry['url']
+        subdir = os.path.join(base_path, entry['subdir'])
+        if download_file(url, file):
+            extract_arch(file, subdir)
+            files_downloaded.append(file)        
+        else:
+            files_skiped.append(file)
+            urls_skiped.append(url)
 
-    ###  -------------  rivers
-    file = 'ne_10m_rivers_lake_centerlines.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/rivers')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-        
-    file = 'ne_10m_rivers_australia.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_australia.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/rivers')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-
-    file = 'ne_10m_rivers_europe.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_europe.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/rivers')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-
-    file = 'ne_10m_rivers_north_america.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/rivers')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-    ###  -------------  Lakes
-    file = 'ne_10m_lakes.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/lakes')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-
-    file = 'ne_10m_lakes_australia.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_australia.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/lakes')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-
-    file = 'ne_10m_lakes_europe.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_europe.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/lakes')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-
-    file = 'ne_10m_lakes_north_america.zip'
-    url  = 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_north_america.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/natural_earth/lakes')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-    ###  -------------  popolation
-    file = 'WPP2022_Demographic_Indicators_Medium.zip'
-    url  = 'https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/CSV_FILES/WPP2022_Demographic_Indicators_Medium.zip'
-    if download_file(url, file):
-        extract_zip(file, base_path+'/population')
-        files_downloaded.append(file)    
-    else:
-        files_skiped.append(file)        
-        urls_skiped.append(url)       
-
-    ## Add similar blocks for other files
-    #file = ''
-    #url  = ''
-    #if download_file(url, file):
-    #    extract_zip(file, base_path+'/natural_earth/coastlines/lakes')
-    #    files_downloaded.append(file)    
+    ## Delete folders and files that we do not need !!!! this should be resolved by removing these files in archive
     
     if (files_skiped):
         print('\n')                      
