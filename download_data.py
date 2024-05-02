@@ -113,6 +113,7 @@ def main():
     files_downloaded = []
     files_skiped = []
     urls_skiped = []
+    subdirs_skiped = []
 
     for entry in sources:
         file = entry['filename']
@@ -124,6 +125,7 @@ def main():
         else:
             files_skiped.append(file)
             urls_skiped.append(url)
+            subdirs_skiped.append(subdir)
 
     ## Delete folders and files that we do not need !!!! this should be resolved by removing these files in archive
     
@@ -133,8 +135,9 @@ def main():
         print(f"\033[91mFiles not downloaded, please download manualy:\033[0m")
         for i,file in enumerate(files_skiped):
             print('--------')               
-            print(f"\033[93mFile:\033[0m",file)
-            print(f"\033[93mUrl:\033[0m",urls_skiped[i])        
+            print(f"\033[93mFile:\033[0m", file)
+            print(f"\033[93mUrl:\033[0m", urls_skiped[i])        
+            print(f"\033[93munpack it into the:\033[0m ", subdirs_skiped[i])            
             print('--------')        
 
     print('\n')                      
