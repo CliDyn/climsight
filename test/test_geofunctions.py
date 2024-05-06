@@ -170,12 +170,28 @@ def test_where_is_point(config_geo, config_main):
     os.chdir('test')
 
 #--------------------------------   get_elevation_from_api  
+#test with request to api
 @pytest.mark.request
 def test_get_elevation_from_api(config_geo):
     lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
     elevation = get_elevation_from_api(lat, lon)
     assert elevation == config_geo['test_location']['elevation'], f"error in elevation at point lat={lat}, lon={lon}"    
-    
+#test with mock request 
+@pytest.mark.mock_request
+def test_get_elevation_from_api(config_geo, requests_mock):
+    lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
+    exp_elevation = config_geo['test_location']['elevation']
+    mock_url = f"https://api.opentopodata.org/v1/etopo1?locations={lat},{lon}"
+    mock_response ={'results': [{'dataset': 'etopo1',
+                    'elevation': exp_elevation,
+                    'location': {'lat': lat, 'lng': lon}}],
+                    'status': 'OK'}    
+
+    requests_mock.get(mock_url, json=mock_response)
+
+    elevation = get_elevation_from_api(lat, lon)
+    assert elevation == exp_elevation, f"error in elevation at point lat={lat}, lon={lon}"    
+     
 #--------------------------------   test_fetch_land_use  
 @pytest.mark.request
 def test_fetch_land_use(config_geo):
