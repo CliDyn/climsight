@@ -13,6 +13,7 @@ import warnings
 import sys
 import os
 import requests
+import requests_mock
 
 # Append the directory containing the module to sys.path
 module_dir = os.path.abspath('../src/climsight/')
@@ -46,16 +47,11 @@ def config_main():
         config = yaml.safe_load(file)
     return config
 
-config = config_main
-
-
 @pytest.fixture
 def config_geo():
     with open(test_config_path, 'r') as file:
         config_data = yaml.safe_load(file)
     return config_data
-
-config_geofunciton = config_geo
 
 @pytest.fixture
 def latlon(config_geo):
@@ -63,21 +59,16 @@ def latlon(config_geo):
     lon = float(config_geo['test_location']['lon'])
     return lat, lon  # This returns a tuple, but we'll unpack this in the function call
 
-@pytest.fixture
-def expected_address(config_geo):
-    return config_geo['test_location']['expected_address']
-
-@pytest.fixture
-def expected_address_string(config_geo):
-    return config_geo['test_location']['expected_address_string']
-
-@pytest.fixture
-def expected_location_details(config_geo):
-    return config_geo['test_location']['expected_location_details']
-
 @pytest.mark.request
-def test_get_location(latlon, expected_address, expected_address_string, expected_location_details):
-    location = get_location(*latlon)  #location = get_location(lat, lon)  
+def test_get_location(config_geo):
+    
+    lat = float(config_geo['test_location']['lat'])
+    lon = float(config_geo['test_location']['lon'])    
+    expected_address = config_geo['test_location']['expected_address']
+    expected_address_string = config_geo['test_location']['expected_address_string']
+    expected_location_details = config_geo['test_location']['expected_location_details']
+        
+    location = get_location(lat, lon)
 
     message = "\033[91m" + " \n Warning: test can fail because it changes the road unpredictably. \n" + "\033[0m"    
 
@@ -101,6 +92,36 @@ def test_get_location(latlon, expected_address, expected_address_string, expecte
       warnings.warn(str(e)+message, UserWarning)
         
 
+@pytest.mark.mock_request
+def test_mock_get_location(config_geo, requests_mock):
+
+    lat = float(config_geo['test_location']['lat'])
+    lon = float(config_geo['test_location']['lon'])    
+    expected_address = config_geo['test_location']['expected_address']
+    expected_address_string = tuple(config_geo['test_location']['expected_address_string'])
+    expected_location_details = config_geo['test_location']['expected_location_details']
+    expected_location = config_geo['test_location']['expected_location']
+    
+    mock_url = "https://nominatim.openstreetmap.org/reverse"
+    mock_response = expected_location  # Include all the fields expected in the 'properties'
+
+    # Setup mock request with parameters and headers
+    requests_mock.get(mock_url, json=mock_response)
+
+    location = get_location(lat,lon)
+
+    message = "\033[91m" + " \n Warning: test can fail because it changes the road unpredictably. \n" + "\033[0m"    
+
+    assert location is not None  , f"get_location: response.status_code not == 200"
+    assert 'error' not in location, f"get_location: {location}"
+    assert location['features'][0]['properties']['address'] == expected_address, f"wrong adress"
+      
+    address_string = get_adress_string(location)
+    assert address_string == expected_address_string, f"adress string is failed"
+
+    location_details = get_location_details(location)
+    assert location_details == expected_location_details
+        
 #----------------------------- Test wet dry areas 
 @pytest.fixture
 def out_point_on_land():

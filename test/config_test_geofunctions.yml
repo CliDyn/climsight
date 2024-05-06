@@ -38,7 +38,59 @@ test_location:
       wheelchair: 'yes'
       tactile_paving: 'yes'   
       public_transport: platform
-
+  expected_location:
+    type: FeatureCollection
+    licence: "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright"
+    features:
+      - type: Feature
+        properties:
+          place_id: 132326216
+          osm_type: relation
+          osm_id: 13392159
+          place_rank: 30
+          category: railway
+          type: platform
+          importance: 9.99999999995449e-06
+          addresstype: railway
+          name: Berlin Hauptbahnhof (Tief)
+          display_name: "Berlin Hauptbahnhof (Tief), Invalidenstraße, Europacity, Moabit, Mitte, Berlin, 10557, Germany"
+          address:
+            railway: Berlin Hauptbahnhof (Tief)
+            road: Invalidenstraße
+            quarter: Europacity
+            suburb: Moabit
+            borough: Mitte
+            city: Berlin
+            ISO3166-2-lvl4: DE-BE
+            postcode: '10557'
+            country: Germany
+            country_code: de
+          extratags:
+            bin: 'yes'
+            area: 'yes'
+            bench: 'yes'
+            layer: "-2"
+            level: "-2"
+            train: 'yes'
+            location: underground
+            ref:IFOPT: de:11000:900003200:2
+            wheelchair: 'yes'
+            tactile_paving: 'yes'
+            public_transport: platform
+          namedetails:
+            ref: "3;4"
+            name: Berlin Hauptbahnhof (Tief)
+            name:de: Berlin Hauptbahnhof (Tief)
+        bbox:
+          - 13.3678092
+          - 52.5234726
+          - 13.3704283
+          - 52.5270488
+        geometry:
+          type: Point
+          coordinates:
+            - 13.368987558281562
+            - 52.5254487
 
 test_wetdry:
   lat_dry: 52.5240
@@ -47,5 +99,6 @@ test_wetdry:
   lon_oce: 0.0
   lat_lake: 47.57983
   lon_lake: 9.47596
+
 
   
