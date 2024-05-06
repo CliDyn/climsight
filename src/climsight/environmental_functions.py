@@ -29,14 +29,21 @@ def fetch_biodiversity(lon, lat):
     }
     response = requests.get(gbif_api_url, params=params, timeout=3)
     biodiv = response.json()
-    biodiv_set = set()
+
+    biodiv_list = []
+    seen = set()  # This set will help in avoiding duplicates efficiently
+        
     if biodiv['results']:
         for record in biodiv['results']:
             if 'genericName' in record and record.get('taxonRank') != 'UNRANKED':
-                biodiv_set.add(record['genericName'])
-        biodiversity = ', '.join(list(biodiv_set))
+                generic_name = record['genericName']
+                if generic_name not in seen:  # Check if the name has already been added
+                    seen.add(generic_name)
+                    biodiv_list.append(generic_name)
+        biodiversity = ', '.join(biodiv_list)
     else:
         biodiversity = "Not known"
+        
     return biodiversity
  
  
