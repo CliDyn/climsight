@@ -178,7 +178,7 @@ def test_get_elevation_from_api(config_geo):
     assert elevation == config_geo['test_location']['elevation'], f"error in elevation at point lat={lat}, lon={lon}"    
 #test with mock request 
 @pytest.mark.mock_request
-def test_get_elevation_from_api(config_geo, requests_mock):
+def test_mock_get_elevation_from_api(config_geo, requests_mock):
     lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
     exp_elevation = config_geo['test_location']['elevation']
     mock_url = f"https://api.opentopodata.org/v1/etopo1?locations={lat},{lon}"
@@ -210,6 +210,28 @@ def test_fetch_land_use(config_geo):
         message = "\033[91m" + " \n Warning: test can fail because of HTML request. \n" + "\033[0m"    
         warnings.warn(str(e)+message, UserWarning)  
 
+#test with mock request 
+@pytest.mark.mock_request
+def test_mock_fetch_land_use(config_geo, requests_mock):
+    lat, lon = config_geo['test_location']['lat_land_use'], config_geo['test_location']['lon_land_use']
+    exp_landuse = config_geo['test_location']['current_land_use']
+    
+    mock_url = "http://overpass-api.de/api/interpreter"
+        
+    mock_response ={'version': 0.6,
+                    'generator': 'Overpass API 0.7.62.1 084b4234',
+                    'osm3s': {'timestamp_osm_base': '2024-05-06T12:58:41Z',
+                    'timestamp_areas_base': '2024-05-06T10:46:45Z',
+                    'copyright': 'The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.'},
+                    'elements': [{'type': 'way', 'id': 565154562, 'tags': {'landuse': exp_landuse}}]}    
+    
+    requests_mock.get(mock_url, json=mock_response)
+    
+    land_use_data = fetch_land_use(lon, lat)
+
+    current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+    assert current_land_use == exp_landuse, f"error in land use at point lat={lat}, lon={lon}"  
+
 #--------------------------------   get_soil_from_api  
 @pytest.mark.request
 def test_get_soil_from_api(config_geo):
@@ -219,14 +241,25 @@ def test_get_soil_from_api(config_geo):
     except:
         soil = "Not known"
     try:
-        assert soil == config_geo['test_location']['soil'], f' lat={lat}, lon={lon}'
+        assert soil == config_geo['test_location']['soil'], f'error in soil at point  lat={lat}, lon={lon}'
     except AssertionError as e: 
         message = "\033[91m" + " \n Warning: test can fail because of HTML request. \n" + "\033[0m"    
         warnings.warn(str(e)+message, UserWarning)        
     
+@pytest.mark.mock_request
+def test_mock_get_soil_from_api(config_geo, requests_mock):
+    lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
     
+    mock_url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
+        
+    mock_response = {'type': 'Point', 'coordinates': [13.37, 52.524],
+                     'query_time_s': 0.9068989753723145, 'wrb_class_name': 'Cambisols',
+                     'wrb_class_value': 6, 'wrb_class_probability': [['Cambisols', 17],
+                     ['Vertisols', 13],  ['Chernozems', 10],  ['Calcisols', 8],  ['Fluvisols', 8]]}
+    requests_mock.get(mock_url, json=mock_response)
+        
+    soil = get_soil_from_api(lat, lon)
+
+    assert soil == config_geo['test_location']['soil'], f'error in soil at point  lat={lat}, lon={lon}'
     
-
-
-
 

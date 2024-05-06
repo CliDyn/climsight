@@ -3,9 +3,9 @@ test_location:
   lon: 13.3700
   closest_shore_distance: 143240.00374445764
   elevation: 36.0
-  lat_land_use: 52.5240
+  lat_land_use: 53.5240
   lon_land_use: 14.3700  
-  current_land_use: 'forest'
+  current_land_use: 'meadow'
   soil: 'Cambisols'
   expected_address:
     railway: Berlin Hauptbahnhof (Tief)
