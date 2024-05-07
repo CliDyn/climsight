@@ -13,6 +13,7 @@ import warnings
 import sys
 import os
 import requests
+import requests_mock
 
 # Append the directory containing the module to sys.path
 module_dir = os.path.abspath('../src/climsight/')
@@ -46,16 +47,11 @@ def config_main():
         config = yaml.safe_load(file)
     return config
 
-config = config_main
-
-
 @pytest.fixture
 def config_geo():
     with open(test_config_path, 'r') as file:
         config_data = yaml.safe_load(file)
     return config_data
-
-config_geofunciton = config_geo
 
 @pytest.fixture
 def latlon(config_geo):
@@ -63,21 +59,16 @@ def latlon(config_geo):
     lon = float(config_geo['test_location']['lon'])
     return lat, lon  # This returns a tuple, but we'll unpack this in the function call
 
-@pytest.fixture
-def expected_address(config_geo):
-    return config_geo['test_location']['expected_address']
-
-@pytest.fixture
-def expected_address_string(config_geo):
-    return config_geo['test_location']['expected_address_string']
-
-@pytest.fixture
-def expected_location_details(config_geo):
-    return config_geo['test_location']['expected_location_details']
-
 @pytest.mark.request
-def test_get_location(latlon, expected_address, expected_address_string, expected_location_details):
-    location = get_location(*latlon)  #location = get_location(lat, lon)  
+def test_get_location(config_geo):
+    
+    lat = float(config_geo['test_location']['lat'])
+    lon = float(config_geo['test_location']['lon'])    
+    expected_address = config_geo['test_location']['expected_address']
+    expected_address_string = config_geo['test_location']['expected_address_string']
+    expected_location_details = config_geo['test_location']['expected_location_details']
+        
+    location = get_location(lat, lon)
 
     message = "\033[91m" + " \n Warning: test can fail because it changes the road unpredictably. \n" + "\033[0m"    
 
@@ -101,6 +92,36 @@ def test_get_location(latlon, expected_address, expected_address_string, expecte
       warnings.warn(str(e)+message, UserWarning)
         
 
+@pytest.mark.mock_request
+def test_mock_get_location(config_geo, requests_mock):
+
+    lat = float(config_geo['test_location']['lat'])
+    lon = float(config_geo['test_location']['lon'])    
+    expected_address = config_geo['test_location']['expected_address']
+    expected_address_string = tuple(config_geo['test_location']['expected_address_string'])
+    expected_location_details = config_geo['test_location']['expected_location_details']
+    expected_location = config_geo['test_location']['expected_location']
+    
+    mock_url = "https://nominatim.openstreetmap.org/reverse"
+    mock_response = expected_location  # Include all the fields expected in the 'properties'
+
+    # Setup mock request with parameters and headers
+    requests_mock.get(mock_url, json=mock_response)
+
+    location = get_location(lat,lon)
+
+    message = "\033[91m" + " \n Warning: test can fail because it changes the road unpredictably. \n" + "\033[0m"    
+
+    assert location is not None  , f"get_location: response.status_code not == 200"
+    assert 'error' not in location, f"get_location: {location}"
+    assert location['features'][0]['properties']['address'] == expected_address, f"wrong adress"
+      
+    address_string = get_adress_string(location)
+    assert address_string == expected_address_string, f"adress string is failed"
+
+    location_details = get_location_details(location)
+    assert location_details == expected_location_details
+        
 #----------------------------- Test wet dry areas 
 @pytest.fixture
 def out_point_on_land():
@@ -149,12 +170,28 @@ def test_where_is_point(config_geo, config_main):
     os.chdir('test')
 
 #--------------------------------   get_elevation_from_api  
+#test with request to api
 @pytest.mark.request
 def test_get_elevation_from_api(config_geo):
     lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
     elevation = get_elevation_from_api(lat, lon)
     assert elevation == config_geo['test_location']['elevation'], f"error in elevation at point lat={lat}, lon={lon}"    
-    
+#test with mock request 
+@pytest.mark.mock_request
+def test_mock_get_elevation_from_api(config_geo, requests_mock):
+    lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
+    exp_elevation = config_geo['test_location']['elevation']
+    mock_url = f"https://api.opentopodata.org/v1/etopo1?locations={lat},{lon}"
+    mock_response ={'results': [{'dataset': 'etopo1',
+                    'elevation': exp_elevation,
+                    'location': {'lat': lat, 'lng': lon}}],
+                    'status': 'OK'}    
+
+    requests_mock.get(mock_url, json=mock_response)
+
+    elevation = get_elevation_from_api(lat, lon)
+    assert elevation == exp_elevation, f"error in elevation at point lat={lat}, lon={lon}"    
+     
 #--------------------------------   test_fetch_land_use  
 @pytest.mark.request
 def test_fetch_land_use(config_geo):
@@ -173,6 +210,28 @@ def test_fetch_land_use(config_geo):
         message = "\033[91m" + " \n Warning: test can fail because of HTML request. \n" + "\033[0m"    
         warnings.warn(str(e)+message, UserWarning)  
 
+#test with mock request 
+@pytest.mark.mock_request
+def test_mock_fetch_land_use(config_geo, requests_mock):
+    lat, lon = config_geo['test_location']['lat_land_use'], config_geo['test_location']['lon_land_use']
+    exp_landuse = config_geo['test_location']['current_land_use']
+    
+    mock_url = "http://overpass-api.de/api/interpreter"
+        
+    mock_response ={'version': 0.6,
+                    'generator': 'Overpass API 0.7.62.1 084b4234',
+                    'osm3s': {'timestamp_osm_base': '2024-05-06T12:58:41Z',
+                    'timestamp_areas_base': '2024-05-06T10:46:45Z',
+                    'copyright': 'The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.'},
+                    'elements': [{'type': 'way', 'id': 565154562, 'tags': {'landuse': exp_landuse}}]}    
+    
+    requests_mock.get(mock_url, json=mock_response)
+    
+    land_use_data = fetch_land_use(lon, lat)
+
+    current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+    assert current_land_use == exp_landuse, f"error in land use at point lat={lat}, lon={lon}"  
+
 #--------------------------------   get_soil_from_api  
 @pytest.mark.request
 def test_get_soil_from_api(config_geo):
@@ -182,14 +241,25 @@ def test_get_soil_from_api(config_geo):
     except:
         soil = "Not known"
     try:
-        assert soil == config_geo['test_location']['soil'], f' lat={lat}, lon={lon}'
+        assert soil == config_geo['test_location']['soil'], f'error in soil at point  lat={lat}, lon={lon}'
     except AssertionError as e: 
         message = "\033[91m" + " \n Warning: test can fail because of HTML request. \n" + "\033[0m"    
         warnings.warn(str(e)+message, UserWarning)        
     
+@pytest.mark.mock_request
+def test_mock_get_soil_from_api(config_geo, requests_mock):
+    lat, lon = config_geo['test_location']['lat'], config_geo['test_location']['lon']
     
+    mock_url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
+        
+    mock_response = {'type': 'Point', 'coordinates': [13.37, 52.524],
+                     'query_time_s': 0.9068989753723145, 'wrb_class_name': 'Cambisols',
+                     'wrb_class_value': 6, 'wrb_class_probability': [['Cambisols', 17],
+                     ['Vertisols', 13],  ['Chernozems', 10],  ['Calcisols', 8],  ['Fluvisols', 8]]}
+    requests_mock.get(mock_url, json=mock_response)
+        
+    soil = get_soil_from_api(lat, lon)
+
+    assert soil == config_geo['test_location']['soil'], f'error in soil at point  lat={lat}, lon={lon}'
     
-
-
-
 
