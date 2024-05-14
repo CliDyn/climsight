@@ -6,13 +6,13 @@ import streamlit as st
 import xarray as xr
 import numpy as np
 import pandas as pd
-
+from functools import lru_cache
 #from climate_functions import (
 #    load_data,
 #    extract_climate_data
 #)
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def load_data(data_path):
     """
     load climate model data 
@@ -32,7 +32,7 @@ def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
     return monthly_precip_kg_m2_s1 * 60 * 60 * 24 * days_in_months
 
 
-@st.cache_data
+#@lru_cache(maxsize=100)
 def extract_climate_data(lat, lon, _hist, _future):
     """
     Extracts climate data for a given latitude and longitude from historical and future datasets.
