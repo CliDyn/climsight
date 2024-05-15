@@ -11,9 +11,9 @@ import geopandas as gpd
 import pandas as pd
 from pyproj import Geod
 from requests.exceptions import Timeout
+from functools import lru_cache
 
-
-@st.cache_data
+@lru_cache(maxsize=100)
 def get_location(lat, lon):
     """
     Returns the address of a given latitude and longitude using the Nominatim geocoding service.
@@ -53,7 +53,7 @@ def get_location(lat, lon):
         print("Error:", response.status_code, response.reason)
         return None
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def where_is_point(lat, lon):
     """
     Checks if a given point (latitude and longitude) is on land or water, and identifies the water body's name if applicable.
@@ -133,7 +133,7 @@ def where_is_point(lat, lon):
     return is_on_land, in_lake, lake_name, near_river, river_name, water_body_status
 
 
-@st.cache_data
+#@lru_cache(maxsize=100)
 def get_adress_string(location):
     """
     Returns a tuple containing three strings:
@@ -173,7 +173,7 @@ def get_adress_string(location):
     return location_str, location_str_for_print, country
 
 
-@st.cache_data
+#@lru_cache(maxsize=100)
 def get_location_details(location):
     """"
     Returns a dictionary containing:
@@ -194,7 +194,7 @@ def get_location_details(location):
 
     return extracted_properties
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def closest_shore_distance(lat: float, lon: float, coastline_shapefile: str) -> float:
     """
     Calculates the closest distance between a given point (lat, lon) and the nearest point on the coastline.
@@ -229,7 +229,7 @@ def closest_shore_distance(lat: float, lon: float, coastline_shapefile: str) -> 
     return min_distance
 
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def get_elevation_from_api(lat, lon):
     """
     Get the elevation of a location using the Open Topo Data API.
@@ -246,7 +246,7 @@ def get_elevation_from_api(lat, lon):
     data = response.json()
     return data["results"][0]["elevation"]
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def fetch_land_use(lon, lat):
     """
     Fetches land use data for a given longitude and latitude using the Overpass API.
@@ -269,7 +269,7 @@ def fetch_land_use(lon, lat):
     data = response.json()
     return data
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def get_soil_from_api(lat, lon):
     """
     Retrieves the soil type at a given latitude and longitude using the ISRIC SoilGrids API.
