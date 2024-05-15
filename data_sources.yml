@@ -1,0 +1,83 @@
+base_path: './data'
+sources:
+  - filename: 'data_climate_foresight.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_5c967f69-11af-4eff-bc86-ebddfd95a578/climsight_data/data_climate_foresight.zip?temp_url_sig=499f354faff4c6c0c7ef477f4225647f26078b13&temp_url_expires=2034-04-30T12:44:25Z'
+    archive_type: 'zip'
+    subdir: './'
+    citation:     
+
+  - filename: 'natural_hazards.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_5c967f69-11af-4eff-bc86-ebddfd95a578/climsight_data/natural_hazards.zip?temp_url_sig=b415d6d7e20721e1fea3c9e42e6238d12c1b32fa&temp_url_expires=2034-04-30T12:43:59Z'
+    archive_type: 'zip'
+    subdir: 'natural_hazards'
+    citation: 
+      - 'The GDIS data descriptor: Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8, 61 (2021). https://doi.org/10.1038/s41597-021-00846-6'
+      - 'The GDIS dataset: Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61 , Accessed 02 May 2024.'
+      - 'The EM-DAT dataset: Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International disaster database. Centre for Research on the Epidemiology of Disasters (CRED).'
+
+  - filename: 'population.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_5c967f69-11af-4eff-bc86-ebddfd95a578/climsight_data/population.zip?temp_url_sig=e7825fe96cf47463a3198d9c5f5785c4b0c155dc&temp_url_expires=2034-04-30T12:43:05Z'
+    archive_type: 'zip'
+    subdir: 'population'
+    citation: 
+      - 'United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition.'      
+
+  - filename: 'ne_10m_coastline.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_coastline.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/coastlines'
+    citation:     
+
+  - filename: 'ne_10m_land.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/land'
+    citation:     
+
+  - filename: 'ne_10m_rivers_lake_centerlines.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+    citation:     
+
+  - filename: 'ne_10m_rivers_australia.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_australia.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+    citation:     
+
+  - filename: 'ne_10m_rivers_europe.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_europe.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+    citation:     
+
+  - filename: 'ne_10m_rivers_north_america.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/rivers'
+    citation:     
+
+  - filename: 'ne_10m_lakes.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+    citation:     
+
+  - filename: 'ne_10m_lakes_australia.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_australia.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+    citation:     
+
+  - filename: 'ne_10m_lakes_europe.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_europe.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+    citation:     
+
+  - filename: 'ne_10m_lakes_north_america.zip'
+    url: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes_north_america.zip'
+    archive_type: 'zip'
+    subdir: 'natural_earth/lakes'
+    citation:     
