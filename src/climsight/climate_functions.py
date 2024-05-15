@@ -45,6 +45,7 @@ def load_data(config):
         if hist_files and climatemodel_name != "AWI_CM":
             hist = xr.open_mfdataset(hist_files, concat_dim='time_counter', combine='nested')
         elif hist_files and climatemodel_name == 'AWI_CM':
+
             hist = xr.open_mfdataset(hist_files, combine='by_coords', compat='override')
         else:
             raise FileNotFoundError(f"No historical files found matching pattern {historical_pattern} in {data_path}")
@@ -52,6 +53,7 @@ def load_data(config):
         if future_files and climatemodel_name != 'AWI_CM':
             future = xr.open_mfdataset(future_files, concat_dim='time_counter', combine='nested')
         elif future_files and climatemodel_name == 'AWI_CM':
+
             future = xr.open_mfdataset(future_files, combine='by_coords', compat='override')
         else:
             raise FileNotFoundError(f"No projection files found matching pattern {projection_pattern} in {data_path}")
@@ -116,6 +118,7 @@ def convert_precipitation(hist_units, hist_data, future_data):
         # hist_data /= 100
         # future_data /= 100
         # print(f"Converted precipitation from m/month to mm/month.") 
+
     elif 'mm' not in hist_units:  # Check if not already in Celsius
         warnings.warn(f"Unexpected precipitation units: {hist_units}. Please check the unit manually.")
         print(f"Units found: {hist_units}")
@@ -180,6 +183,7 @@ def extract_climate_data(lat, lon, hist, future, config):
         # Check if data is in unusual format and reshape if necessary 
         hist_data = process_data(hist_data)
         future_data = process_data(future_data)
+
 
         # Get units for both projections
         hist_units = hist_data.attrs.get('units', '')

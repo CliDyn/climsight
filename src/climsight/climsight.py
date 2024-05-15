@@ -63,6 +63,7 @@ with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 
 model_name = config['model_name']
+
 climatemodel_name = config['climatemodel_name']
 data_path = config['data_settings']['data_path']
 coastline_shapefile = config['coastline_shapefile']
