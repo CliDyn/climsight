@@ -46,6 +46,7 @@ from economic_functions import (
 )
 
 from climate_functions import (
+   #load_config,
    load_data,
    extract_climate_data
 )
@@ -57,12 +58,15 @@ from environmental_functions import (
 )
 
 config_path = os.getenv('CONFIG_PATH', 'config.yml')
+
 # print(config_path)
 with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 
 model_name = config['model_name']
-data_path = config['data_path']
+
+climatemodel_name = config['climatemodel_name']
+data_path = config['data_settings']['data_path']
 coastline_shapefile = config['coastline_shapefile']
 haz_path = config['haz_path']
 pop_path = config['pop_path']
@@ -90,7 +94,6 @@ content_message = "{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
-      Occuring species: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Current precipitation flux (mm/month): {hist_pr_str} \
@@ -122,7 +125,7 @@ class StreamHandler(BaseCallbackHandler):
         else:
             raise ValueError(f"Invalid display_method: {self.display_method}")
 
-hist, future = load_data(data_path)
+hist, future = load_data(config)
 
 st.title(
     " :cyclone: \
@@ -217,7 +220,7 @@ if submit_button and user_message:
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
 
         # create pandas dataframe
-        df, data_dict = extract_climate_data(lat, lon, hist, future)
+        df, data_dict = extract_climate_data(lat, lon, hist, future, config)
 
         filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
 
@@ -262,14 +265,14 @@ if submit_button and user_message:
                 current_land_use=current_land_use,
                 soil=soil,
                 biodiv = biodiv,
-                hist_temp_str=data_dict["hist_temp"],
-                future_temp_str=data_dict["future_temp"],
-                hist_pr_str=data_dict["hist_pr"],
-                future_pr_str=data_dict["future_pr"],
-                hist_uas_str=data_dict["hist_uas"],
-                future_uas_str=data_dict["future_uas"],
-                hist_vas_str=data_dict["hist_vas"],
-                future_vas_str=data_dict["future_vas"],
+                hist_temp_str=data_dict["hist_Temperature"],
+                future_temp_str=data_dict["future_Temperature"],
+                hist_pr_str=data_dict["hist_Precipitation"],
+                future_pr_str=data_dict["future_Precipitation"],
+                hist_uas_str=data_dict["hist_u_wind"],
+                future_uas_str=data_dict["future_u_wind"],
+                hist_vas_str=data_dict["hist_v_wind"],
+                future_vas_str=data_dict["future_v_wind"],
                 nat_hazards = promt_hazard_data,
                 population = population,
                 verbose=True,
@@ -289,7 +292,7 @@ if submit_button and user_message:
         # Climate Data
         st.markdown("**Climate data:**")
         st.markdown(
-            "Near surface temperature",
+            "Near surface temperature (in °C)",
         )
         st.line_chart(
             df,
@@ -298,7 +301,7 @@ if submit_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
-            "Precipitation",
+            "Precipitation (in mm)",
         )
         st.line_chart(
             df,
@@ -307,7 +310,7 @@ if submit_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
-            "Wind speed",
+            "Wind speed (in m*s-1)",
         )
         st.line_chart(
             df,
@@ -315,8 +318,18 @@ if submit_button and user_message:
             y=["Present Day Wind Speed", "Future Wind Speed"],
             color=["#d62728", "#2ca02c"],
         )
+        # Determine the model information string based on climatemodel_name
+        if climatemodel_name == 'AWI_CM':
+            model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+        elif climatemodel_name == 'tco1279':
+            model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+        elif climatemodel_name == 'tco319':
+            model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
+        else:
+            model_info = 'unknown climate model'
+
         with st.expander("Source"):
-            st.markdown('AWI-CM-1-1-MR, historical, and SSP5-8.5')
+            st.markdown(model_info)
 
         # Natural Hazards
         if haz_fig is not None:
