@@ -57,11 +57,14 @@ from environmental_functions import (
 )
 
 config_path = os.getenv('CONFIG_PATH', 'config.yml')
+
 # print(config_path)
 with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 
 model_name = config['model_name']
+
+climatemodel_name = config['climatemodel_name']
 data_path = config['data_settings']['data_path']
 coastline_shapefile = config['coastline_shapefile']
 haz_path = config['haz_path']
@@ -90,7 +93,6 @@ content_message = "{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
-      Occuring species: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Current precipitation flux (mm/month): {hist_pr_str} \
@@ -315,8 +317,18 @@ if submit_button and user_message:
             y=["Present Day Wind Speed", "Future Wind Speed"],
             color=["#d62728", "#2ca02c"],
         )
+        # Determine the model information string based on climatemodel_name
+        if climatemodel_name == 'AWI_CM':
+            model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+        elif climatemodel_name == 'tco1279':
+            model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+        elif climatemodel_name == 'tco319':
+            model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
+        else:
+            model_info = 'unknown climate model'
+
         with st.expander("Source"):
-            st.markdown('AWI-CM-1-1-MR, historical, and SSP5-8.5')
+            st.markdown(model_info)
 
         # Natural Hazards
         if haz_fig is not None:

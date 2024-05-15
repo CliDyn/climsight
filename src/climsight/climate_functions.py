@@ -28,18 +28,32 @@ def load_data(config):
     """   
     try:
         data_path = config['data_settings']['data_path']
+        climatemodel_name = config['climatemodel_name']
         historical_pattern = config['data_settings']['historical']
         projection_pattern = config['data_settings']['projection']
 
-        hist_files = glob.glob(os.path.join(data_path, f"*{historical_pattern}*.nc"))
-        future_files = glob.glob(os.path.join(data_path, f"*{projection_pattern}*.nc"))
+        if climatemodel_name == 'tco1279' or climatemodel_name == 'tco319':
+            all_files = glob.glob(os.path.join(data_path, '*.nc'))
+            hist_files = [f for f in all_files if climatemodel_name in f and historical_pattern in f]
+            future_files = [f for f in all_files if climatemodel_name in f and projection_pattern in f]
+        elif climatemodel_name == 'AWI_CM':
+            hist_files = glob.glob(os.path.join(data_path, f"*{historical_pattern}*.nc"))
+            future_files = glob.glob(os.path.join(data_path, f"*{projection_pattern}*.nc"))
+        else: 
+            warnings.warn("Unknown model type. Cannot evaluate given climate data.")
 
-        if hist_files:
+        if hist_files and climatemodel_name != "AWI_CM":
+            hist = xr.open_mfdataset(hist_files, concat_dim='time_counter', combine='nested')
+        elif hist_files and climatemodel_name == 'AWI_CM':
+
             hist = xr.open_mfdataset(hist_files, combine='by_coords', compat='override')
         else:
             raise FileNotFoundError(f"No historical files found matching pattern {historical_pattern} in {data_path}")
 
-        if future_files:
+        if future_files and climatemodel_name != 'AWI_CM':
+            future = xr.open_mfdataset(future_files, concat_dim='time_counter', combine='nested')
+        elif future_files and climatemodel_name == 'AWI_CM':
+
             future = xr.open_mfdataset(future_files, combine='by_coords', compat='override')
         else:
             raise FileNotFoundError(f"No projection files found matching pattern {projection_pattern} in {data_path}")
@@ -87,7 +101,7 @@ def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
     Converts kg_m2_s1 to mm per month
     """
     days_in_months = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
-    return monthly_precip_kg_m2_s1 * 60 * 60 * 24 * days_in_months
+    return monthly_precip_kg_m2_s1 * 60 * 60 * 24 * days_in_months # input in seconds 
 
 def convert_precipitation(hist_units, hist_data, future_data):
     """
@@ -97,14 +111,39 @@ def convert_precipitation(hist_units, hist_data, future_data):
         hist_data = convert_to_mm_per_month(hist_data)
         future_data = convert_to_mm_per_month(future_data)
         print(f"Converted precipitation from kg/m^2/s to mm/month.")
-    elif 'm' in hist_units:
-        hist_data /= 100
-        future_data /= 100
-        print(f"Converted precipitation from m/month to mm/month.")
+    elif 'm' in hist_units: # this is not perfectly handled yet, but the awi-cm-3 tco... data comes in unit m but is actually m^2/s
+        hist_data = convert_to_mm_per_month(hist_data) * 1000
+        future_data = convert_to_mm_per_month(future_data) * 1000
+        print(f"Converted precipitation from kg/m^2/s to mm/month.")
+        # hist_data /= 100
+        # future_data /= 100
+        # print(f"Converted precipitation from m/month to mm/month.") 
+
     elif 'mm' not in hist_units:  # Check if not already in Celsius
         warnings.warn(f"Unexpected precipitation units: {hist_units}. Please check the unit manually.")
         print(f"Units found: {hist_units}")
     return hist_data, future_data
+
+def process_data(data):
+    """
+    Processes the given data by squeezing out singleton dimensions, ensuring the 
+    remaining dimensions include the month dimension (size 12).
+    
+    Args:
+        data (xarray.DataArray or xarray.Dataset): The climate data to be processed.
+    
+    Returns:
+        xarray.DataArray or xarray.Dataset: The processed climate data with singleton
+        dimensions removed.
+    """
+    # Squeeze out all singleton dimensions from the data
+    processed_data = data.squeeze()
+
+    # Check if the squeezed data still contains the month dimension (expected to be size 12)
+    if 12 not in processed_data.shape:
+        raise ValueError("The month dimension (size 12) is missing from the processed data.")
+
+    return processed_data
 
 def extract_climate_data(lat, lon, hist, future, config):
     """
@@ -141,11 +180,10 @@ def extract_climate_data(lat, lon, hist, future, config):
         #     hist_data = hist_data.groupby('time.month').mean('time')  # Averaging over 'time' assuming data includes multiple years
         #     future_data = future_data.groupby('time.month').mean('time')
 
-        # Check if data is in unusual format and reshape if necessary (only for AWI_CM files currently neccessary)
-        if hist_data.values.shape == (1, 1, 12):
-            hist_data = hist_data.squeeze()  # this removes dimensions of size 1
-        if future_data.values.shape == (1, 1,12):
-            future_data = future_data.squeeze()
+        # Check if data is in unusual format and reshape if necessary 
+        hist_data = process_data(hist_data)
+        future_data = process_data(future_data)
+
 
         # Get units for both projections
         hist_units = hist_data.attrs.get('units', '')
