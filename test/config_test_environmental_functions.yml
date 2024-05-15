@@ -1,0 +1,1962 @@
+test_location:
+  lat: 52.5240
+  lon: 13.3700
+  biodiv: 'Panellus, Piptoporus, Hordeum'
+  promt_hazard_data:
+    - year: 2002
+      disastertype: storm
+    - year: 2006
+      disastertype: storm
+    - year: 2010
+      disastertype: storm
+    - year: 2003
+      disastertype: 'extreme temperature '
+    - year: 2006
+      disastertype: 'extreme temperature '
+    - year: 2009
+      disastertype: 'extreme temperature '
+    - year: 2009
+      disastertype: 'extreme temperature '
+    - year: 2012
+      disastertype: 'extreme temperature '
+    - year: 2012
+      disastertype: 'extreme temperature '
+  filtered_events_square:
+    - country: Germany
+      year: 2002
+      geolocation: Berlin
+      disastertype: storm
+      latitude: 52.501332
+      longitude: 13.40144
+    - country: Germany
+      year: 2006
+      geolocation: Berlin
+      disastertype: storm
+      latitude: 52.501332
+      longitude: 13.40144
+    - country: Germany
+      year: 2010
+      geolocation: Berlin
+      disastertype: storm
+      latitude: 52.501332
+      longitude: 13.40144
+    - country: Germany
+      year: 2003
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2006
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2009
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2009
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2012
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+    - country: Germany
+      year: 2012
+      geolocation: Berlin
+      disastertype: 'extreme temperature '
+      latitude: 52.501532
+      longitude: 13.40185
+expected_biodiv:
+  offset: 0
+  limit: 20
+  endOfRecords: false
+  count: 733
+  results:
+  - key: 1990330159
+    datasetKey: 032f1fbe-d21f-407d-be46-5cd1bb1ea397
+    publishingOrgKey: 61c539d8-47e0-4b82-875f-b95aad66dcd4
+    installationKey: dd8ffb07-5f02-4e70-b4cd-dbba0dfae83e
+    hostingOrganizationKey: b648db34-3bf9-45eb-a65b-8176a3c3be88
+    publishingCountry: US
+    protocol: DWC_ARCHIVE
+    lastCrawled: '2024-05-03T14:32:06.690+00:00'
+    lastParsed: '2024-05-03T14:33:08.719+00:00'
+    crawlId: 273
+    extensions: {}
+    basisOfRecord: PRESERVED_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 8931746
+    kingdomKey: 5
+    phylumKey: 34
+    classKey: 186
+    orderKey: 1499
+    familyKey: 4180
+    genusKey: 2526673
+    speciesKey: 8931746
+    acceptedTaxonKey: 8931746
+    scientificName: Panellus mitis (Pers.) Singer
+    acceptedScientificName: Panellus mitis (Pers.) Singer
+    kingdom: Fungi
+    phylum: Basidiomycota
+    order: Agaricales
+    family: Mycenaceae
+    genus: Panellus
+    species: Panellus mitis
+    genericName: Panellus
+    specificEpithet: mitis
+    taxonRank: SPECIES
+    taxonomicStatus: ACCEPTED
+    iucnRedListCategory: NE
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    stateProvince: Mecklenburg-vorpommern
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    year: 2000
+    month: 1
+    day: 1
+    eventDate: '2000-01-01'
+    startDayOfYear: 1
+    endDayOfYear: 1
+    issues:
+    - GEODETIC_DATUM_ASSUMED_WGS84
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_TAXON_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    modified: '2018-06-22T16:37:28.000+00:00'
+    lastInterpreted: '2024-05-03T14:33:08.719+00:00'
+    references: https://www.mycoportal.org/portal/collections/individual/index.php?occid=280204
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: '280204'
+    media: []
+    facts: []
+    relations: []
+    isInCluster: false
+    recordedBy: "D. Kr\xFCger"
+    geodeticDatum: WGS84
+    class: Agaricomycetes
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: NORTH_AMERICA
+    identifier: '280204'
+    recordNumber: '10913'
+    verbatimEventDate: 1/1/2000
+    http://unknown.org/recordID: 6a2f85c3-9767-4aee-944e-f972c53c28e7
+    county: Mecklenburg-Strelitz
+    locality: Neustrelitz, NANA
+    municipality: Neustrelitz
+    gbifID: '1990330159'
+    occurrenceID: 6a2f85c3-9767-4aee-944e-f972c53c28e7
+    taxonID: '186613'
+    catalogNumber: TENN-F-058396
+    institutionCode: TENN-F
+    rights: https://creativecommons.org/licenses/by-nc-nd/4.0/
+    http://unknown.org/recordEnteredBy: DK
+    collectionID: 97e2d271-3744-48a3-92b5-5a86afbfb01d
+    higherClassification: Fungi|Basidiomycota|Agaricomycotina|Agaricomycetes|Agaricomycetidae|Agaricales|Mycenaceae|Panellus
+  - key: 1990330206
+    datasetKey: 032f1fbe-d21f-407d-be46-5cd1bb1ea397
+    publishingOrgKey: 61c539d8-47e0-4b82-875f-b95aad66dcd4
+    installationKey: dd8ffb07-5f02-4e70-b4cd-dbba0dfae83e
+    hostingOrganizationKey: b648db34-3bf9-45eb-a65b-8176a3c3be88
+    publishingCountry: US
+    protocol: DWC_ARCHIVE
+    lastCrawled: '2024-05-03T14:32:06.690+00:00'
+    lastParsed: '2024-05-03T14:33:08.721+00:00'
+    crawlId: 273
+    extensions: {}
+    basisOfRecord: PRESERVED_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 9173916
+    kingdomKey: 5
+    phylumKey: 34
+    classKey: 186
+    orderKey: 1145
+    familyKey: 7619
+    genusKey: 2523631
+    speciesKey: 9819973
+    acceptedTaxonKey: 9819973
+    scientificName: Piptoporus betulinus (Bull.) P.Karst.
+    acceptedScientificName: Fomitopsis betulina (Bull.) B.K.Cui, M.L.Han & Y.C.Dai
+    kingdom: Fungi
+    phylum: Basidiomycota
+    order: Polyporales
+    family: Fomitopsidaceae
+    genus: Fomitopsis
+    species: Fomitopsis betulina
+    genericName: Piptoporus
+    specificEpithet: betulinus
+    taxonRank: SPECIES
+    taxonomicStatus: SYNONYM
+    iucnRedListCategory: NE
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    stateProvince: Mecklenburg-vorpommern
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    year: 2000
+    month: 1
+    day: 1
+    eventDate: '2000-01-01'
+    startDayOfYear: 1
+    endDayOfYear: 1
+    issues:
+    - GEODETIC_DATUM_ASSUMED_WGS84
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_TAXON_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    modified: '2018-06-22T16:37:28.000+00:00'
+    lastInterpreted: '2024-05-03T14:33:08.721+00:00'
+    references: https://www.mycoportal.org/portal/collections/individual/index.php?occid=280205
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: '280205'
+    media: []
+    facts: []
+    relations: []
+    isInCluster: false
+    recordedBy: "D. Kr\xFCger"
+    geodeticDatum: WGS84
+    class: Agaricomycetes
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: NORTH_AMERICA
+    identifier: '280205'
+    recordNumber: '10914'
+    verbatimEventDate: 1/1/2000
+    http://unknown.org/recordID: fd64762d-446b-4c78-904d-0a87a659cfd1
+    county: Mecklenburg-Strelitz
+    locality: Neustrelitz, Kiefernheide Forest (strelitzer Stadtforst), Rehwiese (lewitz
+      Moor)
+    municipality: Neustrelitz
+    gbifID: '1990330206'
+    occurrenceID: fd64762d-446b-4c78-904d-0a87a659cfd1
+    taxonID: '187541'
+    catalogNumber: TENN-F-058397
+    institutionCode: TENN-F
+    rights: https://creativecommons.org/licenses/by-nc-nd/4.0/
+    http://unknown.org/recordEnteredBy: DK
+    collectionID: 97e2d271-3744-48a3-92b5-5a86afbfb01d
+    higherClassification: Fungi|Basidiomycota|Agaricomycotina|Agaricomycetes|Agaricomycetidae|Polyporales|Fomitopsidaceae|Piptoporus
+  - key: 4525984287
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:26.520+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00007
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '500'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00007
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Lago
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:26.520+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/12X57
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00007
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/12X57
+    catalogNumber: CGN00007
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525984287'
+    occurrenceID: 10.18730/12X57
+  - key: 4525980863
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:25.803+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00226
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00226
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Kuckuck 1961
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:25.803+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/133Q*
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00226
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/133Q*
+    catalogNumber: CGN00226
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525980863'
+    occurrenceID: 10.18730/133Q*
+  - key: 4525980726
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:25.771+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00228
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '500'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00228
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Wieselburger 2-zeilige
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:25.771+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/133S$
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00228
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/133S$
+    catalogNumber: CGN00228
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525980726'
+    occurrenceID: 10.18730/133S$
+  - key: 4525980777
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:25.781+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00229
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00229
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: 2679/44
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:25.781+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/133T=
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00229
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/133T=
+    catalogNumber: CGN00229
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525980777'
+    occurrenceID: 10.18730/133T=
+  - key: 4525980832
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:25.793+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00239
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: Criewener/Pflugs
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00239
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: Criewener/Pflugs
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:25.793+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/13404
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00239
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/13404
+    catalogNumber: CGN00239
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525980832'
+    occurrenceID: 10.18730/13404
+  - key: 4525987547
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.082+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00268
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00268
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Lechtaler
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.082+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/134QV
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00268
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    otherCatalogNumbers: USA027:CI 6488
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/134QV
+    catalogNumber: CGN00268
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525987547'
+    occurrenceID: 10.18730/134QV
+  - key: 4525987359
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.041+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00269
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: Haisa/Imperial/H.spontaneum
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00269
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: Haisa/Imperial/H.spontaneum
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Hispont
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.041+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/134RW
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00269
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    otherCatalogNumbers: USA007:PI 180687|USA027:CI 8828
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/134RW
+    catalogNumber: CGN00269
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525987359'
+    occurrenceID: 10.18730/134RW
+  - key: 4525987543
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.100+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00281
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00281
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Hor.793
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.100+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/13532
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00281
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/13532
+    catalogNumber: CGN00281
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525987543'
+    occurrenceID: 10.18730/13532
+  - key: 4525987355
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.039+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00282
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00282
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Hor.1457
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.039+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/13543
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00282
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/13543
+    catalogNumber: CGN00282
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525987355'
+    occurrenceID: 10.18730/13543
+  - key: 4525987654
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.102+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00289
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00289
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Linie 4831
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.102+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/13587
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00289
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/13587
+    catalogNumber: CGN00289
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525987654'
+    occurrenceID: 10.18730/13587
+  - key: 4525987682
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.106+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00290
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '500'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00290
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Berg
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.106+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/13598
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00290
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/13598
+    catalogNumber: CGN00290
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525987682'
+    occurrenceID: 10.18730/13598
+  - key: 4525988739
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.288+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00343
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: Triple Awn Lemma/Rigel
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00343
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: Triple Awn Lemma/Rigel
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.288+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/136WP
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00343
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/136WP
+    catalogNumber: CGN00343
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525988739'
+    occurrenceID: 10.18730/136WP
+  - key: 4525988762
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.291+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00344
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: Forrajera/Rika
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00344
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: Forrajera/Rika
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.291+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/136XQ
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00344
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/136XQ
+    catalogNumber: CGN00344
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525988762'
+    occurrenceID: 10.18730/136XQ
+  - key: 4525988779
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.295+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00345
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: La Estanzuela 75A/Rika
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00345
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: La Estanzuela 75A/Rika
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.295+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/136YR
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00345
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/136YR
+    catalogNumber: CGN00345
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525988779'
+    occurrenceID: 10.18730/136YR
+  - key: 4525988610
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.271+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00347
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: Freja/Jerusalem
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00347
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: Freja/Jerusalem
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.271+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/1370T
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00347
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/1370T
+    catalogNumber: CGN00347
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525988610'
+    occurrenceID: 10.18730/1370T
+  - key: 4525988622
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.269+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00348
+        http://purl.org/germplasm/germplasmTerm#purdyPedigree: Fida//Triple Awn Lemma/Aurore
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#biologicalStatus: '400'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00348
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#ancestralData: Fida//Triple Awn Lemma/Aurore
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.269+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/1371V
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00348
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/1371V
+    catalogNumber: CGN00348
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525988622'
+    occurrenceID: 10.18730/1371V
+  - key: 4525988749
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.289+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00356
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00356
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: G 1 m.s.
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.289+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/1379=
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00356
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/1379=
+    catalogNumber: CGN00356
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525988749'
+    occurrenceID: 10.18730/1379=
+  - key: 4525989204
+    datasetKey: 85796928-f762-11e1-a439-00145eb45e9a
+    publishingOrgKey: efc2ae40-9880-11da-89b4-b8a03c50a862
+    installationKey: 97dfec69-b198-43ba-a8fa-c5edbc04e324
+    hostingOrganizationKey: cace8d10-2646-11d8-a2da-b8a03c50a862
+    publishingCountry: NL
+    protocol: EML
+    lastCrawled: '2024-02-26T11:40:15.213+00:00'
+    lastParsed: '2024-02-26T12:47:27.359+00:00'
+    crawlId: 364
+    extensions:
+      http://purl.org/germplasm/germplasmTerm#GermplasmAccession:
+      - http://purl.org/germplasm/germplasmTerm#germplasmID: CGN00364
+        http://purl.org/germplasm/germplasmTerm#storageCondition: '-20'
+        http://purl.org/germplasm/germplasmTerm#germplasmIdentifier: CGN00364
+        http://purl.org/germplasm/germplasmTerm#safetyDuplicationInstituteID: DEU146
+        http://purl.org/germplasm/germplasmTerm#mlsStatus: '1'
+        http://www.w3.org/2003/01/geo/wgs84_pos#lat: '53'
+        http://www.w3.org/2003/01/geo/wgs84_pos#long: '13'
+        http://purl.org/germplasm/germplasmTerm#donorInstituteID: NLD078
+        http://purl.org/germplasm/germplasmTerm#breedingIdentifier: Emilio Mariani
+    basisOfRecord: LIVING_SPECIMEN
+    occurrenceStatus: PRESENT
+    taxonKey: 4932619
+    kingdomKey: 6
+    phylumKey: 7707728
+    classKey: 196
+    orderKey: 1369
+    familyKey: 3073
+    genusKey: 2706050
+    speciesKey: 2706056
+    acceptedTaxonKey: 4932619
+    scientificName: Hordeum vulgare subsp. vulgare
+    acceptedScientificName: Hordeum vulgare subsp. vulgare
+    kingdom: Plantae
+    phylum: Tracheophyta
+    order: Poales
+    family: Poaceae
+    genus: Hordeum
+    species: Hordeum vulgare
+    genericName: Hordeum
+    specificEpithet: vulgare
+    infraspecificEpithet: vulgare
+    taxonRank: SUBSPECIES
+    taxonomicStatus: ACCEPTED
+    decimalLatitude: 53.0
+    decimalLongitude: 13.0
+    continent: EUROPE
+    gadm:
+      level0:
+        gid: DEU
+        name: Germany
+      level1:
+        gid: DEU.4_1
+        name: Brandenburg
+      level2:
+        gid: DEU.4.12_1
+        name: Ostprignitz-Ruppin
+      level3:
+        gid: DEU.4.12.4_1
+        name: Lindow (Mark)
+    issues:
+    - COUNTRY_DERIVED_FROM_COORDINATES
+    - CONTINENT_DERIVED_FROM_COORDINATES
+    - TAXON_MATCH_SCIENTIFIC_NAME_ID_IGNORED
+    - INSTITUTION_MATCH_NONE
+    lastInterpreted: '2024-02-26T12:47:27.359+00:00'
+    license: http://creativecommons.org/publicdomain/zero/1.0/legalcode
+    isSequenced: false
+    identifiers:
+    - identifier: 10.18730/137H6
+    media:
+    - references: https://cgngenis.wur.nl/accessiondetails/CGN00364
+    facts: []
+    relations: []
+    isInCluster: false
+    datasetID: NLD
+    geodeticDatum: WGS84
+    class: Liliopsida
+    countryCode: DE
+    recordedByIDs: []
+    identifiedByIDs: []
+    gbifRegion: EUROPE
+    country: Germany
+    publishedByGbifRegion: EUROPE
+    identifier: 10.18730/137H6
+    catalogNumber: CGN00364
+    vernacularName: barley
+    scientificNameID: Hordeum vulgare subsp. vulgare L.
+    institutionCode: NLD037
+    gbifID: '4525989204'
+    occurrenceID: 10.18730/137H6
+  facets: []

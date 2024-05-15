@@ -40,7 +40,7 @@ def get_location(lat, lon):
         "User-Agent": "climsight",
         "accept-language": "en"
     }
-    response = requests.get(url, params=params, headers=headers, timeout=3)
+    response = requests.get(url, params=params, headers=headers, timeout=5)
     location = response.json()
 
     # Wait before making the next request (according to terms of use)

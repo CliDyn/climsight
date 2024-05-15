@@ -94,6 +94,15 @@ export OPENAI_API_KEY="???????"
 There is a possibility to also provide it in the running app. The cost of each request (status September 2023) is about 6 cents with `gpt-4` and about 0.3 cents with `gpt-3.5-turbo` (you can change it in the config file).
 Moreover, if you want to use your own climate data, please adjust the data_settings, variable_mappings, and dimension_mappings according to the structure of your NetCDF files.
 
+And you need to export the path of the configuration file. If you don't want to exchange anything and just test the prepared version, simply run
+```bash
+export CONFIG_PATH="./config.yml"
+```
+Otherwise you might want to adjust this path to direct to an individual config file, but keep in mind that it must be a path relative to the one from where you are running climsight. Also, you will have to adjust the paths in the config file you are using to point back to the climsight data folder. 
+
+
+There is a possibility to also provide it in the running app. The cost of each request (status September 2023) is about 6 cents with `gpt-4` and about 0.3 cents with `gpt-3.5-turbo` (you can change it in the beggining of `climsight.py` script).
+
 
 ### Running 
 
