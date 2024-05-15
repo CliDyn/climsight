@@ -106,7 +106,7 @@ def calc_mean(years, dataset):
     Returns:
     pandas data frame: A data frame with the means calculated for the given time span.
     """
-    years = str(years) + 'Y'
+    years = str(years) + 'YE'
     dataset.set_index('Time', inplace=True) # Set the 'Time' column as the index
     numeric_columns = dataset.select_dtypes(include='number')
     dataset = numeric_columns.resample(years).mean() # Resample the numeric data in x-year intervals and calculate the mean

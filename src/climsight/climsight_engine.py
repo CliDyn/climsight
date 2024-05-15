@@ -25,22 +25,22 @@ from geo_functions import (
    fetch_land_use,
    get_soil_from_api
  )
-# from economic_functions import (
-#    get_population,
-#    plot_population,
-#    x_year_mean_population   
-# )
+from environmental_functions import (
+   fetch_biodiversity,
+   load_nat_haz_data,
+   filter_events_within_square,
+   plot_disaster_counts
+)
 
 from climate_functions import (
    load_data,
    extract_climate_data
 )
-# from environmental_functions import (
-#    fetch_biodiversity,
-#    load_nat_haz_data,
-#    filter_events_within_square,
-#    plot_disaster_counts
-# )
+from economic_functions import (
+   get_population,
+   plot_population,
+   x_year_mean_population   
+)
 
 logger = logging.getLogger(__name__)
 
@@ -121,14 +121,14 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
         "        
 
 
-    logger.info(f"Retrieving location from: {lat}, {lon}")        
+    logger.debug(f"Retrieving location from: {lat}, {lon}")        
     try:
         location = get_location(lat, lon)
     except Exception as e:
         logging.error(f"Unexpected error in get_location: {e}")
         raise RuntimeError(f"Unexpected error in get_location: {e}")
 
-    logger.info(f"get_adress_string from: {lat}, {lon}")        
+    logger.debug(f"get_adress_string from: {lat}, {lon}")        
     try:
         location_str, location_str_for_print, country = get_adress_string(location)
     except Exception as e:
@@ -137,17 +137,17 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
 
     yield f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}"
 
-    logger.info(f"where_is_point from: {lat}, {lon}")            
+    logger.debug(f"where_is_point from: {lat}, {lon}")            
     try:
         is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = where_is_point(lat, lon)
-    except:
+    except Exception as e:
         logging.error(f"Unexpected error in where_is_point: {e}")
         raise RuntimeError(f"Unexpected error in where_is_point: {e}")
 
-    logger.info(f"get_location_details")            
+    logger.debug(f"get_location_details")            
     try:
         add_properties = get_location_details(location)
-    except:
+    except Exception as e:
         logging.error(f"Unexpected error in get_location_details: {e}")
         raise RuntimeError(f"Unexpected error in get_location_details: {e}")
     
@@ -158,13 +158,98 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
         if in_lake:
             #yield f"You have clicked on {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result."
             yield f"You have choose {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result."
+            logging.info(f"location in {'lake ' + lake_name if lake_name else 'a lake'}")
+            
         if near_river:
             yield f"You have choose on a place that might be in {'the river ' + river_name if river_name else 'a river'}. Our analyses are currently only meant for land areas. Please select another location for a better result."              
+            logging.info(f"location in {'the river ' + river_name if river_name else 'a river'}")            
     else:
         yield f"You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result."
+        logging.info(f"place somewhere in the ocean")
         country = None
         location_str = None
         add_properties = None
+
+    logger.debug(f"get_elevation_from_api from: {lat}, {lon}")        
+    try:
+        elevation = get_elevation_from_api(lat, lon)
+    except Exception as e:
+        elevation = "Not known"
+        logging.exception(f"elevation = Not known: {e}")
+            
+    logger.debug(f"fetch_land_use from: {lat}, {lon}")        
+    try:
+        land_use_data = fetch_land_use(lon, lat)
+    except Exception as e:
+        land_use_data = "Not known"
+        logging.exception(f"land_use_data = Not known: {e}")
+
+    logger.debug(f"get current_land_use from land_use_data")              
+    try:
+        current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+    except Exception as e:
+        current_land_use = "Not known"
+        logging.exception(f"current_land_use = Not known: {e}")
+
+    logger.debug(f"get current_land_use from land_use_data")              
+    try:
+        soil = get_soil_from_api(lat, lon)
+    except Exception as e:
+        soil = "Not known"
+        logging.exception(f"soil = Not known: {e}")
+
+    logger.debug(f"fetch_biodiversity from: {round(lat), round(lon)}")              
+    try:
+        biodiv = fetch_biodiversity(round(lat), round(lon))
+    except Exception as e:
+        biodiv = "Not known"
+        logging.error(f"Unexpected error in fetch_biodiversity: {e}")
+    
+    logger.debug(f"closest_shore_distance from: {lat, lon}")              
+    try:
+        distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
+    except Exception as e:
+        distance_to_coastline = "Not known"
+        logging.error(f"Unexpected error in closest_shore_distance: {e}")
+
+    # create pandas dataframe
+    logger.debug(f"extract_climate_data for: {lat, lon}")              
+    try:
+        df, data_dict = extract_climate_data(lat, lon, hist, future)
+    except Exception as e:
+        logging.error(f"Unexpected error in extract_climate_data: {e}")
+        raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
+
+    logger.debug(f"filter_events_within_square for: {lat, lon}")              
+    try:
+        filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
+    except Exception as e:
+        logging.error(f"Unexpected error in filter_events_within_square: {e}")
+        raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+
+    logger.debug(f"x_year_mean_population for: {pop_path, country}")              
+    try:
+        population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
+    except Exception as e:
+        logging.error(f"Unexpected error in filter_events_within_square: {e}")
+        raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+
+    logger.debug(f"plot_disaster_counts for filtered_events_square")              
+    try:
+        haz_fig = plot_disaster_counts(filtered_events_square)
+    except Exception as e:
+        logging.error(f"Unexpected error in plot_disaster_counts: {e}")
+        raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
+
+    logger.debug(f"plot_population for: {pop_path, country}")              
+    try:
+        population_plot = plot_population(pop_path, country)
+    except Exception as e:
+        logging.error(f"Unexpected error in population_plot: {e}")
+        raise RuntimeError(f"Unexpected error in population_plot: {e}")
+
+
+
 
     return
 
