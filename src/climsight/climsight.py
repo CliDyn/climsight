@@ -56,7 +56,7 @@ from environmental_functions import (
    plot_disaster_counts
 )
 
-config_path = os.getenv('CONFIG_PATH', 'config*.yml')
+config_path = os.getenv('CONFIG_PATH', 'config.yml')
 
 # print(config_path)
 with open(config_path, 'r') as file:
