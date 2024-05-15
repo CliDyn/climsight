@@ -45,6 +45,7 @@ from economic_functions import (
 )
 
 from climate_functions import (
+   #load_config,
    load_data,
    extract_climate_data
 )
@@ -61,7 +62,7 @@ with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 
 model_name = config['model_name']
-data_path = config['data_path']
+data_path = config['data_settings']['data_path']
 coastline_shapefile = config['coastline_shapefile']
 haz_path = config['haz_path']
 pop_path = config['pop_path']
@@ -121,7 +122,7 @@ class StreamHandler(BaseCallbackHandler):
         else:
             raise ValueError(f"Invalid display_method: {self.display_method}")
 
-hist, future = load_data(data_path)
+hist, future = load_data(config)
 
 st.title(
     " :cyclone: \
@@ -216,7 +217,7 @@ if submit_button and user_message:
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
 
         # create pandas dataframe
-        df, data_dict = extract_climate_data(lat, lon, hist, future)
+        df, data_dict = extract_climate_data(lat, lon, hist, future, config)
 
         filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
 
@@ -261,14 +262,14 @@ if submit_button and user_message:
                 current_land_use=current_land_use,
                 soil=soil,
                 biodiv = biodiv,
-                hist_temp_str=data_dict["hist_temp"],
-                future_temp_str=data_dict["future_temp"],
-                hist_pr_str=data_dict["hist_pr"],
-                future_pr_str=data_dict["future_pr"],
-                hist_uas_str=data_dict["hist_uas"],
-                future_uas_str=data_dict["future_uas"],
-                hist_vas_str=data_dict["hist_vas"],
-                future_vas_str=data_dict["future_vas"],
+                hist_temp_str=data_dict["hist_Temperature"],
+                future_temp_str=data_dict["future_Temperature"],
+                hist_pr_str=data_dict["hist_Precipitation"],
+                future_pr_str=data_dict["future_Precipitation"],
+                hist_uas_str=data_dict["hist_u_wind"],
+                future_uas_str=data_dict["future_u_wind"],
+                hist_vas_str=data_dict["hist_v_wind"],
+                future_vas_str=data_dict["future_v_wind"],
                 nat_hazards = promt_hazard_data,
                 population = population,
                 verbose=True,
@@ -288,7 +289,7 @@ if submit_button and user_message:
         # Climate Data
         st.markdown("**Climate data:**")
         st.markdown(
-            "Near surface temperature",
+            "Near surface temperature (in °C)",
         )
         st.line_chart(
             df,
@@ -297,7 +298,7 @@ if submit_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
-            "Precipitation",
+            "Precipitation (in mm)",
         )
         st.line_chart(
             df,
@@ -306,7 +307,7 @@ if submit_button and user_message:
             color=["#d62728", "#2ca02c"],
         )
         st.markdown(
-            "Wind speed",
+            "Wind speed (in m*s-1)",
         )
         st.line_chart(
             df,
