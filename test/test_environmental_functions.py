@@ -15,6 +15,7 @@ import warnings
 import sys
 import os
 import requests
+import requests_mock
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -54,7 +55,7 @@ def config_test():
         config_data = yaml.safe_load(file)
     return config_data
 
-#config_env = config_data
+#config_test = config_data
 
 @pytest.fixture
 def latlon(config_test):
@@ -74,6 +75,20 @@ def test_fetch_biodiversity(config_test, expected_biodiv):
     biodiv = fetch_biodiversity(round(lat), round(lon))
     assert biodiv == expected_biodiv, f"error in fetch_biodiversity, point({lat},{lon})"
 
+#test with mock request 
+@pytest.mark.mock_request
+@pytest.mark.env
+def test_mock_fetch_biodiversity(config_test, expected_biodiv, requests_mock):
+    lat, lon = config_test['test_location']['lat'], config_test['test_location']['lon']
+    
+    mock_url = "https://api.gbif.org/v1/occurrence/search"
+    mock_response = config_test['expected_biodiv']
+
+    requests_mock.get(mock_url, json=mock_response)
+
+    biodiv = fetch_biodiversity(round(lat), round(lon))
+    assert biodiv == expected_biodiv, f"error in fetch_biodiversity, point({lat},{lon})"    
+    
  #----------------------------- Test filter_events_within_square
 def are_dataframes_equal(df1, df2, tol=1e-6):
     """
