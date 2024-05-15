@@ -1,22 +1,22 @@
-model_name: "gpt-3.5-turbo"
-# model_name: "gpt-4-1106-preview"
-climatemodel_name: "AWI_CM"
+# model_name: "gpt-3.5-turbo"
+model_name: "gpt-4-1106-preview"
+climatemodel_name: "tco319"
 data_settings:
-    data_path: "./data/"
-    historical: "historical"
-    projection: "ssp585"
+    data_path: "../climsight/data/"
+    historical: "2000"
+    projection: "2090"
 variable_mappings:
-    Temperature: "tas"
-    Precipitation: "pr"
-    u_wind: "uas" 
-    v_wind: "vas"
+    Temperature: "2t" 
+    Precipitation: "precip"
+    u_wind: "10u"  
+    v_wind: "10v" 
 dimension_mappings:
     latitude: "lat"
     longitude: "lon"
-    time: "month"
-coastline_shapefile: "./data/natural_earth/coastlines/ne_10m_coastline.shp"
-haz_path: './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
-pop_path: './data/population/WPP2022_Demographic_Indicators_Medium.csv'
+    time: "time_counter"
+coastline_shapefile: "../climsight/data/natural_earth/coastlines/ne_10m_coastline.shp"
+haz_path: '../climsight/data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
+pop_path: '../climsight/data/population/WPP2022_Demographic_Indicators_Medium.csv'
 distance_from_event: 5.0
 lat_default: 52.5240
 lon_default: 13.3700
