@@ -14,7 +14,18 @@ loaded again from a YAML file.
 import yaml
 import os
 import logging
+# import classes for climsight
+from stream_handler import StreamHandler
 
+# import langchaion functions
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import LLMChain
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+# import climsight functions
 from geo_functions import (
    get_location,
    where_is_point,
@@ -46,19 +57,49 @@ logger = logging.getLogger(__name__)
 
 
 
-def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_call=False):
+def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key='', skip_llm_call=False):
     '''
     Inputs:
     - lat (float): Latitude of the location to analyze.
     - lon (float): Longitude of the location to analyze.
     - question (string): Question for the LLM.
+    - stream_handler: StreamHandler from stream_nadler.py, Handles streaming output from LLM
     - pre_data (dict): Preloaded data, default is an empty dictionary.
     - config (dict): Configuration, default is an empty dictionary.
-    - api_key (string): API Key, default is an empty string.
+    - api_key (string): API Key, default is an empty string. if api_key='' (default) then skip_llm_call=True
     - skip_llm_call (bool): If True - skipp final call to LLM
     Outputs:
-    - The LLM's response.
+    - several yields 
+    - final return, plots and The LLM's response.
     '''
+    
+    # ----- Check input types ------------
+    if not isinstance(lat, float) or not isinstance(lon, float):
+        logging.error(f"lat and lon must be floats in clim_request(...) ")
+        raise TypeError("lat and lon must be floats")
+   
+    if not isinstance(question, str):
+        logging.error(f"question must be a string in clim_request(...) ")
+        raise TypeError("question must be a string")
+
+    if not isinstance(stream_handler, StreamHandler):
+        logging.error(f"stream_handler must be an instance of StreamHandler")
+        raise TypeError("stream_handler must be an instance of StreamHandler")    
+    
+    if not isinstance(skip_llm_call, bool):
+        logging.error(f"skip_llm_call must be bool in clim_request(...) ")
+        raise TypeError("skip_llm_call must be  bool")    
+
+    if not isinstance(api_key, str):
+        logging.error(f"api_key must be a string in clim_request(...) ")
+        raise TypeError("api_key must be a string")
+    if not api_key:
+        api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
+        if not api_key:        
+            skip_llm_call=True
+            api_key='Dummy' #for longchain api_key should be non empty str
+        
+    
     # Config
     if not config:
         config_path = os.getenv('CONFIG_PATH', 'config.yml')
@@ -71,6 +112,7 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
             raise RuntimeError(f"An error occurred while reading the file: {config_path}") from e
     try:
         model_name = config['model_name']
+        climatemodel_name = config['climatemodel_name']
         data_path = config['data_path']
         coastline_shapefile = config['coastline_shapefile']
         haz_path = config['haz_path']
@@ -90,6 +132,7 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
     datakeys = list(data)
     if 'hist' and 'future' not in datakeys:
         logger.info(f"reading data from: {data_path}")        
+        yield f"reading data"
         hist, future = load_data(data_path)
         data['hist'] = hist
         data['future'] = future
@@ -120,7 +163,7 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
         Population data: {population} \
         "        
 
-
+    ##  =================== prepare data ==================
     logger.debug(f"Retrieving location from: {lat}, {lon}")        
     try:
         location = get_location(lat, lon)
@@ -156,7 +199,6 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
             yield f"{location_str_for_print}"            
             pass
         if in_lake:
-            #yield f"You have clicked on {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result."
             yield f"You have choose {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result."
             logging.info(f"location in {'lake ' + lake_name if lake_name else 'a lake'}")
             
@@ -212,7 +254,7 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
         distance_to_coastline = "Not known"
         logging.error(f"Unexpected error in closest_shore_distance: {e}")
 
-    # create pandas dataframe
+    ##  =================== create pandas dataframe
     logger.debug(f"extract_climate_data for: {lat, lon}")              
     try:
         df, data_dict = extract_climate_data(lat, lon, hist, future)
@@ -248,8 +290,24 @@ def clim_request(lat, lon, question, data={}, config={}, api_key='', skip_llm_ca
         logging.error(f"Unexpected error in population_plot: {e}")
         raise RuntimeError(f"Unexpected error in population_plot: {e}")
 
-
-
+    ##  ===================  start with LLM =========================
+    llm = ChatOpenAI(
+        openai_api_key=api_key,
+        model_name=model_name,
+        streaming=True,
+        callbacks=[stream_handler],
+    )
+    system_message_prompt = SystemMessagePromptTemplate.from_template(system_role)
+    human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
+    chat_prompt = ChatPromptTemplate.from_messages(
+        [system_message_prompt, human_message_prompt]
+    )
+    chain = LLMChain(
+        llm=llm,
+        prompt=chat_prompt,
+        output_key="review",
+        verbose=True,
+    )
 
     return
 

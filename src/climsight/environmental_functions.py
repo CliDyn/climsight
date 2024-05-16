@@ -9,8 +9,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import MaxNLocator
+from functools import lru_cache
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def fetch_biodiversity(lon, lat):
     """
     Fetches biodiversity data for a given longitude and latitude using the GBIF API.
@@ -47,7 +48,7 @@ def fetch_biodiversity(lon, lat):
     return biodiversity
  
  
-@st.cache_data
+@lru_cache(maxsize=100)
 def load_nat_haz_data(haz_path):
     """
     Load natural hazard data from a CSV file and filter relevant columns.
@@ -67,7 +68,7 @@ def load_nat_haz_data(haz_path):
 
     return(haz_dat)
 
-@st.cache_data
+@lru_cache(maxsize=100)
 def filter_events_within_square(lat, lon, haz_path, distance_from_event):
     """
     Filter events within a square of given distance from the center point.
@@ -98,7 +99,6 @@ def filter_events_within_square(lat, lon, haz_path, distance_from_event):
 
     return filtered_haz_dat, prompt_haz_dat
 
-@st.cache_data
 def plot_disaster_counts(filtered_events):
     """
     Plot the number of different disaster types over a time period for the selected location (within 5km radius).
