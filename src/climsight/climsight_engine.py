@@ -68,6 +68,9 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     - config (dict): Configuration, default is an empty dictionary.
     - api_key (string): API Key, default is an empty string. if api_key='' (default) then skip_llm_call=True
     - skip_llm_call (bool): If True - skipp final call to LLM
+    
+    be aware that data, config, skip_llm_call could be modified  by this function
+    
     Outputs:
     - several yields 
     - final return, plots and The LLM's response.
@@ -139,29 +142,8 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     else:
         logger.info(f"Data are preloaded in data dict")                
         hist, future = data['hist'], data['future']
-
-    content_message = "{user_message} \n \
-        Location: latitude = {lat}, longitude = {lon} \
-        Adress: {location_str} \
-        Where is this point?: {water_body_status} \
-        Policy: {policy} \
-        Additional location information: {add_properties} \
-        Distance to the closest coastline: {distance_to_coastline} \
-        Elevation above sea level: {elevation} \
-        Current landuse: {current_land_use} \
-        Current soil type: {soil} \
-        Occuring species: {biodiv} \
-        Current mean monthly temperature for each month: {hist_temp_str} \
-        Future monthly temperatures for each month at the location: {future_temp_str}\
-        Current precipitation flux (mm/month): {hist_pr_str} \
-        Future precipitation flux (mm/month): {future_pr_str} \
-        Current u wind component (in m/s): {hist_uas_str} \
-        Future u wind component (in m/s): {future_uas_str} \
-        Current v wind component (in m/s): {hist_vas_str} \
-        Future v wind component (in m/s): {future_vas_str} \
-        Natural hazards: {nat_hazards} \
-        Population data: {population} \
-        "        
+        
+    #content_message defined below now
 
     ##  =================== prepare data ==================
     ##  ===== location
@@ -259,7 +241,7 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     ## == create pandas dataframe
     logger.debug(f"extract_climate_data for: {lat, lon}")              
     try:
-        df, data_dict = extract_climate_data(lat, lon, hist, future, config)
+        df_data, data_dict = extract_climate_data(lat, lon, hist, future, config)
     except Exception as e:
         logging.error(f"Unexpected error in extract_climate_data: {e}")
         raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
@@ -279,9 +261,25 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
         raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
 
     ##  ===================  plotting      =========================   
+    
+    figs = {}
+    
     logger.debug(f"plot_disaster_counts for filtered_events_square")              
     try:
         haz_fig = plot_disaster_counts(filtered_events_square)
+        source = '''
+                    *The GDIS data descriptor*  
+                    Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                    61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                    *The GDIS dataset*  
+                    Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                    Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                    Accessed DAY MONTH YEAR.  
+                    *The EM-DAT dataset*  
+                    Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                    disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+                '''
+        figs['haz_fig'] = {'fig':haz_fig,'source':source}
     except Exception as e:
         logging.error(f"Unexpected error in plot_disaster_counts: {e}")
         raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
@@ -289,6 +287,11 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     logger.debug(f"plot_population for: {pop_path, country}")              
     try:
         population_plot = plot_population(pop_path, country)
+        source = '''
+                United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
+                Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
+                '''
+        figs['population_plot'] = {'fig':population_plot,'source':source}        
     except Exception as e:
         logging.error(f"Unexpected error in population_plot: {e}")
         raise RuntimeError(f"Unexpected error in population_plot: {e}")
@@ -299,6 +302,29 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     ##  ===================  start with LLM =========================
     yield f"Generating..."
     logging.info(f"Generating...")    
+    
+    content_message = "{user_message} \n \
+        Location: latitude = {lat}, longitude = {lon} \
+        Adress: {location_str} \
+        Where is this point?: {water_body_status} \
+        Policy: {policy} \
+        Additional location information: {add_properties} \
+        Distance to the closest coastline: {distance_to_coastline} \
+        Elevation above sea level: {elevation} \
+        Current landuse: {current_land_use} \
+        Current soil type: {soil} \
+        Occuring species: {biodiv} \
+        Current mean monthly temperature for each month: {hist_temp_str} \
+        Future monthly temperatures for each month at the location: {future_temp_str}\
+        Current precipitation flux (mm/month): {hist_pr_str} \
+        Future precipitation flux (mm/month): {future_pr_str} \
+        Current u wind component (in m/s): {hist_uas_str} \
+        Future u wind component (in m/s): {future_uas_str} \
+        Current v wind component (in m/s): {hist_vas_str} \
+        Future v wind component (in m/s): {future_vas_str} \
+        Natural hazards: {nat_hazards} \
+        Population data: {population} \
+        "        
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
     llm = ChatOpenAI(
@@ -320,34 +346,35 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     )
     logger.debug(f"call  LLM, chain.run ")                 
     # Only proceed with the LLM call if 'skipLLMCall' is NOT provided
+    input_params = {
+        "user_message": user_message,
+        "lat": str(lat),
+        "lon": str(lon),
+        "location_str": location_str,
+        "water_body_status": water_body_status,
+        "add_properties": add_properties,
+        "policy": policy,
+        "distance_to_coastline": str(distance_to_coastline),
+        "elevation": str(elevation),
+        "current_land_use": current_land_use,
+        "soil": soil,
+        "biodiv": biodiv,
+        "hist_temp_str": data_dict["hist_Temperature"],
+        "future_temp_str": data_dict["future_Temperature"],
+        "hist_pr_str": data_dict["hist_Precipitation"],
+        "future_pr_str": data_dict["future_Precipitation"],
+        "hist_uas_str": data_dict["hist_u_wind"],
+        "future_uas_str": data_dict["future_u_wind"],
+        "hist_vas_str": data_dict["hist_v_wind"],
+        "future_vas_str": data_dict["future_v_wind"],
+        "nat_hazards": promt_hazard_data,
+        "population": population,
+    }    
     if not skip_llm_call:  
-        output = chain.run(
-            user_message=user_message,
-            lat=str(lat),
-            lon=str(lon),
-            location_str=location_str,
-            water_body_status=water_body_status,
-            add_properties=add_properties,
-            policy=policy,
-            distance_to_coastline=str(distance_to_coastline),
-            elevation=str(elevation),
-            current_land_use=current_land_use,
-            soil=soil,
-            biodiv = biodiv,
-            hist_temp_str=data_dict["hist_Temperature"],
-            future_temp_str=data_dict["future_Temperature"],
-            hist_pr_str=data_dict["hist_Precipitation"],
-            future_pr_str=data_dict["future_Precipitation"],
-            hist_uas_str=data_dict["hist_u_wind"],
-            future_uas_str=data_dict["future_u_wind"],
-            hist_vas_str=data_dict["hist_v_wind"],
-            future_vas_str=data_dict["future_v_wind"],
-            nat_hazards = promt_hazard_data,
-            population = population,
-            verbose=True,
-        )
-    #print(stream_handler.get_text())
-    return
+        # Pass the input_params dictionary to chain.run() using the ** operator
+        output = chain.run(**input_params, verbose=True)
+
+    return input_params, df_data, figs
 
 ## ADD to MAin
 # Initialize logging at the beginning of your main application
