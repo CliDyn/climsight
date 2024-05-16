@@ -4,7 +4,7 @@ climate data based on latitude and longitude. It constructs prompts for language
 learning model (LLM) queries and handles the interaction with the LLM to generate 
 responses based on the input data.
 
-The main inputs include latitude, longitude, and a question. Data such as historical 
+The main inputs include latitude, longitude, and a user_message. Data such as historical 
 and future data (from climate models) can be provided with pre_data. By default, 
 pre_data is an empty dictionary, and data will be loaded anew each time.
 The config parameter is a configuration dictionary; if not provided, it will be 
@@ -57,12 +57,12 @@ logger = logging.getLogger(__name__)
 
 
 
-def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key='', skip_llm_call=False):
+def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api_key='', skip_llm_call=False):
     '''
     Inputs:
     - lat (float): Latitude of the location to analyze.
     - lon (float): Longitude of the location to analyze.
-    - question (string): Question for the LLM.
+    - user_message (string): Question for the LLM.
     - stream_handler: StreamHandler from stream_nadler.py, Handles streaming output from LLM
     - pre_data (dict): Preloaded data, default is an empty dictionary.
     - config (dict): Configuration, default is an empty dictionary.
@@ -78,9 +78,9 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         logging.error(f"lat and lon must be floats in clim_request(...) ")
         raise TypeError("lat and lon must be floats")
    
-    if not isinstance(question, str):
-        logging.error(f"question must be a string in clim_request(...) ")
-        raise TypeError("question must be a string")
+    if not isinstance(user_message, str):
+        logging.error(f"user_message must be a string in clim_request(...) ")
+        raise TypeError("user_message must be a string")
 
     if not isinstance(stream_handler, StreamHandler):
         logging.error(f"stream_handler must be an instance of StreamHandler")
@@ -113,7 +113,7 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
     try:
         model_name = config['model_name']
         climatemodel_name = config['climatemodel_name']
-        data_path = config['data_path']
+        data_path = config['data_settings']['data_path']
         coastline_shapefile = config['coastline_shapefile']
         haz_path = config['haz_path']
         pop_path = config['pop_path']
@@ -133,7 +133,7 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
     if 'hist' and 'future' not in datakeys:
         logger.info(f"reading data from: {data_path}")        
         yield f"reading data"
-        hist, future = load_data(data_path)
+        hist, future = load_data(config)
         data['hist'] = hist
         data['future'] = future
     else:
@@ -164,13 +164,14 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         "        
 
     ##  =================== prepare data ==================
+    ##  ===== location
     logger.debug(f"Retrieving location from: {lat}, {lon}")        
     try:
         location = get_location(lat, lon)
     except Exception as e:
         logging.error(f"Unexpected error in get_location: {e}")
         raise RuntimeError(f"Unexpected error in get_location: {e}")
-
+    ##  == adress 
     logger.debug(f"get_adress_string from: {lat}, {lon}")        
     try:
         location_str, location_str_for_print, country = get_adress_string(location)
@@ -179,14 +180,14 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         raise RuntimeError(f"Unexpected error in get_adress_string: {e}")
 
     yield f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}"
-
+    ##  == wet / dry
     logger.debug(f"where_is_point from: {lat}, {lon}")            
     try:
         is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = where_is_point(lat, lon)
     except Exception as e:
         logging.error(f"Unexpected error in where_is_point: {e}")
         raise RuntimeError(f"Unexpected error in where_is_point: {e}")
-
+    ##  == location details
     logger.debug(f"get_location_details")            
     try:
         add_properties = get_location_details(location)
@@ -211,14 +212,14 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         country = None
         location_str = None
         add_properties = None
-
+    ##  == elevation
     logger.debug(f"get_elevation_from_api from: {lat}, {lon}")        
     try:
         elevation = get_elevation_from_api(lat, lon)
     except Exception as e:
         elevation = "Not known"
         logging.exception(f"elevation = Not known: {e}")
-            
+    ##  == land use        
     logger.debug(f"fetch_land_use from: {lat}, {lon}")        
     try:
         land_use_data = fetch_land_use(lon, lat)
@@ -232,21 +233,21 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
     except Exception as e:
         current_land_use = "Not known"
         logging.exception(f"current_land_use = Not known: {e}")
-
+    ##  == soil
     logger.debug(f"get current_land_use from land_use_data")              
     try:
         soil = get_soil_from_api(lat, lon)
     except Exception as e:
         soil = "Not known"
         logging.exception(f"soil = Not known: {e}")
-
+    ##  == biodiversity
     logger.debug(f"fetch_biodiversity from: {round(lat), round(lon)}")              
     try:
         biodiv = fetch_biodiversity(round(lat), round(lon))
     except Exception as e:
         biodiv = "Not known"
         logging.error(f"Unexpected error in fetch_biodiversity: {e}")
-    
+    ##  == coast distance
     logger.debug(f"closest_shore_distance from: {lat, lon}")              
     try:
         distance_to_coastline = closest_shore_distance(lat, lon, coastline_shapefile)
@@ -254,21 +255,22 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         distance_to_coastline = "Not known"
         logging.error(f"Unexpected error in closest_shore_distance: {e}")
 
-    ##  =================== create pandas dataframe
+    ##  =================== climate data 
+    ## == create pandas dataframe
     logger.debug(f"extract_climate_data for: {lat, lon}")              
     try:
-        df, data_dict = extract_climate_data(lat, lon, hist, future)
+        df, data_dict = extract_climate_data(lat, lon, hist, future, config)
     except Exception as e:
         logging.error(f"Unexpected error in extract_climate_data: {e}")
         raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
-
+    ## == hazards
     logger.debug(f"filter_events_within_square for: {lat, lon}")              
     try:
         filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, haz_path, distance_from_event)
     except Exception as e:
         logging.error(f"Unexpected error in filter_events_within_square: {e}")
         raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
-
+    ## == population
     logger.debug(f"x_year_mean_population for: {pop_path, country}")              
     try:
         population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
@@ -276,6 +278,7 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         logging.error(f"Unexpected error in filter_events_within_square: {e}")
         raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
 
+    ##  ===================  plotting      =========================   
     logger.debug(f"plot_disaster_counts for filtered_events_square")              
     try:
         haz_fig = plot_disaster_counts(filtered_events_square)
@@ -290,7 +293,14 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         logging.error(f"Unexpected error in population_plot: {e}")
         raise RuntimeError(f"Unexpected error in population_plot: {e}")
 
+    ## == policy IS NOT IN USE
+    policy = ""
+
     ##  ===================  start with LLM =========================
+    yield f"Generating..."
+    logging.info(f"Generating...")    
+
+    logger.debug(f"start ChatOpenAI, LLMChain ")                 
     llm = ChatOpenAI(
         openai_api_key=api_key,
         model_name=model_name,
@@ -308,7 +318,35 @@ def clim_request(lat, lon, question, stream_handler, data={}, config={}, api_key
         output_key="review",
         verbose=True,
     )
-
+    logger.debug(f"call  LLM, chain.run ")                 
+    # Only proceed with the LLM call if 'skipLLMCall' is NOT provided
+    if not skip_llm_call:  
+        output = chain.run(
+            user_message=user_message,
+            lat=str(lat),
+            lon=str(lon),
+            location_str=location_str,
+            water_body_status=water_body_status,
+            add_properties=add_properties,
+            policy=policy,
+            distance_to_coastline=str(distance_to_coastline),
+            elevation=str(elevation),
+            current_land_use=current_land_use,
+            soil=soil,
+            biodiv = biodiv,
+            hist_temp_str=data_dict["hist_Temperature"],
+            future_temp_str=data_dict["future_Temperature"],
+            hist_pr_str=data_dict["hist_Precipitation"],
+            future_pr_str=data_dict["future_Precipitation"],
+            hist_uas_str=data_dict["hist_u_wind"],
+            future_uas_str=data_dict["future_u_wind"],
+            hist_vas_str=data_dict["hist_v_wind"],
+            future_vas_str=data_dict["future_v_wind"],
+            nat_hazards = promt_hazard_data,
+            population = population,
+            verbose=True,
+        )
+    #print(stream_handler.get_text())
     return
 
 ## ADD to MAin
