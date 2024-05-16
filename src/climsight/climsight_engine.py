@@ -74,6 +74,25 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     Outputs:
     - several yields 
     - final return, plots and The LLM's response.
+    
+    How to call it in wrapers (strealit, terminal, ... )
+        logger = logging.getLogger(__name__)
+        logging.basicConfig( ...
+        lat, lon, user_message = ...
+        stream_handler = StreamHandler(...)
+
+        generator = clim_request(lat, lon, user_message, stream_handler)
+
+        while True:
+        try:
+            # Get the next intermediate result from the generator
+            result = next(generator)
+            print(f"Intermediate result: {result}")
+        except StopIteration as e:
+            # The generator is exhausted, and e.value contains the final result
+            final_result = e.value
+            print(f"Final result: {final_result}")
+            break
     '''
     
     # ----- Check input types ------------
@@ -374,34 +393,4 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
         # Pass the input_params dictionary to chain.run() using the ** operator
         output = chain.run(**input_params, verbose=True)
 
-    return input_params, df_data, figs
-
-## ADD to MAin
-# Initialize logging at the beginning of your main application
-#logging.basicConfig(
-#    level=logging.INFO,
-#    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#    datefmt='%Y-%m-%d %H:%M:%S'
-#)
-
-#   for result in func2():
-#        print(result)
-#        # Additional processing can be done here if needed
-
-# def func1():
-#     # Create a generator object by calling func2
-#     generator = func2()
-    
-#     while True:
-#         try:
-#             # Get the next intermediate result from the generator
-#             result = next(generator)
-#             print(f"Intermediate result: {result}")
-#         except StopIteration as e:
-#             # The generator is exhausted, and e.value contains the final result
-#             final_result = e.value
-#             print(f"Final result: {final_result}")
-#             break
-
-# # Run func1
-# func1()
+    return input_params, df_data, figs, data, config
