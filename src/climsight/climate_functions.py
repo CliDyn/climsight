@@ -15,7 +15,7 @@ import warnings
 #    extract_climate_data
 #)
 
-@st.cache_data
+#@st.cache_data
 def load_data(config):
     """
     load climate model data from specified directory patterns
