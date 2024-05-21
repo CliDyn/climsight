@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api_key='', skip_llm_call=False):
+def forming_request(lat, lon, user_message, data={}, config={}):
     '''
     Inputs:
     - lat (float): Latitude of the location to analyze.
@@ -66,14 +66,12 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
     - stream_handler: StreamHandler from stream_nadler.py, Handles streaming output from LLM
     - pre_data (dict): Preloaded data, default is an empty dictionary.
     - config (dict): Configuration, default is an empty dictionary.
-    - api_key (string): API Key, default is an empty string. if api_key='' (default) then skip_llm_call=True
-    - skip_llm_call (bool): If True - skipp final call to LLM
     
-    be aware that data, config, skip_llm_call could be modified  by this function
+    be aware that data, config could be modified  by this function
     
     Outputs:
     - several yields 
-    - final return, plots and The LLM's response.
+    - final return: content_message, input_params, df_data, figs, data, config
     
     How to call it in wrapers (strealit, terminal, ... )
         logger = logging.getLogger(__name__)
@@ -104,24 +102,6 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
         logging.error(f"user_message must be a string in clim_request(...) ")
         raise TypeError("user_message must be a string")
 
-    if not isinstance(stream_handler, StreamHandler):
-        logging.error(f"stream_handler must be an instance of StreamHandler")
-        raise TypeError("stream_handler must be an instance of StreamHandler")    
-    
-    if not isinstance(skip_llm_call, bool):
-        logging.error(f"skip_llm_call must be bool in clim_request(...) ")
-        raise TypeError("skip_llm_call must be  bool")    
-
-    if not isinstance(api_key, str):
-        logging.error(f"api_key must be a string in clim_request(...) ")
-        raise TypeError("api_key must be a string")
-    if not api_key:
-        api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
-        if not api_key:        
-            skip_llm_call=True
-            api_key='Dummy' #for longchain api_key should be non empty str
-        
-    
     # Config
     if not config:
         config_path = os.getenv('CONFIG_PATH', 'config.yml')
@@ -317,10 +297,6 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
 
     ## == policy IS NOT IN USE
     policy = ""
-
-    ##  ===================  start with LLM =========================
-    yield f"Generating..."
-    logging.info(f"Generating...")    
     
     content_message = "{user_message} \n \
         Location: latitude = {lat}, longitude = {lon} \
@@ -344,27 +320,6 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
         Natural hazards: {nat_hazards} \
         Population data: {population} \
         "        
-
-    logger.debug(f"start ChatOpenAI, LLMChain ")                 
-    llm = ChatOpenAI(
-        openai_api_key=api_key,
-        model_name=model_name,
-        streaming=True,
-        callbacks=[stream_handler],
-    )
-    system_message_prompt = SystemMessagePromptTemplate.from_template(system_role)
-    human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
-    chat_prompt = ChatPromptTemplate.from_messages(
-        [system_message_prompt, human_message_prompt]
-    )
-    chain = LLMChain(
-        llm=llm,
-        prompt=chat_prompt,
-        output_key="review",
-        verbose=True,
-    )
-    logger.debug(f"call  LLM, chain.run ")                 
-    # Only proceed with the LLM call if 'skipLLMCall' is NOT provided
     input_params = {
         "user_message": user_message,
         "lat": str(lat),
@@ -388,9 +343,40 @@ def clim_request(lat, lon, user_message, stream_handler, data={}, config={}, api
         "future_vas_str": data_dict["future_v_wind"],
         "nat_hazards": promt_hazard_data,
         "population": population,
-    }    
-    if not skip_llm_call:  
-        # Pass the input_params dictionary to chain.run() using the ** operator
-        output = chain.run(**input_params, verbose=True)
+    }               
+    return content_message, input_params, config, df_data, figs, data
 
-    return input_params, df_data, figs, data, config
+def llm_request(content_message, input_params, config, api_key, stream_handler):
+
+    if not isinstance(stream_handler, StreamHandler):
+        logging.error(f"stream_handler must be an instance of StreamHandler")
+        raise TypeError("stream_handler must be an instance of StreamHandler")    
+    
+    ##  ===================  start with LLM =========================
+    #yield f"Generating..."
+    logging.info(f"Generating...")    
+
+    logger.debug(f"start ChatOpenAI, LLMChain ")                 
+    llm = ChatOpenAI(
+        openai_api_key=api_key,
+        model_name=config['model_name'],
+        streaming=True,
+        callbacks=[stream_handler],
+    )
+    system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+    human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
+    chat_prompt = ChatPromptTemplate.from_messages(
+        [system_message_prompt, human_message_prompt]
+    )
+    chain = LLMChain(
+        llm=llm,
+        prompt=chat_prompt,
+        output_key="review",
+        verbose=True,
+    )
+
+    logger.debug(f"call  LLM, chain.run ")                 
+    # Pass the input_params dictionary to chain.run() using the ** operator
+    output = chain.run(**input_params, verbose=True)
+
+    return output
