@@ -57,21 +57,20 @@ logger = logging.getLogger(__name__)
 
 
 
-def forming_request(lat, lon, user_message, data={}, config={}):
+def forming_request(config, lat, lon, user_message, data={}):
     '''
     Inputs:
+    - config (dict): Configuration 
     - lat (float): Latitude of the location to analyze.
     - lon (float): Longitude of the location to analyze.
     - user_message (string): Question for the LLM.
-    - stream_handler: StreamHandler from stream_nadler.py, Handles streaming output from LLM
-    - pre_data (dict): Preloaded data, default is an empty dictionary.
-    - config (dict): Configuration, default is an empty dictionary.
+    - data (dict): Preloaded data, default is an empty dictionary.
     
-    be aware that data, config could be modified  by this function
+    be aware that data could be modified  by this function
     
     Outputs:
     - several yields 
-    - final return: content_message, input_params, df_data, figs, data, config
+    - final return: content_message, input_params, df_data, figs, data
     
     How to call it in wrapers (strealit, terminal, ... )
         logger = logging.getLogger(__name__)
@@ -103,29 +102,15 @@ def forming_request(lat, lon, user_message, data={}, config={}):
         raise TypeError("user_message must be a string")
 
     # Config
-    if not config:
-        config_path = os.getenv('CONFIG_PATH', 'config.yml')
-        logger.info(f"reading config from: {config_path}")
-        try:
-            with open(config_path, 'r') as file:
-                config = yaml.safe_load(file)
-        except Exception as e:
-            logging.error(f"An error occurred while reading the file: {config_path}")
-            raise RuntimeError(f"An error occurred while reading the file: {config_path}") from e
     try:
-        model_name = config['model_name']
-        climatemodel_name = config['climatemodel_name']
         data_path = config['data_settings']['data_path']
         coastline_shapefile = config['coastline_shapefile']
         haz_path = config['haz_path']
         pop_path = config['pop_path']
         distance_from_event = config['distance_from_event']
-        lat_default = config['lat_default']
-        lon_default = config['lon_default']
         year_step = config['year_step']
         start_year = config['start_year']
         end_year = config['end_year']
-        system_role = config['system_role']
     except KeyError as e:
         logging.error(f"Missing configuration key: {e}")
         raise RuntimeError(f"Missing configuration key: {e}")
@@ -213,7 +198,7 @@ def forming_request(lat, lon, user_message, data={}, config={}):
         current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
     except Exception as e:
         current_land_use = "Not known"
-        logging.exception(f"current_land_use = Not known: {e}")
+        logging.exception(f"{e}. Continue with: current_land_use = Not known")
     ##  == soil
     logger.debug(f"get current_land_use from land_use_data")              
     try:
@@ -344,7 +329,7 @@ def forming_request(lat, lon, user_message, data={}, config={}):
         "nat_hazards": promt_hazard_data,
         "population": population,
     }               
-    return content_message, input_params, config, df_data, figs, data
+    return content_message, input_params, df_data, figs, data
 
 def llm_request(content_message, input_params, config, api_key, stream_handler):
 
