@@ -1,4 +1,5 @@
 from streamlit_interface import run_streamlit
+from terminal_interface import run_terminal
 import logging
 import yaml
 import os
@@ -12,7 +13,7 @@ logging.basicConfig(
    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-skip_llm_call = False
+skip_llm_call = True
 
 config = {}
 # Config
@@ -45,4 +46,5 @@ except KeyError as e:
 
 
 
-run_streamlit(config, skip_llm_call=skip_llm_call)
+#run_streamlit(config, skip_llm_call=skip_llm_call)
+run_terminal(config, skip_llm_call=skip_llm_call)

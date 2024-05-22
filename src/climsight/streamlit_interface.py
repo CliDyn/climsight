@@ -35,11 +35,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
         raise RuntimeError(f"Missing configuration key: {e}")   
 
     if not isinstance(skip_llm_call, bool):
-        logging.error(f"skip_llm_call must be bool in clim_request(...) ")
+        logging.error(f"skip_llm_call must be bool ")
         raise TypeError("skip_llm_call must be  bool")    
     
     if not isinstance(api_key, str):
-        logging.error(f"api_key must be a string in clim_request(...) ")
+        logging.error(f"api_key must be a string ")
         raise TypeError("api_key must be a string")
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
@@ -112,13 +112,12 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                 chat_box = st.empty()
                 stream_handler = StreamHandler(chat_box, display_method="write")
                 if not skip_llm_call:
-                output = llm_request(content_message, input_params, config, api_key, stream_handler)   
+                    output = llm_request(content_message, input_params, config, api_key, stream_handler)   
 
                 # PLOTTING ADDITIONAL INFORMATION
                 if show_add_info: 
                     st.subheader("Additional information", divider='rainbow')
                     st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-                    st.markdown(location_str_for_print) 
                     st.markdown(f"**Elevation:** {input_params['elevation']} m")
                     st.markdown(f"**Current land use:** {input_params['current_land_use']}")
                     st.markdown(f"**Soil type:** {input_params['soil']}")
@@ -179,6 +178,6 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                         st.markdown("**Population Data:**")
                         st.pyplot(figs['population_plot']['fig'])
                         with st.expander("Source"):
-                            st.markdown(figs['population_plot']['fig'])
+                            st.markdown(figs['population_plot']['source'])
                             
     return

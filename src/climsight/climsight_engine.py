@@ -57,7 +57,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def forming_request(config, lat, lon, user_message, data={}):
+def forming_request(config, lat, lon, user_message, data={}, show_add_info=True):
     '''
     Inputs:
     - config (dict): Configuration 
@@ -65,7 +65,7 @@ def forming_request(config, lat, lon, user_message, data={}):
     - lon (float): Longitude of the location to analyze.
     - user_message (string): Question for the LLM.
     - data (dict): Preloaded data, default is an empty dictionary.
-    
+    - show_add_info (bool): add additional info, here plot fiugures
     be aware that data could be modified  by this function
     
     Outputs:
@@ -245,40 +245,42 @@ def forming_request(config, lat, lon, user_message, data={}):
         raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
 
     ##  ===================  plotting      =========================   
-    
-    figs = {}
-    
-    logger.debug(f"plot_disaster_counts for filtered_events_square")              
-    try:
-        haz_fig = plot_disaster_counts(filtered_events_square)
-        source = '''
-                    *The GDIS data descriptor*  
-                    Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
-                    61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
-                    *The GDIS dataset*  
-                    Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
-                    Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
-                    Accessed DAY MONTH YEAR.  
-                    *The EM-DAT dataset*  
-                    Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
-                    disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
-                '''
-        figs['haz_fig'] = {'fig':haz_fig,'source':source}
-    except Exception as e:
-        logging.error(f"Unexpected error in plot_disaster_counts: {e}")
-        raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
+    if show_add_info:
+        figs = {}
+        
+        logger.debug(f"plot_disaster_counts for filtered_events_square")              
+        try:
+            haz_fig = plot_disaster_counts(filtered_events_square)
+            source = '''
+                        *The GDIS data descriptor*  
+                        Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                        61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                        *The GDIS dataset*  
+                        Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                        Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                        Accessed DAY MONTH YEAR.  
+                        *The EM-DAT dataset*  
+                        Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                        disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+                    '''
+            figs['haz_fig'] = {'fig':haz_fig,'source':source}
+        except Exception as e:
+            logging.error(f"Unexpected error in plot_disaster_counts: {e}")
+            raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
 
-    logger.debug(f"plot_population for: {pop_path, country}")              
-    try:
-        population_plot = plot_population(pop_path, country)
-        source = '''
-                United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
-                Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
-                '''
-        figs['population_plot'] = {'fig':population_plot,'source':source}        
-    except Exception as e:
-        logging.error(f"Unexpected error in population_plot: {e}")
-        raise RuntimeError(f"Unexpected error in population_plot: {e}")
+        logger.debug(f"plot_population for: {pop_path, country}")              
+        try:
+            population_plot = plot_population(pop_path, country)
+            source = '''
+                    United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
+                    Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
+                    '''
+            figs['population_plot'] = {'fig':population_plot,'source':source}        
+        except Exception as e:
+            logging.error(f"Unexpected error in population_plot: {e}")
+            raise RuntimeError(f"Unexpected error in population_plot: {e}")       
+        
+        
 
     ## == policy IS NOT IN USE
     policy = ""

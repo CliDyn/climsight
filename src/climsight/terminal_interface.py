@@ -5,12 +5,19 @@
 import logging
 import yaml
 import os
+import matplotlib.pyplot as plt
 
 # climsight modules
 from stream_handler import StreamHandler
 from climsight_engine import llm_request, forming_request
 
 logger = logging.getLogger(__name__)
+
+def input_with_default(prompt, default_value):
+    user_input = input(prompt)
+    if user_input == "":
+        return default_value
+    return user_input
 
 def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message=''):
     '''
@@ -34,31 +41,151 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     if not isinstance(skip_llm_call, bool):
         logging.error(f"skip_llm_call must be bool")
         raise TypeError("skip_llm_call must be  bool")    
-    
+
+############################# input
+    print(f"\n \n \n")
+    print(f"Welcome to Climsight!")
+    print(f"\n")    
+    if lon is None:
+        lon = input_with_default(f"Please provide longitude of the location ({lon_default}): ", lon_default)
+        try:
+            lon = float(lon)
+        except Exception as e:
+            logging.error(f"lat and lon must be floats: {e}")
+            raise RuntimeError(f"lat and lon must be floats: {e}")            
+    print(f"Longitude: {lon}")
+    print(f"\n")        
+    if lat is None:
+        lat = input_with_default(f"Please provide latitude of the location ({lat_default}): ", lat_default)
+        try:
+            lat = float(lat)
+        except Exception as e:
+            logging.error(f"lat and lon must be floats: {e}")
+            raise RuntimeError(f"lat and lon must be floats: {e}")
+    print(f"Latitude: {lat}")
+    print(f"\n")    
+        
+    user_message = input(f"Describe the activity that you would like to evaluate:\n")
+
     if not isinstance(api_key, str):
-        logging.error(f"api_key must be a string")
+        logging.error(f"api_key must be a string ")
         raise TypeError("api_key must be a string")
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
+    if (not api_key) and (not skip_llm_call):
+        api_key = input("Please provide openAI API key: ")
+    else:
+        print("openAI API key accepted.")
 
-#############################3 conbtiune HERE
-    print(f"Welcome to Climsight!")
-    if lon is None:
-        user_message = input(f"Describe the activity that you would like to evaluate:\n")    
-    user_message = input(f"Describe the activity that you would like to evaluate:\n")
+    show_add_info = input_with_default("Do you want to see and save additional information? (y/n, default y): ","y")
+    if show_add_info=="n":
+        show_add_info=False
+        print(f"Additional inforamtion will be not shown.")        
+    else:
+        show_add_info=True
+        print(f"Additional inforamtion will be shown and saved in files.")                
 
-    print(f"Welcome to CLimsight!")
+    print("")
+    print("Getting info on a point...")
+    # Create a generator object by calling func2
+    generator = forming_request(config, lat, lon, user_message)
+    while True:
+        try:
+            # Get the next intermediate result from the generator
+            result = next(generator)
+            print(f"{result}")
+        except StopIteration as e:
+            # The generator is exhausted, and e.value contains the final result
+            content_message, input_params, df_data, figs, data = e.value
+            break       
+    stream_handler = StreamHandler()
+    if not skip_llm_call:
+        output = llm_request(content_message, input_params, config, api_key, stream_handler)   
+            
+        print("|=============================================================================")    
+        print()    
+        print(output)            
+        print()    
+        print("|=============================================================================")    
+    else:
+        formatted_message = content_message.format(**input_params)
+        print("|============================ Prompt after formatting:  ======================")    
+        print()            
+        print(config['system_role'])    
+        print()            
+        print(formatted_message)            
+        print()    
+        print("|=============================================================================")    
+            
 
+    # PLOTTING ADDITIONAL INFORMATION
+    if show_add_info: 
+        print("Additional information")
+        print(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+        print(f"**Elevation:** {input_params['elevation']} m")
+        print(f"**Current land use:** {input_params['current_land_use']}")
+        print(f"**Soil type:** {input_params['soil']}")
+        print(f"**Occuring species:** {input_params['biodiv']}")
+        print(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+        # figures need to move to engine
+        # Climate Data
+        # print("**Climate data:**")
+        # print(
+        #     "Near surface temperature (in °C)",
+        # )
+        # st.line_chart(
+        #     df_data,
+        #     x="Month",
+        #     y=["Present Day Temperature", "Future Temperature"],
+        #     color=["#d62728", "#2ca02c"],
+        # )
+        # print(
+        #     "Precipitation (in mm)",
+        # )
+        # st.line_chart(
+        #     df_data,
+        #     x="Month",
+        #     y=["Present Day Precipitation", "Future Precipitation"],
+        #     color=["#d62728", "#2ca02c"],
+        # )
+        # print(
+        #     "Wind speed (in m*s-1)",
+        # )
+        # st.line_chart(
+        #     df_data,
+        #     x="Month",
+        #     y=["Present Day Wind Speed", "Future Wind Speed"],
+        #     color=["#d62728", "#2ca02c"],
+        # )
+        # Determine the model information string based on climatemodel_name
+        # if climatemodel_name == 'AWI_CM':
+        #     model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+        # elif climatemodel_name == 'tco1279':
+        #     model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+        # elif climatemodel_name == 'tco319':
+        #     model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
+        # else:
+        #     model_info = 'unknown climate model'
 
+        # print("Climate model: ")
+        # print("   ", model_info)
 
-
-    if not isinstance(lat, float) or not isinstance(lon, float):
-        logging.error(f"lat and lon must be floats in clim_request(...) ")
-        raise TypeError("lat and lon must be floats")
-               
-    if not lon:
-        lon = lon_default
-    if not lat:
-        lat = lat_default
-
+        # Natural Hazards
+        if 'haz_fig' in figs:
+            fname = "natural_hazards.png"
+            print("Figure with natural hazards was saved in {fname}.")
+            figs['haz_fig']['fig'].savefig(fname)
+            print("Source for this figure: ")
+            print(figs['haz_fig']['source'])
+            print("\n")    
+        # Population Data
+        if 'population_plot' in figs:
+            fname = "population_data.png"            
+            print("Figure with population data was saved in {fname}.")
+            figs['population_plot']['fig'].savefig(fname)
+            print("Source for this figure: ")
+            print(figs['population_plot']['source'])
+                
+    
+    
     return

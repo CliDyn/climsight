@@ -41,11 +41,11 @@ while True:
 stream_handler = StreamHandler()
 
 if not isinstance(skip_llm_call, bool):
-    logging.error(f"skip_llm_call must be bool in clim_request(...) ")
+    logging.error(f"skip_llm_call must be bool ")
     raise TypeError("skip_llm_call must be  bool")    
 
 if not isinstance(api_key, str):
-    logging.error(f"api_key must be a string in clim_request(...) ")
+    logging.error(f"api_key must be a string")
     raise TypeError("api_key must be a string")
 if not api_key:
     api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
