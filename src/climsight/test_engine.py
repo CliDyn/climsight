@@ -2,6 +2,8 @@ from climsight_engine import llm_request, forming_request
 import logging
 from stream_handler import StreamHandler
 import os
+import yaml
+
 #import streamlit as st
 
 ## ADD to MAin
@@ -18,10 +20,12 @@ lat = 52.5240
 lon = 13.3700
 user_message = "Where Am I ?"
 skip_llm_call = True
-api_key=''   
-
+api_key='' 
+with open('config.yml', 'r') as file:
+      config = yaml.safe_load(file)  
+   
 # Create a generator object by calling func2
-generator = forming_request(lat, lon, user_message)
+generator = forming_request(config, lat, lon, user_message)
 
 while True:
    try:
@@ -30,7 +34,7 @@ while True:
       print(f"Intermediate result: {result}")
    except StopIteration as e:
       # The generator is exhausted, and e.value contains the final result
-      content_message, input_params, config, df_data, figs, data = e.value
+      content_message, input_params, df_data, figs, data = e.value
       break
 
 
@@ -56,19 +60,3 @@ if not skip_llm_call:
       # Write the content to the file
       print(output)
       file.write(output) 
-'''
-print("second time ")
-# Create a generator object by calling func2
-generator = clim_request(lat, lon, question, stream_handler)
-
-while True:
-   try:
-      # Get the next intermediate result from the generator
-      result = next(generator)
-      print(f"Intermediate result: {result}")
-   except StopIteration as e:
-      # The generator is exhausted, and e.value contains the final result
-      final_result = e.value
-      print(f"Final result: {final_result}")
-      break
-'''
