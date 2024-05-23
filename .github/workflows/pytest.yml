@@ -9,7 +9,6 @@ on:
   push:
     branches:
       - make_tests
-      - cli      
 
 jobs:
   build:
