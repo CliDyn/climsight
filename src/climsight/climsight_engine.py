@@ -263,7 +263,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
                         Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
                         disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
                     '''
-            figs['haz_fig'] = {'fig':haz_fig,'source':source}
+            if not (haz_fig is None):
+                figs['haz_fig'] = {'fig':haz_fig,'source':source}
         except Exception as e:
             logging.error(f"Unexpected error in plot_disaster_counts: {e}")
             raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
@@ -275,7 +276,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
                     United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
                     Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
                     '''
-            figs['population_plot'] = {'fig':population_plot,'source':source}        
+            if not (population_plot is None):
+                figs['population_plot'] = {'fig':population_plot,'source':source}        
         except Exception as e:
             logging.error(f"Unexpected error in population_plot: {e}")
             raise RuntimeError(f"Unexpected error in population_plot: {e}")       
