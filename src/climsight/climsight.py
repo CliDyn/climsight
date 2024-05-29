@@ -93,6 +93,7 @@ content_message = "{user_message} \n \
       Elevation above sea level: {elevation} \
       Current landuse: {current_land_use} \
       Current soil type: {soil} \
+      Occuring species: {biodiv} \
       Current mean monthly temperature for each month: {hist_temp_str} \
       Future monthly temperatures for each month at the location: {future_temp_str}\
       Current precipitation flux (mm/month): {hist_pr_str} \
