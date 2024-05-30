@@ -1,3 +1,4 @@
 data_climate_foresight.tar
 data/ 
 *.ipynb
+__pycache__
