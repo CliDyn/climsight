@@ -133,7 +133,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                         df_data,
                         x="Month",
                         y=["Present Day Temperature", "Future Temperature"],
-                        color=["#d62728", "#2ca02c"],
+                        color=["#d62728", "#0000ff"],
                     )
                     st.markdown(
                         "Precipitation (in mm)",
@@ -142,7 +142,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                         df_data,
                         x="Month",
                         y=["Present Day Precipitation", "Future Precipitation"],
-                        color=["#d62728", "#2ca02c"],
+                        color=["#d62728", "#0000ff"],
                     )
                     st.markdown(
                         "Wind speed (in m*s-1)",
@@ -151,7 +151,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                         df_data,
                         x="Month",
                         y=["Present Day Wind Speed", "Future Wind Speed"],
-                        color=["#d62728", "#2ca02c"],
+                        color=["#d62728", "#0000ff"],
                     )
                     # Determine the model information string based on climatemodel_name
                     if climatemodel_name == 'AWI_CM':
