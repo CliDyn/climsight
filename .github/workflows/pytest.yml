@@ -40,4 +40,4 @@ jobs:
       run: |
         cd test
         # we run pytest without local data
-        pytest -m "not local_data and not request"
+        pytest -m "not request"
