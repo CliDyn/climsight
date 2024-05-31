@@ -67,22 +67,22 @@ def are_dataframes_equal(df1, df2, tol=1e-6):
 def test_climate_data(config_main, config_test):
     lat, lon   = config_test['test_location']['lat'], config_test['test_location']['lon']
     expected_data_dict = config_test['test_location']['data_dict']
-    data_path  = config_main['data_path']
+    data_path  = config_main['data_settings']['data_path']
     expected_df = pd.read_csv('expected_df_climate_data.csv', index_col=0)    
     
     #I do not like it (we need to eliminate hardcode paths)
     os.chdir('..') 
     try:
-        hist, future = load_data(data_path)
+        hist, future = load_data(config_main)
     except Exception as e:
         warnings.warn(f"Failed to load_data(data_path): {str(e)}", RuntimeWarning)
         # Explicitly fail the test with a message
         pytest.fail(f"Test failed due to an error in load_data: {str(e)}, no file probably ?")        
 
     try:
-        df, data_dict = extract_climate_data(lat, lon, hist, future)
+        df, data_dict = extract_climate_data(lat, lon, hist, future, config_main)
     except Exception as e:
-        warnings.warn(f"Failed to extract_climate_data(lat, lon, hist, future): {str(e)}", RuntimeWarning)
+        warnings.warn(f"Failed to extract_climate_data(lat, lon, hist, future, config_main): {str(e)}", RuntimeWarning)
         # Explicitly fail the test with a message
         pytest.fail(f"Test failed due to an error in extract_climate_data: {str(e)}, no file probably ?")        
             
