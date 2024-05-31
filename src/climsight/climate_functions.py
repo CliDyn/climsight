@@ -61,7 +61,8 @@ def load_data(config):
         return hist, future
     
     except Exception as e:
-        st.error(f"Failed to load data: {str(e)}")
+        raise RuntimeError(f"Failed to load data: {str(e)}")
+        #st.error(f"Failed to load data: {str(e)}")
         return None, None
 
 # functions used in extract_climate_data
