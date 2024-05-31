@@ -39,5 +39,5 @@ jobs:
     - name: Run tests
       run: |
         cd test
-        # we run pytest without local data
+        # we run pytest without request with api, only local data
         pytest -m "not request"
