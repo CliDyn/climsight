@@ -34,12 +34,10 @@ jobs:
     
     - name: Download data
       run: |
-        # download data is not working now due to https://population.un.org/wpp/Download/... issues unsafe legacy renegotiation disabled
-        # chmod +x download_data.sh
-        # ./download_data.sh
+        python download_data.py
 
     - name: Run tests
       run: |
         cd test
-        # we run pytest without local data
-        pytest -m "not local_data and not request"
+        # we run pytest without request with api, only local data
+        pytest -m "not request"
