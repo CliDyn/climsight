@@ -10,12 +10,6 @@ import glob
 import os
 import warnings
 
-#from climate_functions import (
-#    load_data,
-#    extract_climate_data
-#)
-
-@st.cache_data
 def load_data(config):
     """
     load climate model data from specified directory patterns

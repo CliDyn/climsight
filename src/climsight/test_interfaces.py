@@ -3,7 +3,6 @@ from terminal_interface import run_terminal
 import logging
 import yaml
 import os
-import sys
 
 #Initialize logging at the beginning of your main application
 logger = logging.getLogger(__name__)
@@ -14,16 +13,10 @@ logging.basicConfig(
    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# Check arguments
-skip_llm_call = 'skipLLMCall' in sys.argv
-if skip_llm_call:
-   logger.info(f"skipLLMCall is in arguments, no call to LLM would be performed")
-terminal_call = 'terminal' in sys.argv
-if terminal_call:
-   logger.info(f"terminal is in arguments, run without Streamlit")   
+skip_llm_call = True
 
 config = {}
-# reading configuration file
+# Config
 if not config:
    config_path = os.getenv('CONFIG_PATH', 'config.yml')
    logger.info(f"reading config from: {config_path}")
@@ -33,7 +26,6 @@ if not config:
    except Exception as e:
       logging.error(f"An error occurred while reading the file: {config_path}")
       raise RuntimeError(f"An error occurred while reading the file: {config_path}") from e
-# preliminary check config file   
 try:
    model_name = config['model_name']
    climatemodel_name = config['climatemodel_name']
@@ -52,7 +44,7 @@ except KeyError as e:
    logging.error(f"Missing configuration key: {e}")
    raise RuntimeError(f"Missing configuration key: {e}")
 
-if not terminal_call:
-   run_streamlit(config, skip_llm_call=skip_llm_call)
-else:   
-   run_terminal(config, skip_llm_call=skip_llm_call)
+
+
+#run_streamlit(config, skip_llm_call=skip_llm_call)
+run_terminal(config, skip_llm_call=skip_llm_call)

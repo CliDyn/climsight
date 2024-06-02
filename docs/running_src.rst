@@ -25,3 +25,15 @@ If you do not have an OpenAI key but want to test Climsight without sending requ
 .. code-block:: bash
 
     streamlit run src/climsight/climsight.py skipLLMCall
+
+Running Climsight in Terminal
+----------------------------------
+
+You can now run Climsight directly within the terminal. Change to the ``climsight`` folder and execute:
+
+.. code-block:: bash
+
+    python src/climsight/climsight.py terminal
+
+This method allows you to use Climsight without opening a browser window. It's a convenient option for users who prefer working entirely within the terminal environment.
+
