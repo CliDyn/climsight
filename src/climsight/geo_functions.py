@@ -67,9 +67,9 @@ def where_is_point(lat, lon):
     Returns:
     Tuple: Indicates if the point is on land, in a lake, near a river, and the name of the lake or river if applicable.
     """
-
+    
     point = Point(lon, lat)
-
+    
     land_shp = gpd.read_file('./data/natural_earth/land/ne_10m_land.shp')
     is_on_land = land_shp.contains(point).any()
     print(f"Is the point on land? {'Yes.' if is_on_land else 'No.'}")
