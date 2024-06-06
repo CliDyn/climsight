@@ -34,7 +34,9 @@ from geo_functions import (
    closest_shore_distance,
    get_elevation_from_api,
    fetch_land_use,
-   get_soil_from_api
+   get_soil_from_api,
+   is_point_onland,
+   is_point_in_inlandwater
  )
 from environmental_functions import (
    fetch_biodiversity,
@@ -130,6 +132,17 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     #content_message defined below now
 
     ##  =================== prepare data ==================
+    logger.debug(f"is_point_onland : {lat}, {lon}")        
+    try:
+        is_on_land, water_body_status = is_point_onland(lat, lon, config['natural_e_path'])
+    except Exception as e:
+        logging.error(f"Unexpected error in is_point_onland: {e}")
+        raise RuntimeError(f"Unexpected error in is_point_onland: {e}")
+
+    if not is_on_land:
+        return "Error: point_is_in_ocean"
+
+        
     ##  ===== location
     logger.debug(f"Retrieving location from: {lat}, {lon}")        
     try:
@@ -153,6 +166,15 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     except Exception as e:
         logging.error(f"Unexpected error in where_is_point: {e}")
         raise RuntimeError(f"Unexpected error in where_is_point: {e}")
+    # logger.debug(f"is_point_onland from: {lat}, {lon}")            
+    # try:
+    #     is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = is_point_onland(lat, lon, config)
+    # except Exception as e:
+    #     logging.error(f"Unexpected error in where_is_point: {e}")
+    #     raise RuntimeError(f"Unexpected error in where_is_point: {e}")
+
+    
+    
     ##  == location details
     logger.debug(f"get_location_details")            
     try:
