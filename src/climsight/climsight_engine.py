@@ -35,8 +35,7 @@ from geo_functions import (
    get_elevation_from_api,
    fetch_land_use,
    get_soil_from_api,
-   is_point_onland,
-   is_point_in_inlandwater
+   is_point_onland
  )
 from environmental_functions import (
    fetch_biodiversity,
