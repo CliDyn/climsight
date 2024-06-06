@@ -12,6 +12,12 @@ import pandas as pd
 from pyproj import Geod
 from requests.exceptions import Timeout
 from functools import lru_cache
+import os
+import logging
+#import osmnx as ox
+
+
+logger = logging.getLogger(__name__)
 
 @lru_cache(maxsize=100)
 def get_location(lat, lon):
@@ -52,6 +58,83 @@ def get_location(lat, lon):
     else:
         print("Error:", response.status_code, response.reason)
         return None
+
+@lru_cache(maxsize=100)
+def is_point_onland(lat, lon, land_path_in):
+    """
+    Checks if a given point (latitude and longitude) is on land.
+
+    Args:
+    lat (float): Latitude of the point.
+    lon (float): Longitude of the point.
+    config (list): Config
+
+    Returns:
+    bool : True is on land, False is in the Ocean.
+    str: water_status
+    """
+    point = Point(lon, lat)
+
+    land_path = os.path.join(land_path_in, 'land/ne_10m_land.shp')
+    land_shp = gpd.read_file(land_path)
+    is_on_land = land_shp.contains(point).any()
+    logging.info(f"Is the point on land? {'Yes.' if is_on_land else 'No.'}")
+    
+    water_body_status = ""  # Initialize an empty string to store the status
+    if not is_on_land: # If point is not on land, no need to check for lakes or rivers
+        water_body_status = "The selected point is in the ocean."
+    
+    return is_on_land, water_body_status
+
+# @lru_cache(maxsize=100)
+# def is_point_in_inlandwater(lat, lon, water_body_status="The selected point is on land."):
+#     """
+#     Checks if a given point (latitude and longitude) is in river or lake.
+
+#     Args:
+#     lat (float): Latitude of the point.
+#     lon (float): Longitude of the point.
+#     water_body_status (str): string if ocean/lake/...
+        
+#     Returns:
+#     Tuple: Indicates if the point is on land, in a lake, near a river, and the name of the lake or river if applicable.
+#     """
+#     point = Point(lon, lat)
+
+#     #request to openstreetmap OSM with osmnx
+#     try: 
+#         distance = 1000
+#         tags = {'natural':'water'}
+#         gdf = ox.features.features_from_point((lat,lon),tags,dist=distance)
+#     except Exception as e:
+#         logging.error(f"Unexpected error in request with osmnx ot OSM: {e}")
+#         #raise RuntimeError(f"Unexpected error in get_location: {e}")
+#         #if error, we assume point is on land
+
+#     # Create a Point object
+#     point = Point(lon, lat)
+
+#     # Check if the point is within any of the geometries in the GeoDataFrame
+#     contains_point = gdf['geometry'].apply(lambda geom: geom.contains(point))
+#     is_inland_water = contains_point.any()
+#     inland_water_name, inland_water_type = None, None
+#     if is_inland_water:
+#         gdf_contains_point = gdf[contains_point]
+#         try:
+#             inland_water_name = gdf_contains_point['name'].dropna().iloc[0]
+#         except:  
+#             inland_water_name = None
+#         try:
+#             inland_water_type = gdf_contains_point['water'].dropna().iloc[0]
+#         except:
+#             inland_water_type = None
+        
+#         if inland_water_type:
+#             water_body_status = water_body_status.rstrip('.') + f" and located within the {inland_water_type if inland_water_type else ' water body'}."
+#         if inland_water_name:
+#             inland_water_name = water_body_status.rstrip('.') + f" named {'river ' + river_name if river_name else 'a river'}."
+
+#     return is_inland_water, water_body_status
 
 @lru_cache(maxsize=100)
 def where_is_point(lat, lon):

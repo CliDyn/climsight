@@ -17,6 +17,7 @@ dimension_mappings:
 coastline_shapefile: "../climsight/data/natural_earth/coastlines/ne_10m_coastline.shp"
 haz_path: '../climsight/data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 pop_path: '../climsight/data/population/WPP2022_Demographic_Indicators_Medium.csv'
+natural_e_path: './data/natural_earth/'
 distance_from_event: 5.0
 lat_default: 52.5240
 lon_default: 13.3700
