@@ -112,6 +112,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         year_step = config['year_step']
         start_year = config['start_year']
         end_year = config['end_year']
+        natural_e_path = config['natural_e_path']
     except KeyError as e:
         logging.error(f"Missing configuration key: {e}")
         raise RuntimeError(f"Missing configuration key: {e}")
@@ -133,7 +134,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     ##  =================== prepare data ==================
     logger.debug(f"is_point_onland : {lat}, {lon}")        
     try:
-        is_on_land, water_body_status = is_point_onland(lat, lon, config['natural_e_path'])
+        is_on_land, water_body_status = is_point_onland(lat, lon, natural_e_path)
     except Exception as e:
         logging.error(f"Unexpected error in is_point_onland: {e}")
         raise RuntimeError(f"Unexpected error in is_point_onland: {e}")
