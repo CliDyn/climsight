@@ -94,7 +94,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
             if (not api_key) and (not skip_llm_call):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
-
+                
+            is_on_land = True
             with st.spinner("Getting info on a point..."):
                 # Create a generator object by calling func2
                 generator = forming_request(config, lat, lon, user_message)
@@ -105,79 +106,88 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                         st.markdown(f"{result}")
                     except StopIteration as e:
                         # The generator is exhausted, and e.value contains the final result
-                        content_message, input_params, df_data, figs, data = e.value
+                        
+                        gen_output = e.value
+                        # check if Error ocure:
+                        if isinstance(gen_output,str):
+                            if "Error" in gen_output:
+                                if "point_is_in_ocean" in gen_output:
+                                    is_on_land = False
+                                    st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
+                        else:    
+                            content_message, input_params, df_data, figs, data = e.value
                         break            
+            if is_on_land:        
+                with st.spinner("Generating..."):
+                    chat_box = st.empty()
+                    stream_handler = StreamHandler(chat_box, display_method="write")
+                    if not skip_llm_call:
+                        output = llm_request(content_message, input_params, config, api_key, stream_handler)   
 
-            with st.spinner("Generating..."):
-                chat_box = st.empty()
-                stream_handler = StreamHandler(chat_box, display_method="write")
-                if not skip_llm_call:
-                    output = llm_request(content_message, input_params, config, api_key, stream_handler)   
+                    # PLOTTING ADDITIONAL INFORMATION
+                    if show_add_info: 
+                        st.subheader("Additional information", divider='rainbow')
+                        st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+                        st.markdown(f"**Elevation:** {input_params['elevation']} m")
+                        st.markdown(f"**Current land use:** {input_params['current_land_use']}")
+                        st.markdown(f"**Soil type:** {input_params['soil']}")
+                        st.markdown(f"**Occuring species:** {input_params['biodiv']}")
+                        st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+                        
+                        # Climate Data
+                        st.markdown("**Climate data:**")
+                        st.markdown(
+                            "Near surface temperature (in °C)",
+                        )
+                        st.line_chart(
+                            df_data,
+                            x="Month",
+                            y=["Present Day Temperature", "Future Temperature"],
+                            color=["#1f77b4", "#d62728"],
+                        )
+                        st.markdown(
+                            "Precipitation (in mm)",
+                        )
+                        st.line_chart(
+                            df_data,
+                            x="Month",
+                            y=["Present Day Precipitation", "Future Precipitation"],
+                            color=["#1f77b4", "#d62728"],
+                        )
+                        st.markdown(
+                            "Wind speed (in m*s-1)",
+                        )
+                        st.line_chart(
+                            df_data,
+                            x="Month",
+                            y=["Present Day Wind Speed", "Future Wind Speed"],
+                            color=["#1f77b4", "#d62728"],
+                        )
+                        # Determine the model information string based on climatemodel_name
+                        if climatemodel_name == 'AWI_CM':
+                            model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+                        elif climatemodel_name == 'tco1279':
+                            model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+                        elif climatemodel_name == 'tco319':
+                            model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
+                        else:
+                            model_info = 'unknown climate model'
 
-                # PLOTTING ADDITIONAL INFORMATION
-                if show_add_info: 
-                    st.subheader("Additional information", divider='rainbow')
-                    st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-                    st.markdown(f"**Elevation:** {input_params['elevation']} m")
-                    st.markdown(f"**Current land use:** {input_params['current_land_use']}")
-                    st.markdown(f"**Soil type:** {input_params['soil']}")
-                    st.markdown(f"**Occuring species:** {input_params['biodiv']}")
-                    st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
-                    
-                    # Climate Data
-                    st.markdown("**Climate data:**")
-                    st.markdown(
-                        "Near surface temperature (in °C)",
-                    )
-                    st.line_chart(
-                        df_data,
-                        x="Month",
-                        y=["Present Day Temperature", "Future Temperature"],
-                        color=["#1f77b4", "#d62728"],
-                    )
-                    st.markdown(
-                        "Precipitation (in mm)",
-                    )
-                    st.line_chart(
-                        df_data,
-                        x="Month",
-                        y=["Present Day Precipitation", "Future Precipitation"],
-                        color=["#1f77b4", "#d62728"],
-                    )
-                    st.markdown(
-                        "Wind speed (in m*s-1)",
-                    )
-                    st.line_chart(
-                        df_data,
-                        x="Month",
-                        y=["Present Day Wind Speed", "Future Wind Speed"],
-                        color=["#1f77b4", "#d62728"],
-                    )
-                    # Determine the model information string based on climatemodel_name
-                    if climatemodel_name == 'AWI_CM':
-                        model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
-                    elif climatemodel_name == 'tco1279':
-                        model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
-                    elif climatemodel_name == 'tco319':
-                        model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
-                    else:
-                        model_info = 'unknown climate model'
-
-                    with st.expander("Source"):
-                        st.markdown(model_info)
-
-                    # Natural Hazards
-                    if 'haz_fig' in figs:
-                        st.markdown("**Natural hazards:**")
-                        st.pyplot(figs['haz_fig']['fig'])
                         with st.expander("Source"):
-                            st.markdown(figs['haz_fig']['source'])
+                            st.markdown(model_info)
 
-                    # Population Data
-                    if 'population_plot' in figs:
-                        st.markdown("**Population Data:**")
-                        st.pyplot(figs['population_plot']['fig'])
-                        with st.expander("Source"):
-                            st.markdown(figs['population_plot']['source'])
+                        # Natural Hazards
+                        if 'haz_fig' in figs:
+                            st.markdown("**Natural hazards:**")
+                            st.pyplot(figs['haz_fig']['fig'])
+                            with st.expander("Source"):
+                                st.markdown(figs['haz_fig']['source'])
+
+                        # Population Data
+                        if 'population_plot' in figs:
+                            st.markdown("**Population Data:**")
+                            st.pyplot(figs['population_plot']['fig'])
+                            with st.expander("Source"):
+                                st.markdown(figs['population_plot']['source'])
                             
     return

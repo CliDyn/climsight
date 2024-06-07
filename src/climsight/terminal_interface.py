@@ -88,6 +88,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     print("")
     print("Getting info on a point...")
     # Create a generator object by calling func2
+    is_on_land = True
     generator = forming_request(config, lat, lon, user_message)
     while True:
         try:
@@ -96,95 +97,104 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             print(f"{result}")
         except StopIteration as e:
             # The generator is exhausted, and e.value contains the final result
-            content_message, input_params, df_data, figs, data = e.value
-            break       
-    stream_handler = StreamHandler()
-    if not skip_llm_call:
-        output = llm_request(content_message, input_params, config, api_key, stream_handler)   
-            
-        print("|=============================================================================")    
-        print()    
-        print(output)            
-        print()    
-        print("|=============================================================================")    
-    else:
-        formatted_message = content_message.format(**input_params)
-        print("|============================ Prompt after formatting:  ======================")    
-        print()            
-        print(config['system_role'])    
-        print()            
-        print(formatted_message)            
-        print()    
-        print("|=============================================================================")    
-            
+            gen_output = e.value
+            # check if Error ocure:
+            if isinstance(gen_output,str):
+                if "Error" in gen_output:
+                    if "point_is_in_ocean" in gen_output:
+                        is_on_land = False
+                        print(f"The selected point is in the ocean. Please choose a location on land.")
+            else:    
+                content_message, input_params, df_data, figs, data = e.value
+            break     
+    if is_on_land:        
+        stream_handler = StreamHandler()
+        if not skip_llm_call:
+            output = llm_request(content_message, input_params, config, api_key, stream_handler)   
+                
+            print("|=============================================================================")    
+            print()    
+            print(output)            
+            print()    
+            print("|=============================================================================")    
+        else:
+            formatted_message = content_message.format(**input_params)
+            print("|============================ Prompt after formatting:  ======================")    
+            print()            
+            print(config['system_role'])    
+            print()            
+            print(formatted_message)            
+            print()    
+            print("|=============================================================================")    
+                
 
-    # PLOTTING ADDITIONAL INFORMATION
-    if show_add_info: 
-        print("Additional information")
-        print(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-        print(f"**Elevation:** {input_params['elevation']} m")
-        print(f"**Current land use:** {input_params['current_land_use']}")
-        print(f"**Soil type:** {input_params['soil']}")
-        print(f"**Occuring species:** {input_params['biodiv']}")
-        print(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
-        # figures need to move to engine
-        # Climate Data
-        # print("**Climate data:**")
-        # print(
-        #     "Near surface temperature (in °C)",
-        # )
-        # st.line_chart(
-        #     df_data,
-        #     x="Month",
-        #     y=["Present Day Temperature", "Future Temperature"],
-        #     color=["#d62728", "#0000ff"],
-        # )
-        # print(
-        #     "Precipitation (in mm)",
-        # )
-        # st.line_chart(
-        #     df_data,
-        #     x="Month",
-        #     y=["Present Day Precipitation", "Future Precipitation"],
-        #     color=["#d62728", "#0000ff"],
-        # )
-        # print(
-        #     "Wind speed (in m*s-1)",
-        # )
-        # st.line_chart(
-        #     df_data,
-        #     x="Month",
-        #     y=["Present Day Wind Speed", "Future Wind Speed"],
-        #     color=["#d62728", "#0000ff"],
-        # )
-        # Determine the model information string based on climatemodel_name
-        # if climatemodel_name == 'AWI_CM':
-        #     model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
-        # elif climatemodel_name == 'tco1279':
-        #     model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
-        # elif climatemodel_name == 'tco319':
-        #     model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
-        # else:
-        #     model_info = 'unknown climate model'
+        # PLOTTING ADDITIONAL INFORMATION
+        if show_add_info: 
+            print("Additional information")
+            print(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+            print(f"**Elevation:** {input_params['elevation']} m")
+            print(f"**Current land use:** {input_params['current_land_use']}")
+            print(f"**Soil type:** {input_params['soil']}")
+            print(f"**Occuring species:** {input_params['biodiv']}")
+            print(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+            # figures need to move to engine
+            # Climate Data
+            # print("**Climate data:**")
+            # print(
+            #     "Near surface temperature (in °C)",
+            # )
+            # st.line_chart(
+            #     df_data,
+            #     x="Month",
+            #     y=["Present Day Temperature", "Future Temperature"],
+            #     color=["#d62728", "#0000ff"],
+            # )
+            # print(
+            #     "Precipitation (in mm)",
+            # )
+            # st.line_chart(
+            #     df_data,
+            #     x="Month",
+            #     y=["Present Day Precipitation", "Future Precipitation"],
+            #     color=["#d62728", "#0000ff"],
+            # )
+            # print(
+            #     "Wind speed (in m*s-1)",
+            # )
+            # st.line_chart(
+            #     df_data,
+            #     x="Month",
+            #     y=["Present Day Wind Speed", "Future Wind Speed"],
+            #     color=["#d62728", "#0000ff"],
+            # )
+            # Determine the model information string based on climatemodel_name
+            # if climatemodel_name == 'AWI_CM':
+            #     model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+            # elif climatemodel_name == 'tco1279':
+            #     model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+            # elif climatemodel_name == 'tco319':
+            #     model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
+            # else:
+            #     model_info = 'unknown climate model'
 
-        # print("Climate model: ")
-        # print("   ", model_info)
+            # print("Climate model: ")
+            # print("   ", model_info)
 
-        # Natural Hazards
-        if 'haz_fig' in figs:
-            fname = "natural_hazards.png"
-            print("Figure with natural hazards was saved in {fname}.")
-            figs['haz_fig']['fig'].savefig(fname)
-            print("Source for this figure: ")
-            print(figs['haz_fig']['source'])
-            print("\n")    
-        # Population Data
-        if 'population_plot' in figs:
-            fname = "population_data.png"            
-            print("Figure with population data was saved in {fname}.")
-            figs['population_plot']['fig'].savefig(fname)
-            print("Source for this figure: ")
-            print(figs['population_plot']['source'])
+            # Natural Hazards
+            if 'haz_fig' in figs:
+                fname = "natural_hazards.png"
+                print("Figure with natural hazards was saved in {fname}.")
+                figs['haz_fig']['fig'].savefig(fname)
+                print("Source for this figure: ")
+                print(figs['haz_fig']['source'])
+                print("\n")    
+            # Population Data
+            if 'population_plot' in figs:
+                fname = "population_data.png"            
+                print("Figure with population data was saved in {fname}.")
+                figs['population_plot']['fig'].savefig(fname)
+                print("Source for this figure: ")
+                print(figs['population_plot']['source'])
                 
     
     
