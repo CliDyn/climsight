@@ -17,6 +17,7 @@ import os
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
 
 # Append the directory containing the module to sys.path
 module_dir = os.path.abspath('../src/climsight/')
@@ -29,7 +30,22 @@ from climate_functions import (
    extract_climate_data
 )
 
-config_path = '../config.yml'
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Find the right config file
+def find_config_file(filename):
+    if os.path.exists(filename):
+        return filename
+    parent_dir_file = os.path.join(base_dir, '..', filename)
+    if os.path.exists(parent_dir_file):
+        return parent_dir_file
+    return None
+
+env_config_path = os.getenv('CONFIG_PATH')
+if env_config_path:
+    config_path = find_config_file(env_config_path)
+else:
+    config_path = find_config_file('config.yml')
 test_config_path = 'config_test_climate_functions.yml'
 
 def test_config_files_exist():
@@ -47,7 +63,8 @@ def config_main():
 def config_test():
     with open(test_config_path, 'r') as file:
         config_data = yaml.safe_load(file)
-    return config_data
+    config_name = re.sub(r'^config_', '', os.path.basename(config_path).replace('.yml', ''))
+    return config_data['config_test'].get(config_name, config_data['config_test']['default'])
 
 def are_dataframes_equal(df1, df2, tol=1e-6):
     """
@@ -68,7 +85,16 @@ def test_climate_data(config_main, config_test):
     lat, lon   = config_test['test_location']['lat'], config_test['test_location']['lon']
     expected_data_dict = config_test['test_location']['data_dict']
     data_path  = config_main['data_settings']['data_path']
-    expected_df = pd.read_csv('expected_df_climate_data.csv', index_col=0)    
+    config_name = os.path.basename(config_path).replace('.yml', '')
+    if config_name == 'config_tco319':
+        expected_csv_file = 'expected_df_climate_data_tco319.csv'
+    elif config_name == 'config_tco1279':
+        expected_csv_file = 'expected_df_climate_data_tco1279.csv'
+    else:
+        expected_csv_file = 'expected_df_climate_data.csv'
+    
+    expected_df_path = os.path.join(base_dir, expected_csv_file)
+    expected_df = pd.read_csv(expected_df_path, index_col=0) 
     
     #I do not like it (we need to eliminate hardcode paths)
     os.chdir('..') 
