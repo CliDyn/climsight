@@ -99,6 +99,8 @@ test_wetdry:
   lon_oce: 0.0
   lat_lake: 47.57983
   lon_lake: 9.47596
+  lat_lake2: 47.66364786121676
+  lon_lake2: 9.185621338434288
 
 
   

@@ -30,7 +30,9 @@ from geo_functions import (
     closest_shore_distance,
     get_elevation_from_api,
     fetch_land_use,
-    get_soil_from_api
+    get_soil_from_api,
+    is_point_onland,
+    is_point_in_inlandwater
 )
 
 config_path = '../config.yml'
@@ -121,6 +123,33 @@ def test_mock_get_location(config_geo, requests_mock):
 
     location_details = get_location_details(location)
     assert location_details == expected_location_details
+# ---------------------------- test is on land, is lake
+        
+@pytest.mark.local_data    
+def test_is_point_onland(config_geo, config_main):
+    #I do not like it (we need to eliminate hardcode paths)
+    os.chdir('..')  
+    natural_e_path = config_main['natural_e_path']
+    
+    lat, lon = config_geo['test_wetdry']['lat_dry'], config_geo['test_wetdry']['lon_dry']    
+    is_on_land, water_body_status = is_point_onland(lat, lon, natural_e_path)
+    assert is_on_land == True, f"error in is_point_onland, point({lat},{lon} not on land)"
+    
+    lat, lon = config_geo['test_wetdry']['lat_oce'], config_geo['test_wetdry']['lon_oce']
+    is_on_land, water_body_status = is_point_onland(lat, lon, natural_e_path)
+    assert is_on_land == False, f"error in is_point_onland, point({lat},{lon} not in ocean)"
+
+    lat, lon = config_geo['test_wetdry']['lat_lake'], config_geo['test_wetdry']['lon_lake']
+    is_on_land, water_body_status = is_point_onland(lat, lon, natural_e_path)
+    assert is_on_land == True, f"error in is_point_onland, point({lat},{lon} not on land)"
+
+    lat, lon = config_geo['test_wetdry']['lat_lake2'], config_geo['test_wetdry']['lon_lake2']
+    is_on_land, water_body_status = is_point_in_inlandwater(lat, lon)
+    assert is_on_land == True, f"error in is_point_in_inlandwater, point({lat},{lon} not in lake)"
+    assert water_body_status == 'The selected point is on land and located within the lake.', f"error in is_point_in_inlandwater, point({lat},{lon} not in lake)"
+
+    #I do not like it (we need to eliminate hardcode paths)
+    os.chdir('test')
         
 #----------------------------- Test wet dry areas 
 @pytest.fixture
