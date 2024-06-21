@@ -17,6 +17,8 @@ def download_file(url, local_filename):
                 total_length = int(total_length)
                 downloaded = 0
                 percent = round((total_length/8192)/ 100 )
+                if percent == 0:
+                    percent = 1
 
             with open(local_filename, 'wb') as f:
                 chunk_number = 1
