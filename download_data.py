@@ -27,7 +27,7 @@ def download_file(url, local_filename):
                         # Calculate the percentage of the file downloaded and update the progress bar
                         # files are large, github limits length of logs
                         chunk_number += 1
-                        if mod(chunk_number/percent)==0:
+                        if chunk_number % percent == 0:
                             done_percentage = int(100 * downloaded / total_length)
                         # Update the progress bar
                         sys.stdout.write(f"\rDownloading {local_filename}: {done_percentage}%")
