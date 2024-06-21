@@ -1,0 +1,88 @@
+name: Dockerize  climsight
+# this will build  on what is committed to the branch
+# dockerbuildandpush pulls the repo.
+# overwrites any files created.
+env:
+  MAMBA_DOCKERFILE_ACTIVATE: 1
+  REGISTRY_IMAGE: koldunovn/climsight
+  STREAMLIT_ARGS:
+  STREAMLIT_SERVER_PORT: 8501
+  MAMBA_USER: mambauser
+
+  # addditionally, OPENAI_API_KEY needs to be passed to the container
+on:
+  push:
+    # be wary of using **  for the branch...
+    # it will fail, and only pull the main branch... which means old code, usually
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+
+# https://github.com/marketplace/actions/publish-docker
+# https://github.com/docker/build-push-action
+#defaults:
+#  run:
+#    working-directory:  build
+
+jobs:
+  build:
+    name: build and push climsight
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ["linux/amd64","linux/arm64"]
+        #platform: ["linux/amd64"] #linux/arm64 issues with building
+    steps:
+#      - name: Set variables
+#        run: |
+#            REGISTRY_IMAGE=koldunovn/climsight
+#            echo "REGISTRY_IMAGE=$REGISTRY_IMAGE" >> $GITHUB_ENV
+#        working-directory:  /
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images:  ${{ env.REGISTRY_IMAGE }}
+          flavor: |
+            latest=true
+          tags: |
+            type=ref,event=tag
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+#            type=sha
+
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          #context:  ./dagster/implnets
+          # grr https://github.com/docker/build-push-action#git-context
+          #context:  "{{defaultContext}}"
+          platform: ${{matrix.platform}}
+          push: true
+          build-args:
+            MAMBA_DOCKERFILE_ACTIVATE=${{ env.MAMBA_DOCKERFILE_ACTIVATE }}
+          file: ./Dockerfile
+          context:  .
+          tags: ${{ steps.meta.outputs.tags }}
+#          tags: nsfearthcube/ec_facets_client:latest
+          labels: ${{ steps.meta.outputs.labels }}
+          #platforms: ${{ matrix.platform }}
+          #outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Image digest
+        run: echo ${{ steps.build.outputs.digest }}
+

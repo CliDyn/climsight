@@ -10,7 +10,7 @@ dependencies:
     - geopandas
     - pyproj
     - requests
-    - requests-mock      
+    - requests-mock
     - pandas
     - folium
     - langchain
@@ -19,8 +19,11 @@ dependencies:
     - dask
     - pip
     - matplotlib
-    - pip:
-        - openai==1.5.0
+    - openai
+    - langchain-community
+#    - pip:
+#        - openai==1.35.2
+#        - langchain-community==0.2.5
 
 
 
