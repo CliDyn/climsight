@@ -16,7 +16,7 @@ def download_file(url, local_filename):
             if total_length is not None:
                 total_length = int(total_length)
                 downloaded = 0
-                percent = round(total_length/ 100 )
+                percent = round((total_length/8192)/ 100 )
 
             with open(local_filename, 'wb') as f:
                 chunk_number = 1
@@ -29,9 +29,9 @@ def download_file(url, local_filename):
                         chunk_number += 1
                         if chunk_number % percent == 0:
                             done_percentage = int(100 * downloaded / total_length)
-                        # Update the progress bar
-                        sys.stdout.write(f"\rDownloading {local_filename}: {done_percentage}%")
-                        sys.stdout.flush()
+                            # Update the progress bar
+                            sys.stdout.write(f"\rDownloading {local_filename}: {done_percentage}%")
+                            sys.stdout.flush()
             if total_length is not None:
                 sys.stdout.write('\n')  # Move the cursor to the next line after download completes
 
