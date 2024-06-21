@@ -14,7 +14,7 @@ RUN python download_data.py
 
 WORKDIR /app
 # Streamlit settings
-ENV STREAMLIT_SERVER_PORT 8501
+ENV STREAMLIT_SERVER_PORT=8501
 
 # Expose port
 EXPOSE 8501

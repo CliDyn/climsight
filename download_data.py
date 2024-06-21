@@ -4,7 +4,7 @@ import zipfile
 import os
 import shutil
 import sys
-import yaml 
+import yaml
 
 def download_file(url, local_filename):
     """Attempt to download a file from a URL and save it locally, with a progress indicator."""
@@ -16,14 +16,19 @@ def download_file(url, local_filename):
             if total_length is not None:
                 total_length = int(total_length)
                 downloaded = 0
+                percent = round(total_length/ 100 )
 
             with open(local_filename, 'wb') as f:
+                chunk_number = 1
                 for chunk in r.iter_content(chunk_size=8192):
                     f.write(chunk)
                     if total_length is not None:
                         downloaded += len(chunk)
                         # Calculate the percentage of the file downloaded and update the progress bar
-                        done_percentage = int(100 * downloaded / total_length)
+                        # files are large, github limits length of logs
+                        chunk_number += 1
+                        if mod(chunk_number/percent)==0:
+                            done_percentage = int(100 * downloaded / total_length)
                         # Update the progress bar
                         sys.stdout.write(f"\rDownloading {local_filename}: {done_percentage}%")
                         sys.stdout.flush()
@@ -73,12 +78,12 @@ def extract_arch(file_path, extract_to='.', archive_type=''):
             with tarfile.open(file_path) as tar:
                 tar.extractall(path=extract_to)
         else:
-            #cp file to     
-            destination_file = os.path.join(extract_to, os.path.basename(file_path))   
-            shutil.copyfile(file_path,destination_file)    
+            #cp file to
+            destination_file = os.path.join(extract_to, os.path.basename(file_path))
+            shutil.copyfile(file_path,destination_file)
         os.remove(file_path)
     except Exception as e:
-        print(f"\033[93mWarning: Failed to extract {file_path}.\033[0m")        
+        print(f"\033[93mWarning: Failed to extract {file_path}.\033[0m")
 
 def create_dir(path):
     """Create a directory if it doesn't exist."""
@@ -109,7 +114,7 @@ def main():
         create_dir(os.path.join(base_path, subdir))
 
     # Download and extract files
-    
+
     files_downloaded = []
     files_skiped = []
     urls_skiped = []
@@ -121,29 +126,29 @@ def main():
         subdir = os.path.join(base_path, entry['subdir'])
         if download_file(url, file):
             extract_arch(file, subdir)
-            files_downloaded.append(file)        
+            files_downloaded.append(file)
         else:
             files_skiped.append(file)
             urls_skiped.append(url)
             subdirs_skiped.append(subdir)
- 
+
     if (files_skiped):
-        print('\n')                      
-        print('----------------------------------------------')                      
+        print('\n')
+        print('----------------------------------------------')
         print(f"\033[91mFiles not downloaded, please download manualy:\033[0m")
         for i,file in enumerate(files_skiped):
-            print('--------')               
+            print('--------')
             print(f"\033[93mFile:\033[0m", file)
-            print(f"\033[93mUrl:\033[0m", urls_skiped[i])        
-            print(f"\033[93munpack it into the:\033[0m ", subdirs_skiped[i])            
-            print('--------')        
+            print(f"\033[93mUrl:\033[0m", urls_skiped[i])
+            print(f"\033[93munpack it into the:\033[0m ", subdirs_skiped[i])
+            print('--------')
 
     # I would leave it for a while
-    #print('\n')                      
-    #print('----------------------------------------------')                      
+    #print('\n')
+    #print('----------------------------------------------')
     #print("You also need to download the natural hazard data (for which you have to create a free account). Please download the CSV - Disaster Location Centroids [zip file] and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly.")
     #print(f"\033[93mhttps://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download\033[0m")
-    #print('-------------------')                      
-    
+    #print('-------------------')
+
 if __name__ == "__main__":
     main()
