@@ -18,6 +18,7 @@ dependencies:
     - netcdf4
     - dask
     - pip
+    - langchain-community 
     - osmnx
     - matplotlib
     - pip:
