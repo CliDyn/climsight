@@ -35,7 +35,8 @@ from geo_functions import (
    get_elevation_from_api,
    fetch_land_use,
    get_soil_from_api,
-   is_point_onland
+   is_point_onland,
+   is_point_in_inlandwater
  )
 from environmental_functions import (
    fetch_biodiversity,
@@ -139,9 +140,10 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         logging.error(f"Unexpected error in is_point_onland: {e}")
         raise RuntimeError(f"Unexpected error in is_point_onland: {e}")
 
+    ######################## Here is a critical point ######################
     if not is_on_land:
         return "Error: point_is_in_ocean"
-
+    ######################## Here is a critical point ######################
         
     ##  ===== location
     logger.debug(f"Retrieving location from: {lat}, {lon}")        
@@ -160,18 +162,18 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
 
     yield f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}"
     ##  == wet / dry
-    logger.debug(f"where_is_point from: {lat}, {lon}")            
-    try:
-        is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = where_is_point(lat, lon)
-    except Exception as e:
-        logging.error(f"Unexpected error in where_is_point: {e}")
-        raise RuntimeError(f"Unexpected error in where_is_point: {e}")
-    # logger.debug(f"is_point_onland from: {lat}, {lon}")            
+    # logger.debug(f"where_is_point from: {lat}, {lon}")            
     # try:
-    #     is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = is_point_onland(lat, lon, config)
+    #     is_on_land, in_lake, lake_name, near_river, river_name, water_body_status = where_is_point(lat, lon)
     # except Exception as e:
     #     logging.error(f"Unexpected error in where_is_point: {e}")
     #     raise RuntimeError(f"Unexpected error in where_is_point: {e}")
+    logger.debug(f"is_point_onland from: {lat}, {lon}")            
+    try:
+        is_inland_water, water_body_status = is_point_in_inlandwater(lat, lon)
+    except Exception as e:
+        logging.error(f"Unexpected error in where_is_point: {e}")
+        raise RuntimeError(f"Unexpected error in where_is_point: {e}")
 
     
     
@@ -183,23 +185,24 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         logging.error(f"Unexpected error in get_location_details: {e}")
         raise RuntimeError(f"Unexpected error in get_location_details: {e}")
     
-    if is_on_land:
-        if not in_lake or not near_river:
-            yield f"{location_str_for_print}"            
-            pass
-        if in_lake:
-            yield f"You have choose {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result."
-            logging.info(f"location in {'lake ' + lake_name if lake_name else 'a lake'}")
+    #if is_on_land:  We already have return if is_on_land
+    if not is_inland_water:
+        yield f"{location_str_for_print}"            
+        pass
+    if is_inland_water:
+        yield f"{water_body_status} Our analyses are currently only meant for land areas. Please select another location for a better result."
+        #yield f"You have choose {'lake ' + lake_name if lake_name else 'a lake'}. Our analyses are currently only meant for land areas. Please select another location for a better result."
+        logging.info(f"location in inland water: water_body_status= {water_body_status}")
             
-        if near_river:
-            yield f"You have choose on a place that might be in {'the river ' + river_name if river_name else 'a river'}. Our analyses are currently only meant for land areas. Please select another location for a better result."              
-            logging.info(f"location in {'the river ' + river_name if river_name else 'a river'}")            
-    else:
-        yield f"You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result."
-        logging.info(f"place somewhere in the ocean")
-        country = None
-        location_str = None
-        add_properties = None
+        #if near_river:
+        #    yield f"You have choose on a place that might be in {'the river ' + river_name if river_name else 'a river'}. Our analyses are currently only meant for land areas. Please select another location for a better result."              
+        #    logging.info(f"location in {'the river ' + river_name if river_name else 'a river'}")            
+    # else:
+    #     yield f"You have selected a place somewhere in the ocean. Our analyses are currently only meant for land areas. Please select another location for a better result."
+    #     logging.info(f"place somewhere in the ocean")
+    #     country = None
+    #     location_str = None
+    #     add_properties = None
     ##  == elevation
     logger.debug(f"get_elevation_from_api from: {lat}, {lon}")        
     try:

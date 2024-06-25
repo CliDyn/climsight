@@ -17,6 +17,7 @@ dependencies = [
     "netcdf4",
     "dask",
     "pip",
+    "osmnx",
     "matplotlib",
     "openai==1.5.0",
 ]
