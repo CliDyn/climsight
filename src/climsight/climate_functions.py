@@ -211,8 +211,15 @@ def extract_climate_data(lat, lon, hist, future, config):
             df['Present Day Wind Speed'] = hist_wind_speed.values
             df['Future Wind Speed'] = future_wind_speed.values
 
+        # Convert arrays to lists and format to strings with specified precision
+        hist_data_list = np.round(hist_data.values, 3).tolist()
+        future_data_list = np.round(future_data.values, 3).tolist()
 
-        data_dict[f"hist_{key}"] = np.array2string(hist_data.values.ravel(), precision=3)
-        data_dict[f"future_{key}"] = np.array2string(future_data.values.ravel(), precision=3)
+        hist_data_str = ', '.join(f'{x:.3f}' for x in hist_data_list)
+        future_data_str = ', '.join(f'{x:.3f}' for x in future_data_list)
 
+        data_dict[f"hist_{key}"] = hist_data_str
+        data_dict[f"future_{key}"] = future_data_str
+
+    print(data_dict)
     return df, data_dict
