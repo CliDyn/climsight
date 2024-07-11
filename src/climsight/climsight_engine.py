@@ -18,7 +18,7 @@ import logging
 from stream_handler import StreamHandler
 
 # import langchaion functions
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
