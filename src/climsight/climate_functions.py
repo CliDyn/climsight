@@ -85,10 +85,10 @@ def convert_temperature(hist_units, hist_data, future_data):
     if 'K' in hist_units: # transformation to Celsius if data in Kelvin (using only hist_units form here on as hist_units and future_units are identical if no error was thrown before)
         hist_data -= 273.15
         future_data -= 273.15
-        print(f"Converted temperature from Kelvin to Celsius.")
+        #print(f"Converted temperature from Kelvin to Celsius.")
     elif 'C' not in hist_units:  # Check if not already in Celsius
         warnings.warn(f"Unexpected temperature units: {hist_units}. Please check the unit manually.")
-        print(f"Units found: {hist_units}")
+        #print(f"Units found: {hist_units}")
     return hist_data, future_data
 
 def convert_to_mm_per_month(monthly_precip_kg_m2_s1):
@@ -105,11 +105,11 @@ def convert_precipitation(hist_units, hist_data, future_data):
     if 'kg m-2 s-1' in hist_units:
         hist_data = convert_to_mm_per_month(hist_data)
         future_data = convert_to_mm_per_month(future_data)
-        print(f"Converted precipitation from kg/m^2/s to mm/month.")
+        #print(f"Converted precipitation from kg/m^2/s to mm/month.")
     elif 'm' in hist_units: # this is not perfectly handled yet, but the awi-cm-3 tco... data comes in unit m but is actually m^2/s
         hist_data = convert_to_mm_per_month(hist_data) * 1000
         future_data = convert_to_mm_per_month(future_data) * 1000
-        print(f"Converted precipitation from kg/m^2/s to mm/month.")
+        #print(f"Converted precipitation from kg/m^2/s to mm/month.")
         # hist_data /= 100
         # future_data /= 100
         # print(f"Converted precipitation from m/month to mm/month.") 
@@ -221,5 +221,5 @@ def extract_climate_data(lat, lon, hist, future, config):
         data_dict[f"hist_{key}"] = hist_data_str
         data_dict[f"future_{key}"] = future_data_str
 
-    print(data_dict)
+    #print(data_dict)
     return df, data_dict
