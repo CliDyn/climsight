@@ -13,6 +13,7 @@ dependencies:
     - requests-mock      
     - pandas
     - folium
+    - openai
     - langchain
     - streamlit-folium
     - netcdf4
@@ -21,8 +22,6 @@ dependencies:
     - langchain-community 
     - osmnx
     - matplotlib
-    - pip:
-        - openai==1.5.0
 
 
 
