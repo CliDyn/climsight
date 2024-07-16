@@ -55,4 +55,4 @@ except KeyError as e:
 if not terminal_call:
    run_streamlit(config, skip_llm_call=skip_llm_call)
 else:   
-   run_terminal(config, skip_llm_call=skip_llm_call)
+   output = run_terminal(config, skip_llm_call=skip_llm_call)
