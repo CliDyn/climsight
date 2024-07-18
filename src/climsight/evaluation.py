@@ -79,7 +79,7 @@ Follow these steps:
 	•	Read the provided question carefully.
 	•	Identify the key elements and specifics of what the question is asking regarding the effects of climate change on human activities.
 	2.	Analyze the Provided Answers:
-	•	Read the provbided answer from Climsight to evaluate.
+	•	Read the provided answer from Climsight to evaluate.
 	•	Read the provided correct answer to compare with.
 	•	Identify and note the main points, key arguments, and any supporting data or examples in both answers.
 	3.	Compare Answers for Completeness:
@@ -103,7 +103,7 @@ Question: {question}
 Answer 1 (correct one): {correct_answer}
 Answer 2 (evaluate this answer, climsight): {climsight_answer}
 
-You alkso need to provide a recomendation on how to improve the answer from Climsight, for example what kind of data are missing.
+You also need to provide a recomendation on how to improve the answer from Climsight, for example what kind of data are missing.
 
 at the end of the evaluation, you will provide a table with scores following template below:
 template for the table, replace the <your score> with the actual scores of your evaluation, do not change separators "," use only "," to separate the values in the table:
