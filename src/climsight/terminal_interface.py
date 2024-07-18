@@ -6,6 +6,7 @@ import logging
 import yaml
 import os
 import matplotlib.pyplot as plt
+import time
 
 # climsight modules
 from stream_handler import StreamHandler
@@ -19,7 +20,11 @@ def input_with_default(prompt, default_value):
         return default_value
     return user_input
 
-def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message=''):
+def print_verbose(verbose, message):
+    if verbose:
+        print(message)  
+
+def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True):
     '''
         Inputs:
         - config (dict): Configuration, default is an empty dictionary.   
@@ -28,6 +33,10 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         - lat (float): Latitude of the location to analyze. default None
         - lon (float): Longitude of the location to analyze. default None
         - user_message (string): Question for the LLM. default empty ''
+        - show_add_info (string): If 'y' - show additional information, if 'n' - do not show additional information. default ''
+        - verbose (bool): If True - print additional information, if False - do not print additional information (used for loop request). default True
+        Output:
+        - output (string): Output from the LLM.
     '''      
     # Config
     try:
@@ -43,9 +52,9 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         raise TypeError("skip_llm_call must be  bool")    
 
 ############################# input
-    print(f"\n \n \n")
-    print(f"Welcome to Climsight!")
-    print(f"\n")    
+    print_verbose(verbose, f"\n \n \n")
+    print_verbose(verbose, f"Welcome to Climsight!")
+    print_verbose(verbose, f"\n")    
     if lon is None:
         lon = input_with_default(f"Please provide longitude of the location ({lon_default}): ", lon_default)
         try:
@@ -53,8 +62,8 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         except Exception as e:
             logging.error(f"lat and lon must be floats: {e}")
             raise RuntimeError(f"lat and lon must be floats: {e}")            
-    print(f"Longitude: {lon}")
-    print(f"\n")        
+    print_verbose(verbose, f"Longitude: {lon}")
+    print_verbose(verbose, f"\n")        
     if lat is None:
         lat = input_with_default(f"Please provide latitude of the location ({lat_default}): ", lat_default)
         try:
@@ -62,10 +71,15 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         except Exception as e:
             logging.error(f"lat and lon must be floats: {e}")
             raise RuntimeError(f"lat and lon must be floats: {e}")
-    print(f"Latitude: {lat}")
-    print(f"\n")    
-        
-    user_message = input(f"Describe the activity that you would like to evaluate:\n")
+    print_verbose(verbose, f"Latitude: {lat}")
+    print_verbose(verbose, f"\n")    
+
+    if not isinstance(user_message, str):
+        logging.error(f"user_message must be a string ")
+        raise TypeError("user_message must be a string")
+    
+    if not user_message: 
+        user_message = input(f"Describe the activity that you would like to evaluate:\n")
 
     if not isinstance(api_key, str):
         logging.error(f"api_key must be a string ")
@@ -75,26 +89,33 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     if (not api_key) and (not skip_llm_call):
         api_key = input("Please provide openAI API key: ")
     else:
-        print("openAI API key accepted.")
+        print_verbose(verbose, "openAI API key accepted.")
 
-    show_add_info = input_with_default("Do you want to see and save additional information? (y/n, default y): ","y")
+    if not isinstance(show_add_info, str):
+        logging.error(f"show_add_info must be a string ")
+        raise TypeError("show_add_info must be a string")
+    if not show_add_info:
+        show_add_info = input_with_default("Do you want to see and save additional information? (y/n, default y): ","y")
     if show_add_info=="n":
         show_add_info=False
-        print(f"Additional inforamtion will be not shown.")        
+        print_verbose(verbose, f"Additional inforamtion will be not shown.")        
     else:
         show_add_info=True
-        print(f"Additional inforamtion will be shown and saved in files.")                
+        print_verbose(verbose, f"Additional inforamtion will be shown and saved in files.")                
 
-    print("")
-    print("Getting info on a point...")
-    # Create a generator object by calling func2
+    print_verbose(verbose, "")
+    print_verbose(verbose, "Getting info on a point...")
+    
+    # Record the start time
+    start_time = time.time()
+    
     is_on_land = True
     generator = forming_request(config, lat, lon, user_message)
     while True:
         try:
             # Get the next intermediate result from the generator
             result = next(generator)
-            print(f"{result}")
+            print_verbose(verbose, f"{result}")
         except StopIteration as e:
             # The generator is exhausted, and e.value contains the final result
             gen_output = e.value
@@ -103,40 +124,47 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
                 if "Error" in gen_output:
                     if "point_is_in_ocean" in gen_output:
                         is_on_land = False
-                        print(f"The selected point is in the ocean. Please choose a location on land.")
+                        print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
             else:    
                 content_message, input_params, df_data, figs, data = e.value
             break     
+    # Record the start time
+    forming_request_time = time.time() - start_time
+        
     if is_on_land:        
+        start_time = time.time()
         stream_handler = StreamHandler()
+        output = ''
         if not skip_llm_call:
             output = llm_request(content_message, input_params, config, api_key, stream_handler)   
                 
-            print("|=============================================================================")    
-            print()    
-            print(output)            
-            print()    
-            print("|=============================================================================")    
+            print_verbose(verbose, "|=============================================================================")    
+            print_verbose(verbose, "")    
+            print_verbose(verbose, output)            
+            print_verbose(verbose, "")    
+            print_verbose(verbose, "|=============================================================================")    
         else:
-            formatted_message = content_message.format(**input_params)
-            print("|============================ Prompt after formatting:  ======================")    
-            print()            
-            print(config['system_role'])    
-            print()            
-            print(formatted_message)            
-            print()    
-            print("|=============================================================================")    
+            output = content_message.format(**input_params)
+            print_verbose(verbose, "|============================ Prompt after formatting:  ======================")    
+            print_verbose(verbose, "")            
+            print_verbose(verbose, config['system_role'])    
+            print_verbose(verbose, "")            
+            print_verbose(verbose, output)            
+            print_verbose(verbose, )    
+            print_verbose(verbose, "|=============================================================================")    
                 
+        # Record the time
+        llm_request_time = time.time() - start_time
 
         # PLOTTING ADDITIONAL INFORMATION
         if show_add_info: 
-            print("Additional information")
-            print(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-            print(f"**Elevation:** {input_params['elevation']} m")
-            print(f"**Current land use:** {input_params['current_land_use']}")
-            print(f"**Soil type:** {input_params['soil']}")
-            print(f"**Occuring species:** {input_params['biodiv']}")
-            print(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+            print_verbose(verbose, "Additional information")
+            print_verbose(verbose, f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+            print_verbose(verbose, f"**Elevation:** {input_params['elevation']} m")
+            print_verbose(verbose, f"**Current land use:** {input_params['current_land_use']}")
+            print_verbose(verbose, f"**Soil type:** {input_params['soil']}")
+            print_verbose(verbose, f"**Occuring species:** {input_params['biodiv']}")
+            print_verbose(verbose, f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
             # figures need to move to engine
             # Climate Data
             # print("**Climate data:**")
@@ -183,19 +211,21 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             # Natural Hazards
             if 'haz_fig' in figs:
                 fname = "natural_hazards.png"
-                print("Figure with natural hazards was saved in {fname}.")
+                print_verbose(verbose, "Figure with natural hazards was saved in {fname}.")
                 figs['haz_fig']['fig'].savefig(fname)
-                print("Source for this figure: ")
-                print(figs['haz_fig']['source'])
-                print("\n")    
+                print_verbose(verbose, "Source for this figure: ")
+                print_verbose(verbose, figs['haz_fig']['source'])
+                print_verbose(verbose, "\n")    
             # Population Data
             if 'population_plot' in figs:
                 fname = "population_data.png"            
-                print("Figure with population data was saved in {fname}.")
+                print_verbose(verbose, "Figure with population data was saved in {fname}.")
                 figs['population_plot']['fig'].savefig(fname)
-                print("Source for this figure: ")
-                print(figs['population_plot']['source'])
+                print_verbose(verbose, "Source for this figure: ")
+                print_verbose(verbose, figs['population_plot']['source'])
                 
     
-    
-    return
+        #print(f"Time for forming request: {forming_request_time}")
+        #print(f"Time for LLM request: {llm_request_time}")
+        
+    return output

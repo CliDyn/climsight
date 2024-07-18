@@ -19,7 +19,9 @@ dependencies = [
     "pip",
     "osmnx",
     "matplotlib",
-    "openai==1.5.0",
+    "openai",
+    "langchain-community",
+    "langchain_openai",
 ]
 
 
