@@ -21,6 +21,7 @@ dependencies = [
     "matplotlib",
     "openai",
     "langchain-community",
+    "langchain_openai",
 ]
 
 
