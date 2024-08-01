@@ -428,7 +428,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}        
         | RunnableLambda(inspect)
         | custom_rag_prompt
-        | ChatOpenAI(model=config['model_name'])
+        | ChatOpenAI(model=config['model_name'], api_key=api_key)
         | StrOutputParser()
     )
 
