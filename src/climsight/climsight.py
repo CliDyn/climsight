@@ -14,6 +14,14 @@ logging.basicConfig(
    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+# Initialize rag database
+try:
+    from rag import initialize_rag_database
+    initialize_rag_database()
+except Exception as e:
+    logger.warning(f"RAG database initialization skipped or failed: {e}")
+
+
 # Check arguments
 skip_llm_call = 'skipLLMCall' in sys.argv
 if skip_llm_call:
