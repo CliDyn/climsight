@@ -54,21 +54,15 @@ def get_file_names(folder_path):
     Returns:
     file_names (list): list of all file names.
     """
-    try:
-        # Check if all files are text files
-        for file in os.listdir(folder_path):
-            if not file.endswith('.txt'):
-                raise ValueError(f"Non-text file found: {file}")
-
-        # get names of all files
-        files = os.listdir(folder_path)
-        file_names = [file for file in files if os.path.isfile(os.path.join(folder_path, file))]
-        return file_names
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return []
-    
+    file_names = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.txt'):
+            file_names.append(filename)
+        else:
+            # Log and raise an error if a non-text file is found
+            logger.error(f"Non-text file found: {filename}")
+            raise ValueError(f"Non-text file found: {filename}")
+    return file_names
 
 def load_docs(file, encoding='utf-8'):
     """
@@ -81,6 +75,10 @@ def load_docs(file, encoding='utf-8'):
     Returns:
     documents (list): list of documents loaded
     """
+    if not file.endswith('.txt'):
+        logger.error(f"Failed to load {file}: Not a text file.")
+        return []  # Return an empty list for non-text files
+
     try: 
         loader = TextLoader(file, encoding=encoding, autodetect_encoding=True)  # autodetect encoding is essential!
         documents = loader.load()
@@ -117,30 +115,25 @@ def initialize_rag_database(force_update=False):
 
     # check if the database needs to be updated
     current_mod_times = get_file_mod_times(document_path)
+    # print(f"Debug - Current mod times: {current_mod_times}")
     if os.path.exists(timestamp_file):
         with open(timestamp_file, 'r') as f:
             last_mod_times = eval(f.read())
+        # print(f"Debug - Last mod times: {last_mod_times}")
     else:
         last_mod_times = {}
-
+        # print("Debug - Last mod times file does not exist, creating new one.")
     if not force_update and current_mod_times == last_mod_times:
         print("No changes detected in documents. Skipping database initialization.")
         return
 
     file_names = get_file_names(document_path)
-    #print(file_names)
 
     all_documents = []
     for file in file_names:
         logger.info(f"Processing file: {file}")
         documents = load_docs(os.path.join(document_path, file))
         all_documents.extend(documents) # save all of them into one
-        # print(file)
-        # try:
-        #     documents = load_docs(os.path.join(document_path, file))
-        #     all_documents.extend(documents)  # save all of them into one
-        # except RuntimeError as e:
-        #     print(f"Failed to load {file}: {e}")
 
     docs = split_docs(documents=all_documents)
 
