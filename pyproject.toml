@@ -21,7 +21,9 @@ dependencies = [
     "matplotlib",
     "openai",
     "langchain-community",
-    "langchain_openai",
+    "langchain-openai",
+    "langchain-chroma",
+    "langchain-core",
 ]
 
 

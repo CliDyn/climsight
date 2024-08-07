@@ -81,3 +81,10 @@ sources:
     archive_type: 'zip'
     subdir: 'natural_earth/lakes'
     citation:     
+
+  - filename: 'ipcc_text_reports.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/ipcc_text_reports.zip?temp_url_sig=cc3ed2934f91d5296266e217c7d1f479e129cb4a&temp_url_expires=2034-08-02T11:15:22Z'
+    archive_type: 'zip'
+    subdir: 'ipcc_text_reports'
+    citation: 'https://plaintextipcc.com/'
+    
