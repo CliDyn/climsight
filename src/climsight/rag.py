@@ -1,10 +1,17 @@
 import os
-import time
 import logging
+import yaml
+
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_chroma import Chroma
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda
+from langchain_openai import ChatOpenAI
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -14,15 +21,14 @@ logging.basicConfig(
    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# global variables
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-EMBEDDING_MODEL = "text-embedding-3-large"
-CHROMA_PATH = "rag_db"
+# Load config
+config_path = os.getenv('CONFIG_PATH', 'config.yml')
+with open(config_path, 'r') as file:
+    config = yaml.safe_load(file)
 
-
-# local variables
-document_path = './data/ipcc_text_reports/'
-timestamp_file = './data/last_update.txt'
+# Initialize RAG database globally
+rag_ready = False
+rag_db = None
 
 
 def get_file_mod_times(folder_path):
@@ -64,6 +70,7 @@ def get_file_names(folder_path):
             raise ValueError(f"Non-text file found: {filename}")
     return file_names
 
+
 def load_docs(file, encoding='utf-8'):
     """
     Loads (and decodes) a text file with langchain textLoader.
@@ -79,10 +86,11 @@ def load_docs(file, encoding='utf-8'):
         logger.error(f"Failed to load {file}: Not a text file.")
         return []  # Return an empty list for non-text files
 
-    try: 
+    try:
         loader = TextLoader(file, encoding=encoding, autodetect_encoding=True)  # autodetect encoding is essential!
         documents = loader.load()
         return documents
+
     except Exception as e:
         logger.error(f"Failed to load {file}: {e}")
         return []
@@ -106,52 +114,198 @@ def split_docs(documents, chunk_size=2000, chunk_overlap=200, separators=[" ", "
     return docs
 
 
-def initialize_rag_database(force_update=False):
-    # check if api key is available in environment;
-    # otherwise no rag initialization (might still use rag if already exists)
-    if not OPENAI_API_KEY:
-        print("No OpenAI API Key found. Skipping RAG database initialization.")
-        return
+def chunk_and_embed_documents(document_path, embedding_model, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
+    """
+    Chunks and embeds documents from the specified directory using provided embedding function.
 
-    # check if the database needs to be updated
-    current_mod_times = get_file_mod_times(document_path)
-    # print(f"Debug - Current mod times: {current_mod_times}")
-    if os.path.exists(timestamp_file):
-        with open(timestamp_file, 'r') as f:
-            last_mod_times = eval(f.read())
-        # print(f"Debug - Last mod times: {last_mod_times}")
-    else:
-        last_mod_times = {}
-        # print("Debug - Last mod times file does not exist, creating new one.")
-    if not force_update and current_mod_times == last_mod_times:
-        print("No changes detected in documents. Skipping database initialization.")
-        return
+    Args:
+    - document_path (str): The path to the directory containing the documents.
+    - embedding_model (OpenAIEmbeddings): The embedding function to use for generating embeddings.
+    - chunk_size (int): maximum number of characters per chunk. Default: 2000.
+    - chunk_overlap (int): number of characters to overlap per chunk. Default: 200.
+    - separators (list): list of characters where text can be split. Default: [" ", ",", "\n"]
 
+    Returns:
+    - list: A list of documents with embeddings.
+    """
+    # load documents
     file_names = get_file_names(document_path)
-
     all_documents = []
     for file in file_names:
         logger.info(f"Processing file: {file}")
         documents = load_docs(os.path.join(document_path, file))
-        all_documents.extend(documents) # save all of them into one
+        all_documents.extend(documents)  # save all of them into one
 
-    docs = split_docs(documents=all_documents)
+    if not all_documents:
+        logger.info("No documents found for chunking and embedding.")
+        return []
 
+    # Chunk documents
+    chunked_docs = split_docs(
+        documents=all_documents,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=separators
+    )
+
+    logger.info(f"Chunked documents into {len(chunked_docs)} pieces.")
+
+    # embedding documents
+    embedded_docs = []
+    try:
+        for doc in chunked_docs:
+            embedding = embedding_model.embed_documents([doc['text']])[0]  # embed_documents returns a list, so we take the first element
+            embedded_docs.append({"text": doc['text'], "embedding": embedding, "metadata": doc['metadata']})
+            logger.info(f"Embedded document chunk: {doc['metadata']}")
+    except Exception as e:
+        logger.error(f"Failed to embed document chunks: {e}")
+        return []
+
+    logger.info(f"Embedded {len(embedded_docs)} document chunks.")
+    return embedded_docs
+
+
+def initialize_rag(config, force_update=False):
+    """
+    Initializes the RAG database by checking document presence and modification times,
+    and performs chunking and embedding if necessary.
+    """
+    global rag_ready, rag_db
+
+    rag_settings = config['rag_settings']
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+    embedding_model = rag_settings['embedding_model']
+    chroma_path = rag_settings['chroma_path']
+    document_path = rag_settings['document_path']
+    timestamp_file = rag_settings['timestamp_file']
+    chunk_size = rag_settings['chunk_size']
+    chunk_overlap = rag_settings['chunk_overlap']
+    separators = rag_settings['separators']
+
+    # check if api key there
+    if not openai_api_key:
+        logger.warning("No OpenAI API Key found. Skipping RAG initialization.")
+        rag_ready = False
+        return
+
+    # check if documents are present and valid
+    if not os.path.exists(document_path) or not any(file.endswith('.txt') for file in os.listdir(document_path)):
+        logger.warning("No valid documents found in the specified path. Skipping RAG initialization.")
+        rag_ready = False
+        return
+
+    # get current and last modfication times
+    current_mod_times = get_file_mod_times(document_path)
+    if os.path.exists(timestamp_file):
+        with open(timestamp_file, 'r') as f:
+            last_mod_times = eval(f.read())
+    else:
+        last_mod_times = {}
+
+    # Debugging logs to check modification times
+    logger.debug(f"Current modification times: {current_mod_times}")
+    logger.debug(f"Last modification times: {last_mod_times}")
+
+    # if documents are present and haven't changed, no need to re-initialize
+    if not force_update and current_mod_times == last_mod_times:
+        logger.info("No changes detected in documents. Skipping re-initialization.")
+        rag_ready = True
+        return
+
+    # Perform chunking and embedding
     try:
         # embedding function, using the langchain chroma package (not chromadb directly)
-        langchain_ef = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY, model=EMBEDDING_MODEL)  # max_retries, request_timeout, retry_min_seconds
+        langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)  # max_retries, request_timeout, retry_min_seconds
+        documents = chunk_and_embed_documents(document_path, embedding_model, chunk_size, chunk_overlap, separators)
+        rag_db = Chroma.from_documents(
+            documents=documents,
+            persist_directory=chroma_path,
+            embedding=langchain_ef,
+            collection_name="ipcc_collection"
+        )
+        rag_ready = True
+        logger.info("RAG database has been initialized and documents embedded.")
 
-        # save it into Chroma (disk)
-        db = Chroma.from_documents(persist_directory=CHROMA_PATH, collection_name="ipcc-collection", documents=docs, embedding=langchain_ef)
-        logger.info(f"There are {db._collection.count()} entries in the collection")
-
-        # Update the timestamp file
+        # save current modification times
         with open(timestamp_file, 'w') as f:
             f.write(str(current_mod_times))
     except Exception as e:
         logger.error(f"Failed to initialize the RAG database: {e}")
+        rag_ready = False
 
 
-# call function to initialize database
-if __name__ == "__main__":
-    initialize_rag_database()
+def load_rag(embedding_model, chroma_path, openai_api_key):
+    """
+    Loads the RAG database if it has been initialized before and is ready to use.
+    """
+    global rag_ready, rag_db
+
+    if not rag_ready:
+        logger.warning("RAG database is not ready. Not loading it.")
+        return
+
+    try:
+        langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)
+        rag_db = Chroma(persist_directory=chroma_path, embedding_function=langchain_ef, collection_name="ipcc-collection")
+        logger.info(f"RAG database loaded with {rag_db._collection.count()} documents.")
+    except Exception as e:
+        logger.warning(f"Failed to load the RAG database: {e}")
+        rag_ready = False
+
+
+def format_docs(docs):
+    """
+    Formats the retrieved documents into a single string.
+
+    Params:
+    docs (list): List of documents retrieved by the RAG database.
+
+    Returns:
+    str: Formatted string of the document contents.
+    """
+    return "\n\n".join(doc.page_content for doc in docs)
+
+
+def query_rag(input_params, config, openai_api_key):
+    """
+    Queries the RAG database with the user's input.
+    """
+    global rag_ready, rag_db
+
+    if not rag_ready:
+        logger.warning("RAG database is not ready or loaded. Skipping RAG query.")
+        return None
+    try:
+        retriever = rag_db.as_retriever()
+        if retriever is None:
+            logger.error("Failed to create retriever: retriever is None.")
+
+        # load template from config
+        template = config['rag_template']
+        custom_rag_prompt = PromptTemplate.from_template(template)
+
+        location = input_params['location_str']
+
+        def get_loci(_):
+            return location
+
+        # inspect chain - just for development
+        def inspect(state):
+            """Print the state passed between Runnables in a langchain and pass it on"""
+            logger.info(state)
+            return state
+        rag_chain = (
+            {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
+            | RunnableLambda(inspect)
+            | custom_rag_prompt
+            | ChatOpenAI(model=config['model_name'], api_key=openai_api_key)
+            | StrOutputParser()
+        )
+        rag_response = rag_chain.invoke(input_params['user_message'])
+        logging.info(f"RAG response: {rag_response}")
+
+        return rag_response
+
+    except Exception as e:
+        logger.error(f"Failed to perform RAG query: {e}")
+        return None
