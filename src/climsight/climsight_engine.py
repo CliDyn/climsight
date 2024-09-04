@@ -27,7 +27,6 @@ from langchain.prompts.chat import (
 )
 
 # import RAG components
-from rag import CHROMA_PATH, OPENAI_API_KEY, EMBEDDING_MODEL
 from langchain_chroma import Chroma
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
@@ -35,6 +34,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
+
+from rag import query_rag
 
 # import climsight functions
 from geo_functions import (
@@ -67,7 +68,6 @@ from economic_functions import (
 )
 
 logger = logging.getLogger(__name__)
-
 
 
 def forming_request(config, lat, lon, user_message, data={}, show_add_info=True):
@@ -378,64 +378,15 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         raise TypeError("stream_handler must be an instance of StreamHandler")    
     
     ##  ===================  start with LLM =========================
-    #yield f"Generating..."
     logging.info(f"Generating...")    
 
     ## === RAG integration === ##
-    # langchain embeddig model
-    langchain_ef = OpenAIEmbeddings(openai_api_key=api_key, model=EMBEDDING_MODEL) # max_retries, request_timeout, retry_min_seconds
-    # load & retrieve database 
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=langchain_ef, collection_name="ipcc-collection")
-    print(f"There are {db._collection.count()} documents in the collection.")
-
-    retriever = db.as_retriever()
-
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-
-    template = """You are an assistant for retrieving information from IPCC reports for 
-    a particular location that is given to you. Use the following pieces of context 
-    to answer the question at the end.
-    Focus on retrieving the most relevant and concise information that 
-    addresses the question. If you cannot find information for that particular region,
-    you are allowed to extend the answer to something more general. However, in that case
-    you have to make clear that it is a general answer and does not apply particularly to 
-    the given region / coutry. Avoid including unrelated details. 
-    Consider the geographical location mentioned.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
-    Content from IPCC reports: {context}
-    Location: {location}
-    Question: {question}
-
-    Helpful Answer:"""
-
-    custom_rag_prompt = PromptTemplate.from_template(template)
-
-    # work-around to be able and pass the location as sth executable to the chain 
-    # (see https://github.com/langchain-ai/langchain/discussions/16421)
-    location = input_params['location_str']
-    def get_loci(_):
-        return location
-    
-    # inspect chain - just for development
-    def inspect(state):
-        """Print the state passed between Runnables in a langchain and pass it on"""
-        print(state)
-        return state
-    
-    rag_chain = (
-        {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}        
-        | RunnableLambda(inspect)
-        | custom_rag_prompt
-        | ChatOpenAI(model=config['model_name'], api_key=api_key)
-        | StrOutputParser()
-    )
-
-    rag_response = rag_chain.invoke(input_params['user_message'])
-    logging.info(f"RAG response: {rag_response}")
-
-    content_message_with_rag = content_message + "\n\n" + rag_response
+    rag_response = query_rag(input_params, config, api_key)
+    if rag_response:
+        content_message = content_message + "\n\n" + rag_response
+    else:
+        content_message = content_message
+        logger.info("RAG response is None. Proceeding without RAG context.")
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
     llm = ChatOpenAI(
@@ -445,7 +396,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         callbacks=[stream_handler],
     )
     system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
-    human_message_prompt = HumanMessagePromptTemplate.from_template(content_message_with_rag)
+    human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
     chat_prompt = ChatPromptTemplate.from_messages(
         [system_message_prompt, human_message_prompt]
     )
@@ -456,8 +407,10 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         verbose=True,
     )
 
+    logger.info("Calling LLM with configured chain.")
     logger.debug(f"call  LLM, chain.run ")                 
     # Pass the input_params dictionary to chain.run() using the ** operator
     output = chain.run(**input_params, verbose=True)
+    logger.info("LLM request completed successfully.")
 
     return output
