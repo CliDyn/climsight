@@ -154,9 +154,9 @@ def chunk_and_embed_documents(document_path, embedding_model, chunk_size=2000, c
     embedded_docs = []
     try:
         for doc in chunked_docs:
-            embedding = embedding_model.embed_documents([doc['text']])[0]  # embed_documents returns a list, so we take the first element
-            embedded_docs.append({"text": doc['text'], "embedding": embedding, "metadata": doc['metadata']})
-            logger.info(f"Embedded document chunk: {doc['metadata']}")
+            embedding = embedding_model.embed_documents([doc.page_content])[0]  # embed_documents returns a list, so we take the first element
+            embedded_docs.append({"text": doc.page_content, "embedding": embedding, "metadata": doc.metadata})
+            logger.info(f"Embedded document chunk: {doc.metadata}")
     except Exception as e:
         logger.error(f"Failed to embed document chunks: {e}")
         return []
