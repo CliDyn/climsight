@@ -9,13 +9,18 @@ module_dir = os.path.abspath('../src/climsight/')
 if module_dir not in sys.path:
     sys.path.append(module_dir)
 
+# make sure the config file gets found (error if line is missing)
+os.environ['CONFIG_PATH'] = os.path.abspath('../config.yml')
+
 # Import module functions
 from rag import (
     get_file_mod_times,
     get_file_names,
     load_docs,
     split_docs,
-    initialize_rag_database
+    chunk_and_embed_documents,
+    initialize_rag,
+    load_rag,
 )
 
 from langchain_core.documents import Document
@@ -150,100 +155,157 @@ class TestSplitDocs(unittest.TestCase):
         self.assertTrue(all(len(chunk.page_content) <= 50 for chunk in chunks))
 
 
-class TestInitializeRAGDatabase(unittest.TestCase):
-    @unittest.skipIf(
-        "OPENAI_API_KEY" not in os.environ,
-        "Skipping test because OPENAI_API_KEY is not set in the environment."
-    )
-    @patch('rag.get_file_mod_times')
-    @patch('rag.get_file_names')
-    @patch('rag.load_docs')
-    @patch('rag.split_docs')
+class TestChunkAndEmbedDocuments(unittest.TestCase):
     @patch('rag.OpenAIEmbeddings')
+    def test_chunk_and_embed_documents(self, mock_embeddings):
+        # Create a temporary directory for the document path
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Create a temporary text file in this directory
+            temp_file_path = os.path.join(temp_dir, "file1.txt")
+            with open(temp_file_path, 'w') as f:
+                f.write("This is some test content.")
+            # mock the embeddings
+            mock_embedding_instance = MagicMock()
+            mock_embedding_instance.embed_documents.return_value = [[0.1, 0.2, 0.3]]  # Mock embedding values
+            mock_embeddings.return_value = mock_embedding_instance
+
+            # Call the function
+            embedded_docs = chunk_and_embed_documents(
+                document_path=temp_dir,
+                embedding_model=mock_embedding_instance,
+                chunk_size=50,
+                chunk_overlap=10
+            )
+
+            # Assert the function returns the expected results
+            self.assertEqual(len(embedded_docs), 1)
+            self.assertEqual(embedded_docs[0]['text'], "This is some test content.")
+            self.assertEqual(embedded_docs[0]['embedding'], [0.1, 0.2, 0.3])
+
+
+class TestInitializeRag(unittest.TestCase):
+    @patch('rag.get_file_mod_times')
+    @patch('rag.chunk_and_embed_documents')
     @patch('rag.Chroma')
-    def test_initialize_rag_database_no_changes(self, mock_chroma, mock_embeddings, mock_split_docs, mock_load_docs, mock_get_file_names, mock_get_file_mod_times):
-        # Mock return values
-        mock_get_file_mod_times.return_value = {'file1.txt': 1000} # random number for when file has been changed
-        mock_get_file_names.return_value = ['file1.txt']
-        mock_load_docs.return_value = [Document(page_content="Test content")]
-        mock_split_docs.return_value = [Document(page_content="Test content chunk")]
+    def test_initialize_rag_no_changes(self, mock_chroma, mock_chunk_and_embed, mock_get_file_mod_times):
+        mock_get_file_mod_times.return_value = {'file1.txt': 1000}  # Simulate no changes in file modification time
+        mock_chunk_and_embed.return_value = []  # No embedding happens in this case
 
-        # Create a temporary timestamp file
-        with tempfile.NamedTemporaryFile(delete=False, mode='w') as temp_timestamp_file:
-            temp_data = "{'file1.txt': 1000}"  # Using a string to simulate the file contents; this has to be the same number to simulate "no change"
-            temp_timestamp_file.write(temp_data)
-            temp_timestamp_file_path = temp_timestamp_file.name
+        # Create a temporary directory to act as the document path
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Create a temporary text file to simulate the documents
+            temp_file_path = os.path.join(temp_dir, "file1.txt")
+            with open(temp_file_path, 'w') as f:
+                f.write("This is some test content.")
 
-        # Log the path and contents of the temporary file
-        print(f"Temporary timestamp file path: {temp_timestamp_file_path}")
+            # Create a temporary file for timestamp_file
+            with tempfile.NamedTemporaryFile(delete=False) as temp_timestamp_file:
+                temp_timestamp_file.write(b"{'file1.txt': 1000}")  # Write initial timestamp data
+                temp_timestamp_file_path = temp_timestamp_file.name
 
-        # Read and log the content of the temp file to ensure it's correct
-        with open(temp_timestamp_file_path, 'r') as temp_file:
-            content = temp_file.read()
-            print(f"Temporary file content before test: {content}")
+            config = {
+                'rag_settings': {
+                    'document_path': temp_dir,  # Use the temp directory for documents
+                    'timestamp_file': temp_timestamp_file_path,  # Use the temp file for the timestamp
+                    'chunk_size': 1000,
+                    'chunk_overlap': 200,
+                    'chroma_path': 'test_chroma_path',
+                    'embedding_model': 'text-embedding-3-large',
+                    'separators': [" ", ",", "\n"]
+                }
+            }
 
-        # Patch the path to use the temporary file
-        original_timestamp_file = initialize_rag_database.__globals__['timestamp_file']
-        initialize_rag_database.__globals__['timestamp_file'] = temp_timestamp_file_path
+            # Run function with the temporary directory and timestamp file
+            with patch('os.path.exists', return_value=True):
+                initialize_rag(config)
 
-        try:
-            # Run the database initialization
-            initialize_rag_database()
+            # Assert that chunk_and_embed_documents was NOT called since there were no changes
+            mock_chunk_and_embed.assert_not_called()
 
-            # Read the content of the timestamp file after initialization
-            with open(temp_timestamp_file_path, 'r') as temp_file:
-                new_content = temp_file.read()
-                print(f"Temporary file content after test: {new_content}")
-
-            # Manually parse the content for comparison
-            last_mod_times = eval(new_content) # Using eval should be ok since it's controlled input
-            current_mod_times = {'file1.txt': 1000}  # This should match
-
-            # Log comparison
-            print(f"Expected mod times: {current_mod_times}")
-            print(f"Actual mod times read: {last_mod_times}")
-
-            # Assert that the database was not updated
+            # Assert that Chroma was NOT initialized
             mock_chroma.from_documents.assert_not_called()
 
-        finally:
-            # Restore the original timestamp file path
-            initialize_rag_database.__globals__['timestamp_file'] = original_timestamp_file
-
-            # Clean up
+            # Clean up the temporary file after the test
             os.remove(temp_timestamp_file_path)
 
-    @unittest.skipIf(
-        "OPENAI_API_KEY" not in os.environ,
-        "Skipping test because OPENAI_API_KEY is not set in the environment."
-    )
     @patch('rag.get_file_mod_times')
-    @patch('rag.get_file_names')
-    @patch('rag.load_docs')
-    @patch('rag.split_docs')
-    @patch('rag.OpenAIEmbeddings')
+    @patch('rag.chunk_and_embed_documents')
     @patch('rag.Chroma')
-    def test_initialize_rag_database_with_changes(self, mock_chroma, mock_embeddings, mock_split_docs, mock_load_docs, mock_get_file_names, mock_get_file_mod_times):
-        # Mock return values
-        mock_get_file_mod_times.return_value = {'file1.txt': 2000}
-        mock_get_file_names.return_value = ['file1.txt']
-        mock_load_docs.return_value = [Document(page_content="Test content")]
-        mock_split_docs.return_value = [Document(page_content="Test content chunk")]
+    def test_initialize_rag_with_changes(self, mock_chroma, mock_chunk_and_embed, mock_get_file_mod_times):
+        mock_get_file_mod_times.return_value = {'file1.txt': 2000}  # Simulate file modification time has changed
+        mock_chunk_and_embed.return_value = [{"text": "chunked content", "embedding": [0.1, 0.2]}]  # Mock some embedded documents
 
-        # Create a temporary timestamp file with old modification time
-        with tempfile.NamedTemporaryFile(delete=False) as temp_timestamp_file:
-            temp_timestamp_file.write(b"{'file1.txt': 1000}")
-            temp_timestamp_file_path = temp_timestamp_file.name
+        # Create a temporary directory to act as the document path
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Create a temporary text file to simulate the documents
+            temp_file_path = os.path.join(temp_dir, "file1.txt")
+            with open(temp_file_path, 'w') as f:
+                f.write("This is some test content.")
 
-        # Run the database initialization
-        initialize_rag_database(force_update=True)
+            # Create a temporary file for timestamp_file
+            with tempfile.NamedTemporaryFile(delete=False) as temp_timestamp_file:
+                temp_timestamp_file.write(b"{'file1.txt': 1000}")  # Write initial timestamp data
+                temp_timestamp_file_path = temp_timestamp_file.name
 
-        # Assert that the database was updated
-        mock_chroma.from_documents.assert_called_once()
+            config = {
+                'rag_settings': {
+                    'document_path': temp_dir,  
+                    'timestamp_file': temp_timestamp_file_path,  
+                    'chunk_size': 1000,
+                    'chunk_overlap': 200,
+                    'chroma_path': 'test_chroma_path',
+                    'embedding_model': 'text-embedding-3-large',
+                    'separators': [" ", ",", "\n"]
+                }
+            }
 
-        # Clean up
-        os.remove(temp_timestamp_file_path)
+            # Run the function
+            with patch('os.path.exists', return_value=True):
+                initialize_rag(config)
 
+            # Assert that chunk_and_embed_documents was called since there were changes
+            mock_chunk_and_embed.assert_called_once()
+
+            # Assert that Chroma was initialized with the embedded documents
+            mock_chroma.from_documents.assert_called_once()
+
+            # Clean up the temporary file after the test
+            os.remove(temp_timestamp_file_path)
+
+
+class TestLoadRag(unittest.TestCase):
+    @patch('rag.rag_ready', True)  # Patch the global rag_ready to True
+    @patch('rag.Chroma')
+    @patch('rag.OpenAIEmbeddings')
+    def test_load_rag_when_ready(self, mock_openai_embeddings, mock_chroma):
+        # Mock the embeddings and chroma instances
+        mock_embedding_instance = MagicMock()
+        mock_openai_embeddings.return_value = mock_embedding_instance
+        mock_chroma_instance = MagicMock()
+        mock_chroma.return_value = mock_chroma_instance
+
+        # Call the function with the mocks
+        load_rag(embedding_model='text-embedding-3-large', chroma_path='test_chroma_path', openai_api_key='test_key')
+
+        # Assert that OpenAIEmbeddings and Chroma were called when rag_ready is True
+        mock_openai_embeddings.assert_called_once_with(openai_api_key='test_key', model='text-embedding-3-large')
+        mock_chroma.assert_called_once_with(
+            persist_directory='test_chroma_path',
+            embedding_function=mock_embedding_instance,
+            collection_name="ipcc-collection"
+        )
+
+    @patch('rag.rag_ready', False)  # Patch the global rag_ready to False
+    @patch('rag.Chroma')
+    @patch('rag.OpenAIEmbeddings')
+    def test_load_rag_when_not_ready(self, mock_openai_embeddings, mock_chroma):
+        # Call the function with the mocks
+        load_rag(embedding_model='text-embedding-3-large', chroma_path='test_chroma_path', openai_api_key='test_key')
+
+        # Assert that OpenAIEmbeddings and Chroma were NOT called when rag_ready is False
+        mock_openai_embeddings.assert_not_called()
+        mock_chroma.assert_not_called()
+        
 
 # Run the tests
 if __name__ == '__main__':
