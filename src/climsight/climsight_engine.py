@@ -17,14 +17,26 @@ import logging
 # import classes for climsight
 from stream_handler import StreamHandler
 
-# import langchaion functions
-from langchain_community.chat_models import ChatOpenAI
+# import langchain functions
+# from langchain_community.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts.chat import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+
+# import RAG components
+from langchain_chroma import Chroma
+from langchain_openai.embeddings import OpenAIEmbeddings
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnableLambda
+from langchain_openai import ChatOpenAI
+
+from rag import query_rag
+
 # import climsight functions
 from geo_functions import (
    get_location,
@@ -56,7 +68,6 @@ from economic_functions import (
 )
 
 logger = logging.getLogger(__name__)
-
 
 
 def forming_request(config, lat, lon, user_message, data={}, show_add_info=True):
@@ -367,8 +378,15 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         raise TypeError("stream_handler must be an instance of StreamHandler")    
     
     ##  ===================  start with LLM =========================
-    #yield f"Generating..."
     logging.info(f"Generating...")    
+
+    ## === RAG integration === ##
+    rag_response = query_rag(input_params, config, api_key)
+    if rag_response:
+        content_message = content_message + "\n\n" + rag_response
+    else:
+        content_message = content_message
+        logger.info("RAG response is None. Proceeding without RAG context.")
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
     llm = ChatOpenAI(
@@ -389,8 +407,10 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         verbose=True,
     )
 
+    logger.info("Calling LLM with configured chain.")
     logger.debug(f"call  LLM, chain.run ")                 
     # Pass the input_params dictionary to chain.run() using the ** operator
     output = chain.run(**input_params, verbose=True)
+    logger.info("LLM request completed successfully.")
 
     return output

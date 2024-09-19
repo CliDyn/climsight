@@ -20,7 +20,9 @@ dependencies:
     - dask
     - pip
     - langchain-community 
-    - langchain_openai
+    - langchain-openai
+    - langchain-chroma
+    - langchain-core
     - osmnx
     - matplotlib
 
