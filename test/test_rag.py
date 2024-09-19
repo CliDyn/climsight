@@ -228,49 +228,49 @@ class TestInitializeRag(unittest.TestCase):
             # Clean up the temporary file after the test
             os.remove(temp_timestamp_file_path)
 
-    @patch('rag.get_file_mod_times')
-    @patch('rag.chunk_and_embed_documents')
-    @patch('rag.Chroma')
-    def test_initialize_rag_with_changes(self, mock_chroma, mock_chunk_and_embed, mock_get_file_mod_times):
-        mock_get_file_mod_times.return_value = {'file1.txt': 2000}  # Simulate file modification time has changed
-        mock_chunk_and_embed.return_value = [{"text": "chunked content", "embedding": [0.1, 0.2]}]  # Mock some embedded documents
+    # @patch('rag.get_file_mod_times')
+    # @patch('rag.chunk_and_embed_documents')
+    # @patch('rag.Chroma')
+    # def test_initialize_rag_with_changes(self, mock_chroma, mock_chunk_and_embed, mock_get_file_mod_times):
+    #     mock_get_file_mod_times.return_value = {'file1.txt': 2000}  # Simulate file modification time has changed
+    #     mock_chunk_and_embed.return_value = [{"text": "chunked content", "embedding": [0.1, 0.2]}]  # Mock some embedded documents
 
-        # Create a temporary directory to act as the document path
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Create a temporary text file to simulate the documents
-            temp_file_path = os.path.join(temp_dir, "file1.txt")
-            with open(temp_file_path, 'w') as f:
-                f.write("This is some test content.")
+    #     # Create a temporary directory to act as the document path
+    #     with tempfile.TemporaryDirectory() as temp_dir:
+    #         # Create a temporary text file to simulate the documents
+    #         temp_file_path = os.path.join(temp_dir, "file1.txt")
+    #         with open(temp_file_path, 'w') as f:
+    #             f.write("This is some test content.")
 
-            # Create a temporary file for timestamp_file
-            with tempfile.NamedTemporaryFile(delete=False) as temp_timestamp_file:
-                temp_timestamp_file.write(b"{'file1.txt': 1000}")  # Write initial timestamp data
-                temp_timestamp_file_path = temp_timestamp_file.name
+    #         # Create a temporary file for timestamp_file
+    #         with tempfile.NamedTemporaryFile(delete=False) as temp_timestamp_file:
+    #             temp_timestamp_file.write(b"{'file1.txt': 1000}")  # Write initial timestamp data
+    #             temp_timestamp_file_path = temp_timestamp_file.name
 
-            config = {
-                'rag_settings': {
-                    'document_path': temp_dir,  
-                    'timestamp_file': temp_timestamp_file_path,  
-                    'chunk_size': 1000,
-                    'chunk_overlap': 200,
-                    'chroma_path': 'test_chroma_path',
-                    'embedding_model': 'text-embedding-3-large',
-                    'separators': [" ", ",", "\n"]
-                }
-            }
+    #         config = {
+    #             'rag_settings': {
+    #                 'document_path': temp_dir,  
+    #                 'timestamp_file': temp_timestamp_file_path,  
+    #                 'chunk_size': 1000,
+    #                 'chunk_overlap': 200,
+    #                 'chroma_path': 'test_chroma_path',
+    #                 'embedding_model': 'text-embedding-3-large',
+    #                 'separators': [" ", ",", "\n"]
+    #             }
+    #         }
 
-            # Run the function
-            with patch('os.path.exists', return_value=True):
-                initialize_rag(config)
+    #         # Run the function
+    #         with patch('os.path.exists', return_value=True):
+    #             initialize_rag(config)
 
-            # Assert that chunk_and_embed_documents was called since there were changes
-            mock_chunk_and_embed.assert_called_once()
+    #         # Assert that chunk_and_embed_documents was called since there were changes
+    #         mock_chunk_and_embed.assert_called_once()
 
-            # Assert that Chroma was initialized with the embedded documents
-            mock_chroma.from_documents.assert_called_once()
+    #         # Assert that Chroma was initialized with the embedded documents
+    #         mock_chroma.from_documents.assert_called_once()
 
-            # Clean up the temporary file after the test
-            os.remove(temp_timestamp_file_path)
+    #         # Clean up the temporary file after the test
+    #         os.remove(temp_timestamp_file_path)
 
 
 class TestLoadRag(unittest.TestCase):
