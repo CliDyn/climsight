@@ -25,6 +25,13 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+# import components for used by agent
+from pydantic import BaseModel
+from typing import Annotated
+from typing import Sequence
+import operator
+from langchain_core.messages import BaseMessage
+from langgraph.graph import END, StateGraph, START
 
 # import RAG components
 from langchain_chroma import Chroma
@@ -36,6 +43,8 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from rag import query_rag
+from typing import Literal
+
 
 # import climsight functions
 from geo_functions import (
@@ -395,6 +404,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
         streaming=True,
         callbacks=[stream_handler],
     )
+    
     system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
     human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
     chat_prompt = ChatPromptTemplate.from_messages(
@@ -414,3 +424,153 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
     logger.info("LLM request completed successfully.")
 
     return output
+
+def agent_request(content_message, input_params, config, api_key, stream_handler):
+    # function similar to llm_request but with agent structure
+    # agent is consist of supervisor and nod that is responsible to call RAG
+    # supervisor need to decide if call RAG or not
+
+    if not isinstance(stream_handler, StreamHandler):
+        logging.error(f"stream_handler must be an instance of StreamHandler")
+        raise TypeError("stream_handler must be an instance of StreamHandler")
+    
+    logger.info(f"Generating...")
+    llm = ChatOpenAI(
+        openai_api_key=api_key,
+        model_name=config['model_name'],
+        streaming=True,
+        callbacks=[stream_handler],
+    )
+    
+    class AgentState(BaseModel):
+        messages: Annotated[Sequence[BaseMessage], operator.add]
+        user: str = ""
+        next: str = ""
+        rag_response: str = ""
+        question_to_rag: str = ""
+        question_to_worker: str = ""
+        final_answser: str = ""
+        
+    supervisor_system_promt = """ 
+    You are the system that should help people to evaluate the impact of climate change
+    on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
+    parking lot, open a shop, buy crop land). You are working with data on a local level,
+    and decisions also should be given for particular locations. You will be given information 
+    about changes in environmental variables for particular location, and how they will 
+    change in a changing climate. 
+    Your task is to provide assessment of potential risks and/or benefits for the planned 
+    activity related to change in climate. Use information about the country to retrieve 
+    information about policies and regulations in the area related to climate change, 
+    environmental use and activity requested by the user.
+    
+    As supervisor you can request extra information by defining NEXT action from following workers : rag_agent.
+    workers_start
+    The workers are described as follows:
+    rag_agent is a system designed to help you retrieve information from reports like IPCC report;  
+    The IPCC prepares comprehensive Assessment Reports that cover extensive knowledge on climate change, including its causes, potential impacts, and response options.
+    When you need more general information, consider using the IPCC reports as a source.
+    Important: If you use information from the IPCC, make sure to mention the IPCC as the source in your response.
+    workers_end
+    If you decide to call on a worker, select next worker and include a specific question that the worker should answer (question_to_worker) 
+    and write None to final_answer.
+    When you are ready to finish the conversation, select FINISH and write your final answer to final_answer.
+    
+    You don't have to use all variables provided to you, if the effect is insignificant,
+    don't use variable in analysis. DON'T just list information about variables, don't 
+    just repeat what is given to you as input. I don't want to get the code, 
+    I want to receive a narrative, with your assessments and advice.
+    """    
+    supervisor_options = ["FINISH", "rag_agent"]
+    members = ["rag_agent",]
+
+    class routeResponse(BaseModel):
+        next: Literal[*supervisor_options]
+        question_to_worker: str = ""
+        final_answer: str = ""
+        
+    supervisor_system_message_prompt = SystemMessagePromptTemplate.from_template(supervisor_system_promt)
+    content_message_message = HumanMessagePromptTemplate.from_template(content_message)
+
+    supervisor_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", supervisor_system_promt),
+            content_message_message,
+            (
+                "system",
+                "RAG response: {rag_response} "
+                "Given the conversation above, who should act next, or give a final answer and FINISH? "
+                "If you decide to call on a worker, do not write a final answer or FINISH. "
+                "If you decide to FINISH, prepare a final answer and write it to final_answser. "
+                "Select one of the following options: {options}."
+            ),
+        ]
+    ).partial(
+        options=str(supervisor_options)
+    )
+    
+    def supervisor_agent(state: AgentState):
+        """
+        Executes the supervisor agent logic based on the provided state.
+        Updates `input_params` with `rag_response` if present, constructs a 
+        supervisor chain using `supervisor_prompt` and `llm`, and invokes the 
+        chain with `input_params`.
+        Args:
+            state (AgentState): The agent's current state, including `rag_response`.
+        Returns:
+            response: The response from the supervisor chain.
+        """
+        input_params.update({"rag_response": "None;"})
+        if state.rag_response:
+            input_params.update({"rag_response": state.rag_response})
+            
+        # Now invoke the chain with the dictionary
+        supervisor_chain = (
+            supervisor_prompt
+            | llm.with_structured_output(routeResponse, include_raw = True)
+        )
+        # Pass the dictionary to invoke
+        response = supervisor_chain.invoke(input_params)
+        state.next = response['parsed'].next or "None" 
+        return response
+      
+    def rag_agent(state: AgentState):
+        ## === RAG integration === ##
+        input_params_rag = input_params.copy()
+        state.question_to_rag = state.question_to_worker
+        if state.question_to_rag:
+            input_params_rag['user_message'] = state.question_to_rag
+            
+        rag_response = query_rag(input_params_rag, config, api_key)
+        state.rag_response = rag_response
+        return {'rag_response': rag_response}
+        
+        
+
+    # Here builds the StateGraph workflow.
+    workflow = StateGraph(AgentState)
+
+    # Add nodes to the graph
+    workflow.add_node("supervisor", supervisor_agent)
+    workflow.add_node("rag_agent", rag_agent)
+
+    # Add edges to the graph
+    workflow.set_entry_point("supervisor") # Set the entry point of the graph
+    workflow.add_edge("rag_agent", "supervisor")
+
+    conditional_map = {k: k for k in members}
+    conditional_map["FINISH"] = END
+    workflow.add_conditional_edges("supervisor", lambda x: x.next, conditional_map)
+    workflow.add_edge("supervisor", END)
+
+    # Compile the graph
+    app = workflow.compile()
+
+    input_params['user_message'] = 'What are the effects of the climate change on urbane zone like Berlin?'
+    state = AgentState(messages=[], user=input_params['user_message'])
+    result = app.invoke(state)
+    supervisor_agent(state)   
+    
+    app.invoke()    
+    output = ""    
+    return output
+
