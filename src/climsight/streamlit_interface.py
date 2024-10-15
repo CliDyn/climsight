@@ -77,6 +77,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
         show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                 that were taken into account for the analysis as well as some plots.""")
+        # llmModeKey_box = st.selectbox(label="Select LLM mode", options=["Direct", "Agent (experimental)"])
+        llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
+    
         # Include the API key input within the form only if it's not found in the environment
         if not api_key:
             api_key_input = st.text_input(
@@ -94,7 +97,10 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
             if (not api_key) and (not skip_llm_call):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
-                
+            
+            # Update config with the selected LLM mode
+            config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            
             is_on_land = True
             with st.spinner("Getting info on a point..."):
                 # Create a generator object by calling func2
