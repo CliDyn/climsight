@@ -9,15 +9,22 @@ class StreamHandler(BaseCallbackHandler):
         self.container = container
         self.display_method = display_method
         self.text = ""
+        
+    def send_text(self, text: str) -> None:
+        self.text += text
+        self._display_text()        
 
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         self.text += token
+        self._display_text()
+
+    def _display_text(self):
         if self.container:
             display_function = getattr(self.container, self.display_method, None)
             if display_function is not None:
                 display_function(self.text)
             else:
                 raise ValueError(f"Invalid display_method: {self.display_method}")
-
+            
     def get_text(self):
         return self.text
