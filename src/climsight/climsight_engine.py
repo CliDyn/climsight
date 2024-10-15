@@ -43,7 +43,8 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from rag import query_rag
-from typing import Literal
+from typing import Literal, Union, List
+
 
 
 # import climsight functions
@@ -380,8 +381,35 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     }               
     return content_message, input_params, df_data, figs, data
 
-def llm_request(content_message, input_params, config, api_key, stream_handler):
 
+def llm_request(content_message, input_params, config, api_key, stream_handler):
+    """
+    Handles LLM requests based on the mode specified in the configuration.
+
+    Parameters:
+    content_message (str): The message content for the LLM.
+    input_params (dict): Input parameters for the LLM request.
+    config (dict): Configuration settings, including 'llmModeKey'.
+    api_key (str): API key for the LLM service.
+    stream_handler (object): Handler for streaming responses.
+
+    Returns:
+    output (any): The output from the LLM request.
+
+    Raises:
+    TypeError: If 'llmModeKey' in the config is not recognized.
+    """
+    if config['llmModeKey'] == "direct_llm":
+        output = direct_llm_request(content_message, input_params, config, api_key, stream_handler)
+    elif config['llmModeKey'] == "agent_llm":
+        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler)
+    else:
+        logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+        raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+    return output
+
+
+def direct_llm_request(content_message, input_params, config, api_key, stream_handler):
     if not isinstance(stream_handler, StreamHandler):
         logging.error(f"stream_handler must be an instance of StreamHandler")
         raise TypeError("stream_handler must be an instance of StreamHandler")    
@@ -425,7 +453,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler):
 
     return output
 
-def agent_request(content_message, input_params, config, api_key, stream_handler):
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not
@@ -434,24 +462,213 @@ def agent_request(content_message, input_params, config, api_key, stream_handler
         logging.error(f"stream_handler must be an instance of StreamHandler")
         raise TypeError("stream_handler must be an instance of StreamHandler")
     
-    logger.info(f"Generating...")
-    llm = ChatOpenAI(
+    logger.info(f"start agent_request")
+    
+    llm_agent = ChatOpenAI(
         openai_api_key=api_key,
         model_name=config['model_name'],
-        streaming=True,
-        callbacks=[stream_handler],
     )
-    
+        # streaming=True,
+        # callbacks=[stream_handler],    
     class AgentState(BaseModel):
-        messages: Annotated[Sequence[BaseMessage], operator.add]
-        user: str = ""
-        next: str = ""
-        rag_response: str = ""
-        question_to_rag: str = ""
-        question_to_worker: str = ""
+        messages: Annotated[Sequence[BaseMessage], operator.add]  #not in use up to now
+        user: str = "" #user question
+        next: List[str] = [] #list of next actions
+        rag_agent_response: str = ""
+        data_agent_response: str = ""
         final_answser: str = ""
+        content_message: str = ""
+        input_params: dict = {}
+        # stream_handler: StreamHandler
+                
+    def data_agent(state: AgentState):
+        # generator = forming_request(config, lat, lon, user_message)
+        # while True:
+        #     try:
+        #         # Get the next intermediate result from the generator
+        #         result = next(generator)
+        #         print_verbose(verbose, f"{result}")
+        #     except StopIteration as e:
+        #         # The generator is exhausted, and e.value contains the final result
+        #         gen_output = e.value
+        #         # check if Error ocure:
+        #         if isinstance(gen_output,str):
+        #             if "Error" in gen_output:
+        #                 if "point_is_in_ocean" in gen_output:
+        #                     is_on_land = False
+        #                     print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
+        #         else:    
+        #             content_message, input_params, df_data, figs, data = e.value
+        #         break  
+        print(f"Data agent in work.")
+
+        return {'content_message': content_message, 'input_params': input_params}
+
+      
+    def rag_agent(state: AgentState):
+        ## === RAG integration === ##
+        #input_params_rag = input_params.copy()
+        #state.question_to_rag = state.question_to_worker
+        #if state.question_to_rag:
+        #    input_params_rag['user_message'] = state.question_to_rag
+        response = query_rag(input_params, config, api_key)
+        if not response:
+            response = "None"
+        print(f"Rag agent in work.")
+        return {'rag_agent_response': response}
+
+
+################# start of intro_agent #############################
+    def intro_agent(state: AgentState):
+        intro_promt = """ 
+        You are the intro point to the system named ClimSight that should help people to evaluate the impact of climate change
+        on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
+        parking lot, open a shop, buy crop land). You are working with data on a local level, and decisions also should be given for particular locations.
+        ClimSight answers questions about climate change impacts on planned activities. Combining high-resolution climate data with LLMs, it provides actionable, 
+        location-specific information, supporting local decisions without barriers of scalability or expertise.
+        Your task is to provide assessment of potential risks and/or benefits for the planned 
+        activity related to change in climate. Use information about the country to retrieve 
+        information about policies and regulations in the area related to climate change, 
+        environmental use and activity requested by the user.\n\n
+        What you should do now:\n\n
+        At this stage you should make a quick preanalysis of the question and decide if you need to call additional agents (other agents that will provide extra information).\n\n
+        Or you can finish the conversation by choosing FINISH and provide quick final answer on a simple question not related to yours primary goals.\n
+        Also finish conversation if you think that the question is not related to the climate. \n
+        example of simple or not related questions:\n
+        Hi; How are you?; Who are you?; Write esse about trains history. Translate some text for me ... . \n\n
         
-    supervisor_system_promt = """ 
+        If question is related to climate or location, you should continue work of this system and call other agents. You can as many agents as you think is neccecary.
+        Be aware that exect could be not in the user question, it will be added in next agents (data_agent). \n
+        possible agents: rag_agent, data_agent .\n
+        The agents are described as follows:\n
+        rag_agent is a system designed to help you retrieve information from reports like IPCC report;  
+        The IPCC report prepares comprehensive Assessment Reports that cover extensive knowledge on climate change, including its causes, potential impacts, and response options.
+        When question is very general, consider using the this report. Do not call it if the user question is about specific location and theme.\n
+        data_agent is a system that will provide additional data about the location, local climate parameters (like tmeprature, winds, ...) with accuracy up to 1 km, economical and environmental variables spcificly to choosen by user location.\n
+        workers description end;\n\n
+        Given the conversation above, who should act next, or give a final answer and FINISH? 
+        If you decide to call on agents, write names of agents as list, and do not write a final answer. "
+        If you decide to FINISH, prepare a final answer and write it to final_answser.
+        Select from following options: FINISH, rag_agent data_agent.\n\n
+        """
+
+        intro_options = ["FINISH", "rag_agent", "data_agent"]
+        intro_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", intro_promt),
+                ("user", "{user_text}"),
+            ])
+        class routeResponse(BaseModel):
+            next: List[Literal[*intro_options]]  # Accepts either a single value or a list
+            final_answer: str = ""  
+            
+        # Now invoke the chain with the dictionary
+        #chain = LLMChain(
+        #    llm=llm_agent.with_structured_output(routeResponse),
+        #    prompt=intro_prompt,
+        #    verbose=False,
+        #    callbacks=[stream_handler],
+        #)
+            #output_key="final_answer",        
+        chain = (
+             intro_prompt
+             | llm_agent.with_structured_output(routeResponse)
+         )
+        # Pass the dictionary to invoke
+        input = {"user_text": state.user}
+        response = chain.invoke(input)
+        state.final_answser = response.final_answer
+        state.next = response.next
+        return state
+    
+    
+################# end of intro_agent #############################
+    def combine_agent(state: AgentState): 
+        print('combine_agent in work')
+        
+        ########## include RAG to promt!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [system_message_prompt, human_message_prompt]
+        )
+        chain = (
+            chat_prompt
+            | llm_agent
+        )
+        # chain = LLMChain(
+        #     llm=llm,
+        #     prompt=chat_prompt,
+        #     output_key="review",
+        #     verbose=True,
+        # )
+        # output = chain.run(**state.input_params, verbose=True)
+        output = chain.invoke(state.input_params)
+        return {'final_answser': output.content}
+    
+    def route_fromintro(state: AgentState) -> Sequence[str]:
+        output = []
+        if "FINISH" in state.next:
+            return "FINISH"
+        else:
+            if "rag_agent" in state.next:
+                output.append("rag_agent")
+            if "data_agent" in state.next:
+                output.append("data_agent")
+        return output
+
+        
+    workflow = StateGraph(AgentState)
+
+  
+     # Add nodes to the graph
+    workflow.add_node("intro_agent", intro_agent)
+    workflow.add_node("rag_agent", rag_agent)
+    workflow.add_node("data_agent", data_agent)   
+    workflow.add_node("combine_agent", combine_agent)   
+
+    workflow.set_entry_point("intro_agent") # Set the entry point of the graph
+    path_map = {'rag_agent':'rag_agent', 'data_agent':'data_agent','FINISH':END}
+    workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
+    workflow.add_edge("rag_agent", "combine_agent")
+    workflow.add_edge("data_agent", "combine_agent")
+    workflow.add_edge("combine_agent", END)
+    # Compile the graph
+    app = workflow.compile()
+    
+    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
+    
+    output = app.invoke(state)
+    stream_handler.send_text(output['final_answser'])
+    return output['final_answser'] 
+
+    
+    
+'''
+    print(output['final_answser'])
+    
+    input_params['user_message'] = 'What are the effects of the climate change on urbane zone like Berlin?'
+    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
+    state2= intro_agent(state)   
+    print(state2)
+
+    state = AgentState(messages=[], user='What are the effects of the climate change on urbane zone like Berlin?')
+    state = AgentState(messages=[], user='What are the effects of the climate change on urbane zone in center of Berlin? ann what are the effects of the climate change on Europe?')    
+    state = AgentState(messages=[], user='Hi')
+    state = AgentState(messages=[], user='I am going to grow tomatoes at my garden in center of Berlin, what problem could be due to climate change at my location?')
+    state = AgentState(messages=[], user='write a python code to print Hello World')                
+    state = AgentState(messages=[], user='Preapare a report about money history and python methods in data science, provide at least 10 pages.')                    
+
+    from IPython.display import display, Image
+    from langchain_core.runnables.graph import MermaidDrawMethod
+    image_data = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
+    with open("graph.png", "wb") as f:
+        f.write(image_data)
+
+'''    
+
+'''
+ supervisor_system_promt = """ 
     You are the system that should help people to evaluate the impact of climate change
     on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
     parking lot, open a shop, buy crop land). You are working with data on a local level,
@@ -482,6 +699,8 @@ def agent_request(content_message, input_params, config, api_key, stream_handler
     """    
     supervisor_options = ["FINISH", "rag_agent"]
     members = ["rag_agent",]
+    
+
 
     class routeResponse(BaseModel):
         next: Literal[*supervisor_options]
@@ -497,9 +716,9 @@ def agent_request(content_message, input_params, config, api_key, stream_handler
             content_message_message,
             (
                 "system",
-                "RAG response: {rag_response} "
+                "\n RAG response:\n {rag_response} \n\n"
                 "Given the conversation above, who should act next, or give a final answer and FINISH? "
-                "If you decide to call on a worker, do not write a final answer or FINISH. "
+                "If you decide to call on a worker, do not write a final answer. "
                 "If you decide to FINISH, prepare a final answer and write it to final_answser. "
                 "Select one of the following options: {options}."
             ),
@@ -526,51 +745,14 @@ def agent_request(content_message, input_params, config, api_key, stream_handler
         # Now invoke the chain with the dictionary
         supervisor_chain = (
             supervisor_prompt
-            | llm.with_structured_output(routeResponse, include_raw = True)
+            | llm.with_structured_output(routeResponse)
         )
         # Pass the dictionary to invoke
         response = supervisor_chain.invoke(input_params)
-        state.next = response['parsed'].next or "None" 
-        return response
-      
-    def rag_agent(state: AgentState):
-        ## === RAG integration === ##
-        input_params_rag = input_params.copy()
-        state.question_to_rag = state.question_to_worker
-        if state.question_to_rag:
-            input_params_rag['user_message'] = state.question_to_rag
-            
-        rag_response = query_rag(input_params_rag, config, api_key)
-        state.rag_response = rag_response
-        return {'rag_response': rag_response}
-        
-        
-
-    # Here builds the StateGraph workflow.
-    workflow = StateGraph(AgentState)
-
-    # Add nodes to the graph
-    workflow.add_node("supervisor", supervisor_agent)
-    workflow.add_node("rag_agent", rag_agent)
-
-    # Add edges to the graph
-    workflow.set_entry_point("supervisor") # Set the entry point of the graph
-    workflow.add_edge("rag_agent", "supervisor")
-
-    conditional_map = {k: k for k in members}
-    conditional_map["FINISH"] = END
-    workflow.add_conditional_edges("supervisor", lambda x: x.next, conditional_map)
-    workflow.add_edge("supervisor", END)
-
-    # Compile the graph
-    app = workflow.compile()
-
-    input_params['user_message'] = 'What are the effects of the climate change on urbane zone like Berlin?'
-    state = AgentState(messages=[], user=input_params['user_message'])
-    result = app.invoke(state)
-    supervisor_agent(state)   
+        state.question_to_worker = response.question_to_worker
+        state.final_answser = response.final_answer
+        state.next = response.next 
+        return state
     
-    app.invoke()    
-    output = ""    
-    return output
-
+    
+'''
