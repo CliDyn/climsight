@@ -25,6 +25,10 @@ dependencies:
     - langchain-core
     - osmnx
     - matplotlib
+    - pydantic
+    - typing
+    - operator
+    - langgraph
 
 
 
