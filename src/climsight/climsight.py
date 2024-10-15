@@ -38,6 +38,7 @@ if not config:
 # preliminary check config file   
 try:
    model_name = config['model_name']
+   llmModeKey = config['llmModeKey'] #"direct_llm" / "agent_llm"
    climatemodel_name = config['climatemodel_name']
    data_path = config['data_settings']['data_path']
    coastline_shapefile = config['coastline_shapefile']
@@ -66,14 +67,14 @@ except KeyError as e:
    raise RuntimeError(f"Missing configuration key: {e}")
 
 rag_ready = False
-if not skip_llm_call and rag_activated:
-    try:
-         logger.info("RAG is activated and skipllmcall is False. Initializing RAG...")
-         initialize_rag(config, False)  # initialize chunking and embedding
-         load_rag(embedding_model, chroma_path, openai_api_key) # load the RAG database 
-         rag_ready = True
-    except Exception as e:
-         logger.warning(f"RAG database initialization skipped or failed: {e}")
+# if not skip_llm_call and rag_activated:
+#     try:
+#          logger.info("RAG is activated and skipllmcall is False. Initializing RAG...")
+#          initialize_rag(config, False)  # initialize chunking and embedding
+#          load_rag(embedding_model, chroma_path, openai_api_key) # load the RAG database 
+#          rag_ready = True
+#     except Exception as e:
+#          logger.warning(f"RAG database initialization skipped or failed: {e}")
 
 if not terminal_call:
    run_streamlit(config, skip_llm_call=skip_llm_call)
