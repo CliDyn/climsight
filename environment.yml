@@ -25,7 +25,4 @@ dependencies:
     - langchain-core
     - osmnx
     - matplotlib
-
-
-
-
+    - chardet

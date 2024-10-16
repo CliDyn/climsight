@@ -11,7 +11,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
-
+from langchain_core.documents.base import Document
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -62,6 +62,11 @@ def get_file_names(folder_path):
     """
     file_names = []
     for filename in os.listdir(folder_path):
+        # ignore hidden files and folders (those that start with '.')
+        if filename.startswith('.'):
+            logger.info(f"Ignoring hidden file or folder: {filename}")
+            continue
+        # only allow .txt files
         if filename.endswith('.txt'):
             file_names.append(filename)
         else:
@@ -114,7 +119,7 @@ def split_docs(documents, chunk_size=2000, chunk_overlap=200, separators=[" ", "
     return docs
 
 
-def chunk_and_embed_documents(document_path, embedding_model, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
+def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
     """
     Chunks and embeds documents from the specified directory using provided embedding function.
 
@@ -150,13 +155,13 @@ def chunk_and_embed_documents(document_path, embedding_model, chunk_size=2000, c
 
     logger.info(f"Chunked documents into {len(chunked_docs)} pieces.")
 
-    # embedding documents
+    # embedding documents 
     embedded_docs = []
+    embedding_item = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model) 
     try:
         for doc in chunked_docs:
-            embedding = embedding_model.embed_documents([doc.page_content])[0]  # embed_documents returns a list, so we take the first element
+            embedding = embedding_item.embed_documents([doc.page_content])[0]  # embed_documents returns a list, so we take the first element
             embedded_docs.append({"text": doc.page_content, "embedding": embedding, "metadata": doc.metadata})
-            logger.info(f"Embedded document chunk: {doc.metadata}")
     except Exception as e:
         logger.error(f"Failed to embed document chunks: {e}")
         return []
@@ -202,12 +207,16 @@ def initialize_rag(config, force_update=False):
     else:
         last_mod_times = {}
 
+    # Sort both modification time dictionaries by keys
+    current_mod_times_sorted = dict(sorted(current_mod_times.items()))
+    last_mod_times_sorted = dict(sorted(last_mod_times.items()))
+
     # Debugging logs to check modification times
-    logger.debug(f"Current modification times: {current_mod_times}")
-    logger.debug(f"Last modification times: {last_mod_times}")
+    logger.debug(f"Current modification times: {current_mod_times_sorted}")
+    logger.debug(f"Last modification times: {last_mod_times_sorted}")
 
     # if documents are present and haven't changed, no need to re-initialize
-    if not force_update and current_mod_times == last_mod_times:
+    if not force_update and current_mod_times_sorted == last_mod_times_sorted:
         logger.info("No changes detected in documents. Skipping re-initialization.")
         rag_ready = True
         return
@@ -216,9 +225,13 @@ def initialize_rag(config, force_update=False):
     try:
         # embedding function, using the langchain chroma package (not chromadb directly)
         langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)  # max_retries, request_timeout, retry_min_seconds
-        documents = chunk_and_embed_documents(document_path, embedding_model, chunk_size, chunk_overlap, separators)
+        documents = chunk_and_embed_documents(document_path, embedding_model, openai_api_key, chunk_size, chunk_overlap, separators)
+        converted_documents = [
+            Document(page_content=doc['text'], metadata=doc['metadata'])
+            for doc in documents
+        ]
         rag_db = Chroma.from_documents(
-            documents=documents,
+            documents=converted_documents,
             persist_directory=chroma_path,
             embedding=langchain_ef,
             collection_name="ipcc_collection"
@@ -246,7 +259,7 @@ def load_rag(embedding_model, chroma_path, openai_api_key):
 
     try:
         langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)
-        rag_db = Chroma(persist_directory=chroma_path, embedding_function=langchain_ef, collection_name="ipcc-collection")
+        rag_db = Chroma(persist_directory=chroma_path, embedding_function=langchain_ef, collection_name="ipcc_collection")
         logger.info(f"RAG database loaded with {rag_db._collection.count()} documents.")
     except Exception as e:
         logger.warning(f"Failed to load the RAG database: {e}")
