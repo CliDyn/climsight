@@ -26,8 +26,6 @@ dependencies:
     - osmnx
     - matplotlib
     - pydantic
-    - typing
-    - operator
     - langgraph
 
 
