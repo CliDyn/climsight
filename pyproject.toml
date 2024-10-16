@@ -24,6 +24,9 @@ dependencies = [
     "langchain-openai",
     "langchain-chroma",
     "langchain-core",
+    "typing",
+    "operator",
+    "langgraph"
 ]
 
 
