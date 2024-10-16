@@ -1,5 +1,6 @@
 # model_name: "gpt-3.5-turbo"
 model_name: "gpt-4o"
+llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 climatemodel_name: "AWI_CM"
 data_settings:
     data_path: "./data/"
@@ -33,7 +34,8 @@ rag_template: |
     you have to make clear that it is a general answer and does not apply particularly to 
     the given region / coutry. Avoid including unrelated details. 
     Consider the geographical location mentioned.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    If you don't know the answer, do not provide any answer. 
+    Don't try to make up an answer.
 
     Content from IPCC reports: {context}
     Location: {location}
@@ -67,3 +69,4 @@ system_role: |
     just repeat what is given to you as input. I don't want to get the code, 
     I want to receive a narrative, with your assessments and advice. Format 
     your response as MARKDOWN, don't use Heading levels 1 and 2.
+  
