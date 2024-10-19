@@ -174,7 +174,8 @@ class TestChunkAndEmbedDocuments(unittest.TestCase):
                 document_path=temp_dir,
                 embedding_model=mock_embedding_instance,
                 chunk_size=50,
-                chunk_overlap=10
+                chunk_overlap=10,
+                openai_api_key='test_key'
             )
 
             # Assert the function returns the expected results
@@ -292,7 +293,7 @@ class TestLoadRag(unittest.TestCase):
         mock_chroma.assert_called_once_with(
             persist_directory='test_chroma_path',
             embedding_function=mock_embedding_instance,
-            collection_name="ipcc-collection"
+            collection_name="ipcc_collection"
         )
 
     @patch('rag.rag_ready', False)  # Patch the global rag_ready to False
