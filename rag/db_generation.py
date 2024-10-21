@@ -1,8 +1,5 @@
 # Database generation based on source (text) files
-# only get executed if run actively and separately
-
-# TO-DO
-# checksum
+# only gets executed if run actively and separately
 
 import os
 import logging
@@ -58,25 +55,15 @@ def is_valid_rag_db(rag_db_path):
 def are_source_files_available(data_path):
     """Checks if the ipcc_text_reports folder exists and is non-empty."""
     ipcc_reports_path = os.path.join(data_path, 'ipcc_text_reports')
-    return os.path.exists(ipcc_reports_path) and os.listdir(ipcc_reports_path)
-
-
-def get_file_mod_times(folder_path):
-    """
-    Gets the modification times of all files in the folder.
-
-    Params:
-    folder_path (str): Path to the folder.
-
-    Returns:
-    mod_times (dict): Dictionary of filenames and their modification times.
-    """
-    mod_times = {}
-    for file in os.listdir(folder_path):
-        if file.endswith('.txt'):
-            full_path = os.path.join(folder_path, file)
-            mod_times[file] = os.path.getmtime(full_path)
-    return mod_times
+    if not os.path.exists(ipcc_reports_path):
+        return False
+    # check for non-hidden files
+    for file in os.listdir(ipcc_reports_path):
+        if not file.startswith('.'):
+            return True
+        
+    # if only hidden files or folder is empty
+    return False
 
 
 def get_file_names(folder_path):
@@ -200,7 +187,7 @@ def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, ch
     return embedded_docs
 
 
-def initialize_rag(config, force_update=False):
+def initialize_rag(config):
     """
     Initializes the RAG database by checking document presence and modification times,
     and performs chunking and embedding if necessary.
@@ -212,7 +199,6 @@ def initialize_rag(config, force_update=False):
     embedding_model = rag_settings['embedding_model']
     chroma_path = rag_settings['chroma_path']
     document_path = rag_settings['document_path']
-    timestamp_file = rag_settings['timestamp_file']
     chunk_size = rag_settings['chunk_size']
     chunk_overlap = rag_settings['chunk_overlap']
     separators = rag_settings['separators']
@@ -227,28 +213,6 @@ def initialize_rag(config, force_update=False):
     if not os.path.exists(document_path) or not any(file.endswith('.txt') for file in os.listdir(document_path)):
         logger.warning("No valid documents found in the specified path. Skipping RAG initialization.")
         rag_ready = False
-        return
-
-    # get current and last modfication times
-    current_mod_times = get_file_mod_times(document_path)
-    if os.path.exists(timestamp_file):
-        with open(timestamp_file, 'r') as f:
-            last_mod_times = eval(f.read())
-    else:
-        last_mod_times = {}
-
-    # Sort both modification time dictionaries by keys
-    current_mod_times_sorted = dict(sorted(current_mod_times.items()))
-    last_mod_times_sorted = dict(sorted(last_mod_times.items()))
-
-    # Debugging logs to check modification times
-    logger.debug(f"Current modification times: {current_mod_times_sorted}")
-    logger.debug(f"Last modification times: {last_mod_times_sorted}")
-
-    # if documents are present and haven't changed, no need to re-initialize
-    if not force_update and current_mod_times_sorted == last_mod_times_sorted:
-        logger.info("No changes detected in documents. Skipping re-initialization.")
-        rag_ready = True
         return
 
     # Perform chunking and embedding
@@ -270,9 +234,8 @@ def initialize_rag(config, force_update=False):
         logger.info(f"RAG ready: {rag_ready}")
         logger.info("RAG database has been initialized and documents embedded.")
 
-        # save current modification times
-        with open(timestamp_file, 'w') as f:
-            f.write(str(current_mod_times))
+        return rag_db
+
     except Exception as e:
         logger.error(f"Failed to initialize the RAG database: {e}")
         rag_ready = False
@@ -288,14 +251,15 @@ def main():
         return
     
     if not are_source_files_available(data_path):
-        logger.warning("""The RAG database does not exists yet and there are no source files available in the data/ipcc_text_reports folder
+        logger.warning("""The RAG database does not exists yet and there are no source files available in the data/ipcc_text_reports folder.
                        Please run the download_data.py again and make sure to set the flag --source_files=True.""")
         return
 
     # if rag does not exist yet and the source files are available, run the initialization
     logger.info("Initializing RAG database...")
     initialize_rag(config)
-    
+    # danach kann es den Fall geben, dass es trotzdem keine db gibt, weil bei der Initialisierung etwas falsch gelaufen ist (zb. pdf statt txt files in ipcc_text_reports folder)
+    # TO-DO write a test for this case!
 
 if __name__ == "__main__":
     main()
