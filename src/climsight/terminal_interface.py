@@ -8,6 +8,9 @@ import os
 import matplotlib.pyplot as plt
 import time
 
+# rag
+from rag import load_rag 
+
 # climsight modules
 from stream_handler import StreamHandler
 from climsight_engine import llm_request, forming_request
@@ -24,7 +27,7 @@ def print_verbose(verbose, message):
     if verbose:
         print(message)  
 
-def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True):
+def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True, rag_activated=None, embedding_model='', chroma_path=''):
     '''
         Inputs:
         - config (dict): Configuration, default is an empty dictionary.   
@@ -35,6 +38,9 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         - user_message (string): Question for the LLM. default empty ''
         - show_add_info (string): If 'y' - show additional information, if 'n' - do not show additional information. default ''
         - verbose (bool): If True - print additional information, if False - do not print additional information (used for loop request). default True
+        - rag_activated (bool): whether or not to include the text based rag
+        - embedding_model (str): embedding model to be used for loading the Chroma database.
+        - chroma_path (str): Path where the Chroma database is stored.
         Output:
         - output (string): Output from the LLM.
     '''      
@@ -43,6 +49,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         climatemodel_name = config['climatemodel_name']
         lat_default = config['lat_default']
         lon_default = config['lon_default']
+        rag_default = config['rag_settings']['rag_activated']
     except KeyError as e:
         logging.error(f"Missing configuration key: {e}")
         raise RuntimeError(f"Missing configuration key: {e}")   
@@ -80,6 +87,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     
     if not user_message: 
         user_message = input(f"Describe the activity that you would like to evaluate:\n")
+        print_verbose(verbose, f"\n")    
 
     if not isinstance(api_key, str):
         logging.error(f"api_key must be a string ")
@@ -88,8 +96,25 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
     if (not api_key) and (not skip_llm_call):
         api_key = input("Please provide openAI API key: ")
+        print_verbose(verbose, f"\n")    
     else:
         print_verbose(verbose, "openAI API key accepted.")
+        print_verbose(verbose, f"\n")
+
+    if rag_activated is None:
+        rag_activated = input_with_default(f"Do you want to run ClimSight with (y) or without (n) additional text source RAG? (Default depends on your config settings): ", rag_default)
+        if isinstance(rag_activated, str):
+            if rag_activated == 'y':
+                rag_activated = True
+            elif rag_activated == 'n':
+                rag_activated =  False
+            else:
+                logging.error("rag_activated must either be 'y', 'n', or empty, but nothing else")
+                raise TypeError("Please enter either 'y', 'n', or leave it empty to use the default value.")
+        if not isinstance(rag_activated, bool):
+            logging.error('rag_activated must be a bool')
+    print_verbose(verbose, f"RAG activated: {rag_activated}")
+    print_verbose(verbose, f"\n")
 
     if not isinstance(show_add_info, str):
         logging.error(f"show_add_info must be a string ")
@@ -108,6 +133,16 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     
     # Record the start time
     start_time = time.time()
+
+    # RAG
+    if not skip_llm_call and rag_activated:
+        try:
+            logger.info("RAG is activated and skipllmcall is False. Loading RAG database...")
+            rag_ready, rag_db = load_rag(embedding_model, chroma_path, api_key) # load the RAG database 
+        except Exception as e:
+            logger.warning(f"RAG database initialization skipped or failed: {e}")
+            rag_ready = False
+            rag_db = None
     
     is_on_land = True
     generator = forming_request(config, lat, lon, user_message)
@@ -136,7 +171,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler = StreamHandler()
         output = ''
         if not skip_llm_call:
-            output = llm_request(content_message, input_params, config, api_key, stream_handler)   
+            output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)   
                 
             print_verbose(verbose, "|=============================================================================")    
             print_verbose(verbose, "")    

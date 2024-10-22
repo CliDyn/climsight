@@ -6,10 +6,13 @@ import logging
 import yaml
 import os
 
-#stgreamlit packeges
+#streamlit packeges
 import streamlit as st
 from streamlit_folium import st_folium
 import folium
+
+# rag
+from rag import load_rag 
 
 # climsight modules
 from stream_handler import StreamHandler
@@ -17,13 +20,19 @@ from climsight_engine import llm_request, forming_request
 
 logger = logging.getLogger(__name__)
 
-def run_streamlit(config, api_key='', skip_llm_call=False):
-    '''
-        Inputs:
+def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, embedding_model='', chroma_path=''):
+    """
+    Runs the Streamlit interface for ClimSight, allowing users to interact with the system.
+    Args:
         - config (dict): Configuration, default is an empty dictionary.   
         - api_key (string): API Key, default is an empty string.
-        - skip_llm_call (bool): If True - skipp final call to LLM    
-    '''       
+        - skip_llm_call (bool): If True - skip final call to LLM
+        - rag_activated (bool): whether or not to include the text based rag
+        - embedding_model (str): embedding model to be used for loading the Chroma database.
+        - chroma_path (str): Path where the Chroma database is stored.
+    Returns:
+        None
+    """     
   
     # Config
     try:
@@ -43,8 +52,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
         raise TypeError("api_key must be a string")
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
-            
-    
+
     #read data while loading here 0000000000000000000000000000000000000000
     ##### like hist, future = load_data(config)
 
@@ -94,7 +102,20 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
             if (not api_key) and (not skip_llm_call):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
-                
+
+            # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
+            # for the moment. Just making a note here for any potential problems that might arise later one. 
+            # Load RAG
+            if not skip_llm_call and rag_activated:
+                try:
+                    logger.info("RAG is activated and skipllmcall is False. Loading RAG database...")
+                    rag_ready, rag_db = load_rag(embedding_model, chroma_path, api_key) # load the RAG database 
+                except Exception as e:
+                    st.error(f"Loading of the RAG database failed unexpectedly, please check the logs. {e}")
+                    logger.warning(f"RAG database initialization skipped or failed: {e}")
+                    rag_ready = False
+                    rag_db = None
+                 
             is_on_land = True
             with st.spinner("Getting info on a point..."):
                 # Create a generator object by calling func2
@@ -122,7 +143,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False):
                     chat_box = st.empty()
                     stream_handler = StreamHandler(chat_box, display_method="write")
                     if not skip_llm_call:
-                        output = llm_request(content_message, input_params, config, api_key, stream_handler)   
+                        output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)   
 
                     # PLOTTING ADDITIONAL INFORMATION
                     if show_add_info: 
