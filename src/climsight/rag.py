@@ -1,6 +1,7 @@
 import os
 import logging
 import yaml
+import re
 
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -27,23 +28,60 @@ with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 
 
+def uuid_patternn():
+    """Returns a regex pattern for matching any UUID folder name."""
+    return re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
+
+
+def is_valid_rag_db(rag_db_path):
+    """Checks if the rag_db folder contains chroma.sqlite3 and non-empty UUID folder."""
+    # check for chroma.sqlite3
+    chroma_file = os.path.join(rag_db_path, 'chroma.sqlite3')
+    if not os.path.exists(chroma_file):
+        return False
+    # check for non-empty folder with UUID name
+    uuid_folder = [f for f in os.listdir(rag_db_path) if os.path.isdir(os.path.join(rag_db_path, f)) and uuid_patternn().match(f)]
+    for file in uuid_folder:
+        folder_path = os.path.join(rag_db_path, file)
+        if os.listdir(folder_path): # check if folder is non-empty
+            return True
+        
+    return False
+
+
 def load_rag(embedding_model, chroma_path, openai_api_key):
     """
     Loads the RAG database if it has been initialized before and is ready to use.
-    """
-    global rag_ready, rag_db
 
-    if not rag_ready:
-        logger.warning("RAG database is not ready. Not loading it.")
-        return
+    Args:
+    - embedding_model (str): Name of the embedding model to be used for loading embeddings.
+    - chroma_path (str): Path where the Chroma database is stored.
+    - openai_api_key (str): OpenAI API Key
+
+    Returns:
+    - tuple (bool, Chroma or None): 
+        - rag_ready (bool): true if the RAG database was successfully loaded, false otherwise.
+        - rag_db (Chroma or None): The loaded Chroma database object if successful, None if loading failed.
+
+    """
+    valid_rag_db = is_valid_rag_db(chroma_path)
+
+    if not valid_rag_db:
+        logger.warning("RAG database is not valid. Not loading it. Please run 'python db_generation.py first.")
+        rag_db = None
+        return rag_ready, rag_db
 
     try:
         langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)
         rag_db = Chroma(persist_directory=chroma_path, embedding_function=langchain_ef, collection_name="ipcc_collection")
         logger.info(f"RAG database loaded with {rag_db._collection.count()} documents.")
+        rag_ready = True
     except Exception as e:
         logger.warning(f"Failed to load the RAG database: {e}")
+        rag_db = None
         rag_ready = False
+
+    return rag_ready, rag_db
 
 
 def format_docs(docs):
@@ -59,12 +97,20 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
-def query_rag(input_params, config, openai_api_key):
+def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
     """
     Queries the RAG database with the user's input.
-    """
-    global rag_ready, rag_db
 
+    Args:
+    - input_params (dict): The user's input parameters.
+    - config (dict): Configuration dictionary.
+    - openai_api_key (str): OpenAI API Key.
+    - rag_ready (bool): Boolean flag indicating whether the RAG database is loaded and ready.
+    - rag_db (Chroma or None): The loaded RAG database object.
+
+    Returns:
+    - str or None: The response from the RAG query, or None if the query fails.
+    """
     if not rag_ready:
         logger.warning("RAG database is not ready or loaded. Skipping RAG query.")
         return None
