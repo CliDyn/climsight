@@ -18,7 +18,7 @@ rag_settings:
     rag_activated: True
     embedding_model: "text-embedding-3-large"
     chroma_path: "rag_db"
-    document_path: './data/ipcc_text_reports/'ß
+    document_path: './data/ipcc_text_reports/'
     chunk_size: 2000
     chunk_overlap: 200
     separators: [" ", ",", "\n"]
