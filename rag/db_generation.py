@@ -191,6 +191,12 @@ def initialize_rag(config):
     """
     Initializes the RAG database by checking document presence and modification times,
     and performs chunking and embedding if necessary.
+
+    Args:
+    - config (dict): configuration dictionary
+
+    Returns:
+    - rag_ready (bool): true if RAG database is initialized successfully, false otherwise
     """
     rag_ready = False
 
@@ -207,13 +213,13 @@ def initialize_rag(config):
     if not openai_api_key:
         logger.warning("No OpenAI API Key found. Skipping RAG initialization.")
         rag_ready = False
-        return
+        return rag_ready
 
     # check if documents are present and valid
     if not os.path.exists(document_path) or not any(file.endswith('.txt') for file in os.listdir(document_path)):
         logger.warning("No valid documents found in the specified path. Skipping RAG initialization.")
         rag_ready = False
-        return
+        return rag_ready
 
     # Perform chunking and embedding
     try:
@@ -234,30 +240,32 @@ def initialize_rag(config):
         logger.info(f"RAG ready: {rag_ready}")
         logger.info("RAG database has been initialized and documents embedded.")
 
-        return rag_db
+        return rag_ready
 
     except Exception as e:
         logger.error(f"Failed to initialize the RAG database: {e}")
-        rag_ready = False
+        return rag_ready
 
 
 def main():
     # paths
     rag_db_path = './rag_db' # using static paths as they are not supposed to be changed and will remain the same.
     data_path = './data'
+    rag_ready = False
 
     if is_valid_rag_db(rag_db_path):
         logger.info("RAG database already exists. No need to initialize.")
-        return
+        rag_ready = True
+        return rag_ready
     
     if not are_source_files_available(data_path):
         logger.warning("""The RAG database does not exists yet and there are no source files available in the data/ipcc_text_reports folder.
                        Please run the download_data.py again and make sure to set the flag --source_files=True.""")
-        return
+        return rag_ready
 
     # if rag does not exist yet and the source files are available, run the initialization
     logger.info("Initializing RAG database...")
-    initialize_rag(config)
+    rag_ready = initialize_rag(config)
     # danach kann es den Fall geben, dass es trotzdem keine db gibt, weil bei der Initialisierung etwas falsch gelaufen ist (zb. pdf statt txt files in ipcc_text_reports folder)
     # TO-DO write a test for this case!
 
