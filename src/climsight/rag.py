@@ -64,6 +64,7 @@ def load_rag(embedding_model, chroma_path, openai_api_key):
         - rag_db (Chroma or None): The loaded Chroma database object if successful, None if loading failed.
 
     """
+    rag_ready = False
     valid_rag_db = is_valid_rag_db(chroma_path)
 
     if not valid_rag_db:
