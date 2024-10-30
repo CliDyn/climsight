@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import yaml 
+import argparse
 
 def download_file(url, local_filename):
     """Attempt to download a file from a URL and save it locally, with a progress indicator."""
@@ -90,6 +91,11 @@ def remove_dir(path):
         shutil.rmtree(path)
 
 def main():
+    # Parse command-line argument (--source_files)
+    parser = argparse.ArgumentParser(description="Download and extract the raw source files of the RAG.")
+    parser.add_argument('--source_files', type=bool, default=False, help='Whether to download and extract source files (IPCC text reports).')
+    args = parser.parse_args()
+
     # Load the YAML file
     with open('data_sources.yml', 'r') as file:
         data_config = yaml.safe_load(file)
@@ -119,6 +125,12 @@ def main():
         file = entry['filename']
         url  = entry['url']
         subdir = os.path.join(base_path, entry['subdir'])
+
+        # Skip downloading source files of RAG unless --source_files is set to True
+        if file == 'ipcc_text_reports.zip' and not args.source_files:
+            print("Skipping IPCC text report download as --source_files flag is not set or False.")
+            continue
+
         if download_file(url, file):
             extract_arch(file, subdir)
             files_downloaded.append(file)        

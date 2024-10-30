@@ -19,7 +19,6 @@ rag_settings:
     embedding_model: "text-embedding-3-large"
     chroma_path: "rag_db"
     document_path: './data/ipcc_text_reports/'
-    timestamp_file: './data/last_update.txt'
     chunk_size: 2000
     chunk_overlap: 200
     separators: [" ", ",", "\n"]

@@ -78,11 +78,17 @@ For installation, use either pip alone for all packages and dependencies in a pu
 
 ## Before you run
 
-You have to download example climate data and NaturalEarth coastlines. To do it simply run:
+You have to download example climate data, NaturalEarth coastlines, and the RAG database. To do it simply run:
 
 ```bash
 python download_data.py
 ```
+In case you are a developer and want to experiment with the text file based RAG, set the ```--source_files``` flag to ```True``` to also download the origial source files.
+
+```bash
+python download_data.py --source_files=True
+```
+
 You would also need an [OpenAI API key](https://platform.openai.com/docs/api-reference) to run the prototype. You can provide it as environment variable:
 
 ```bash
