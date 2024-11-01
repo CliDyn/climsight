@@ -85,6 +85,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
         show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                 that were taken into account for the analysis as well as some plots.""")
+        llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
+    
         # Include the API key input within the form only if it's not found in the environment
         if not api_key:
             api_key_input = st.text_input(
@@ -102,7 +104,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
             if (not api_key) and (not skip_llm_call):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
-
+            # Update config with the selected LLM mode
+            config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
             # Load RAG
