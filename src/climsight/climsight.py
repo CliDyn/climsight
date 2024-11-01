@@ -38,6 +38,7 @@ if not config:
 try:
    model_name = config['model_name']
    climatemodel_name = config['climatemodel_name']
+   llmModeKey = config['llmModeKey'] 
    data_path = config['data_settings']['data_path']
    coastline_shapefile = config['coastline_shapefile']
    haz_path = config['haz_path']
