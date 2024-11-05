@@ -16,6 +16,7 @@ import os
 import logging
 # import classes for climsight
 from stream_handler import StreamHandler
+import pandas as pd
 
 # import langchain functions
 # from langchain_community.chat_models import ChatOpenAI
@@ -78,6 +79,82 @@ from economic_functions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def location_request(config, lat, lon):
+    content_message = None
+    input_params = None 
+
+    # ----- Check input types ------------
+    if not isinstance(lat, float) or not isinstance(lon, float):
+        logging.error(f"lat and lon must be floats in clim_request(...) ")
+        raise TypeError("lat and lon must be floats")
+    # Config
+    try:
+        natural_e_path = config['natural_e_path']
+    except KeyError as e:
+        logging.error(f"Missing configuration key: {e}")
+        raise RuntimeError(f"Missing configuration key: {e}")
+       
+    ##  =================== prepare data ==================
+    logger.debug(f"is_point_onland : {lat}, {lon}")        
+    try:
+        is_on_land, water_body_status = is_point_onland(lat, lon, natural_e_path)
+    except Exception as e:
+        logging.error(f"Unexpected error in is_point_onland: {e}")
+        raise RuntimeError(f"Unexpected error in is_point_onland: {e}")
+
+    ######################## Here is a critical point ######################
+    
+    if not is_on_land:
+        return content_message, input_params
+    ######################## Here is a critical point ######################
+    ##  ===== location
+    logger.debug(f"Retrieving location from: {lat}, {lon}")        
+    try:
+        location = get_location(lat, lon)
+    except Exception as e:
+        logging.error(f"Unexpected error in get_location: {e}")
+        raise RuntimeError(f"Unexpected error in get_location: {e}")
+    ##  == adress 
+    logger.debug(f"get_adress_string from: {lat}, {lon}")        
+    try:
+        location_str, location_str_for_print, country = get_adress_string(location)
+    except Exception as e:
+        logging.error(f"Unexpected error in get_adress_string: {e}")
+        raise RuntimeError(f"Unexpected error in get_adress_string: {e}")
+
+    logger.debug(f"is_point_onland from: {lat}, {lon}")            
+    try:
+        is_inland_water, water_body_status = is_point_in_inlandwater(lat, lon)
+    except Exception as e:
+        logging.error(f"Unexpected error in where_is_point: {e}")
+        raise RuntimeError(f"Unexpected error in where_is_point: {e}")
+
+    ##  == location details
+    logger.debug(f"get_location_details")            
+    try:
+        add_properties = get_location_details(location)
+    except Exception as e:
+        logging.error(f"Unexpected error in get_location_details: {e}")
+        raise RuntimeError(f"Unexpected error in get_location_details: {e}")
+    
+    content_message = """
+        Location: latitude = {lat}, longitude = {lon} \n
+        Adress: {location_str} \n
+        Where is this point?: {water_body_status} \n
+        Additional location information: {add_properties} \n
+        """        
+    input_params = {
+        "lat": str(lat),
+        "lon": str(lon),
+        "location_str": location_str,
+        "water_body_status": water_body_status,
+        "add_properties": add_properties,
+        "location_str_for_print": location_str_for_print,
+        "is_inland_water": is_inland_water,
+    }         
+    return content_message, input_params
 
 
 def forming_request(config, lat, lon, user_message, data={}, show_add_info=True):
@@ -470,7 +547,7 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     return output
 
-def agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db):
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data={}):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not
@@ -478,6 +555,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     if not isinstance(stream_handler, StreamHandler):
         logging.error(f"stream_handler must be an instance of StreamHandler")
         raise TypeError("stream_handler must be an instance of StreamHandler")
+    
+    lat = input_params['lat'] # should be already present in input_params
+    lon = input_params['lon'] # should be already present in input_params
+    df_data=pd.DataFrame() 
     
     logger.info(f"start agent_request")
     
@@ -497,29 +578,50 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         content_message: str = ""
         input_params: dict = {}
         # stream_handler: StreamHandler
-                
-    def data_agent(state: AgentState):
-        # generator = forming_request(config, lat, lon, user_message)
-        # while True:
-        #     try:
-        #         # Get the next intermediate result from the generator
-        #         result = next(generator)
-        #         print_verbose(verbose, f"{result}")
-        #     except StopIteration as e:
-        #         # The generator is exhausted, and e.value contains the final result
-        #         gen_output = e.value
-        #         # check if Error ocure:
-        #         if isinstance(gen_output,str):
-        #             if "Error" in gen_output:
-        #                 if "point_is_in_ocean" in gen_output:
-        #                     is_on_land = False
-        #                     print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
-        #         else:    
-        #             content_message, input_params, df_data, figs, data = e.value
-        #         break  
+               
+    def zero_rag_agent(state: AgentState):
+        state.rag_agent_response = "None"
+        return state
+                    
+    def data_agent(state: AgentState, data={}, df_data=pd.DataFrame()):
+        # data
+        # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
+        datakeys = list(data)
+        if 'hist' and 'future' not in datakeys:
+            logger.info(f"reading data from: {config['data_settings']['data_path']}")        
+            data['hist'], data['future'] = load_data(config)
+        else:
+            logger.info(f"Data are preloaded in data dict")                
+
+        ## == create pandas dataframe
+        logger.debug(f"extract_climate_data for: {lat, lon}")              
+        try:
+            df_data, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
+        except Exception as e:
+            logging.error(f"Unexpected error in extract_climate_data: {e}")
+            raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
+
+        state.input_params["hist_temp_str"]   = data_dict["hist_Temperature"],
+        state.input_params["future_temp_str"] = data_dict["future_Temperature"],
+        state.input_params["hist_pr_str"]     = data_dict["hist_Precipitation"],
+        state.input_params["future_pr_str"]   = data_dict["future_Precipitation"],
+        state.input_params["hist_uas_str"]    = data_dict["hist_u_wind"],
+        state.input_params["future_uas_str"]  = data_dict["future_u_wind"],
+        state.input_params["hist_vas_str"]    = data_dict["hist_v_wind"],
+        state.input_params["future_vas_str"]  = data_dict["future_v_wind"],       
+        state.content_message += """\n
+        Current mean monthly temperature for each month: {hist_temp_str} \n
+        Future monthly temperatures for each month at the location: {future_temp_str}\n
+        Current precipitation flux (mm/month): {hist_pr_str} \n
+        Future precipitation flux (mm/month): {future_pr_str} \n
+        Current u wind component (in m/s): {hist_uas_str} \n
+        Future u wind component (in m/s): {future_uas_str} \n
+        Current v wind component (in m/s): {hist_vas_str} \n
+        Future v wind component (in m/s): {future_vas_str} \n """
+        
         print(f"Data agent in work.")
 
-        return {'content_message': content_message, 'input_params': input_params}
+        return {'content_message': state.content_message, 'input_params': state.input_params}
 
       
     def rag_agent(state: AgentState):
@@ -626,7 +728,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
      # Add nodes to the graph
     workflow.add_node("intro_agent", intro_agent)
     workflow.add_node("rag_agent", rag_agent)
-    workflow.add_node("data_agent", data_agent)   
+    workflow.add_node("data_agent", lambda s: data_agent(s, data, df_data))  # Pass `data` as argument
     workflow.add_node("combine_agent", combine_agent)   
 
     workflow.set_entry_point("intro_agent") # Set the entry point of the graph
