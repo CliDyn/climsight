@@ -489,7 +489,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     class AgentState(BaseModel):
         messages: Annotated[Sequence[BaseMessage], operator.add]  #not in use up to now
         user: str = "" #user question
-        next: List[str] = [] #list of next actions
+        next: str = "" #list of next actions
         rag_agent_response: str = ""
         data_agent_response: str = ""
         final_answser: str = ""
@@ -523,15 +523,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
       
     def rag_agent(state: AgentState):
         ## === RAG integration === ##
-        #input_params_rag = input_params.copy()
-        #state.question_to_rag = state.question_to_worker
-        #if state.question_to_rag:
-        #    input_params_rag['user_message'] = state.question_to_rag
-        response = query_rag(input_params, config, api_key, rag_ready, rag_db)
-        if not response:
-            response = "None"
+        rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
         print(f"Rag agent in work.")
-        return {'rag_agent_response': response}
+        return {'rag_agent_response': rag_response}
 
 
 ################# start of intro_agent #############################
@@ -598,7 +592,11 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def combine_agent(state: AgentState): 
         print('combine_agent in work')
         
-        # RAG response in included in content_message and input_params already
+        #add RAG response to content_message and input_params
+        if state.rag_agent_response:
+            state.content_message +="\n        RAG(text) response: {rag_response} "
+            state.input_params['rag_response'] = state.rag_agent_response
+                    
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
@@ -608,13 +606,6 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             chat_prompt
             | llm_agent
         )
-        # chain = LLMChain(
-        #     llm=llm,
-        #     prompt=chat_prompt,
-        #     output_key="review",
-        #     verbose=True,
-        # )
-        # output = chain.run(**state.input_params, verbose=True)
         output = chain.invoke(state.input_params)
         return {'final_answser': output.content}
     
@@ -623,10 +614,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         if "FINISH" in state.next:
             return "FINISH"
         else:
-            if "rag_agent" in state.next:
-                output.append("rag_agent")
-            if "data_agent" in state.next:
-                output.append("data_agent")
+            output.append("rag_agent")
+            output.append("data_agent")
         return output
 
         
