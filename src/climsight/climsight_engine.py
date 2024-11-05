@@ -333,28 +333,28 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     ## == policy IS NOT IN USE
     policy = ""
     
-    content_message = "{user_message} \n \
-        Location: latitude = {lat}, longitude = {lon} \
-        Adress: {location_str} \
-        Where is this point?: {water_body_status} \
-        Policy: {policy} \
-        Additional location information: {add_properties} \
-        Distance to the closest coastline: {distance_to_coastline} \
-        Elevation above sea level: {elevation} \
-        Current landuse: {current_land_use} \
-        Current soil type: {soil} \
-        Occuring species: {biodiv} \
-        Current mean monthly temperature for each month: {hist_temp_str} \
-        Future monthly temperatures for each month at the location: {future_temp_str}\
-        Current precipitation flux (mm/month): {hist_pr_str} \
-        Future precipitation flux (mm/month): {future_pr_str} \
-        Current u wind component (in m/s): {hist_uas_str} \
-        Future u wind component (in m/s): {future_uas_str} \
-        Current v wind component (in m/s): {hist_vas_str} \
-        Future v wind component (in m/s): {future_vas_str} \
-        Natural hazards: {nat_hazards} \
-        Population data: {population} \
-        "        
+    content_message = """{user_message} \n \
+        Location: latitude = {lat}, longitude = {lon} \n
+        Adress: {location_str} \n
+        Where is this point?: {water_body_status} \n
+        Policy: {policy} \n
+        Additional location information: {add_properties} \n
+        Distance to the closest coastline: {distance_to_coastline} \n
+        Elevation above sea level: {elevation} \n
+        Current landuse: {current_land_use} \n
+        Current soil type: {soil} \n
+        Occuring species: {biodiv} \n
+        Current mean monthly temperature for each month: {hist_temp_str} \n
+        Future monthly temperatures for each month at the location: {future_temp_str}\n
+        Current precipitation flux (mm/month): {hist_pr_str} \n
+        Future precipitation flux (mm/month): {future_pr_str} \n
+        Current u wind component (in m/s): {hist_uas_str} \n
+        Future u wind component (in m/s): {future_uas_str} \n
+        Current v wind component (in m/s): {hist_vas_str} \n
+        Future v wind component (in m/s): {future_vas_str} \n
+        Natural hazards: {nat_hazards} \n
+        Population data: {population} \n
+        """        
     input_params = {
         "user_message": user_message,
         "lat": str(lat),
@@ -436,9 +436,10 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
     ## === RAG integration === ##
     rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
     if rag_response:
-        content_message = content_message + "\n\n" + rag_response
+        content_message = content_message + "\n        RAG(text) response: {rag_response} " 
+        input_params['rag_response'] = rag_response
     else:
-        content_message = content_message
+        #content_message = content_message
         logger.info("RAG response is None. Proceeding without RAG context.")
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
@@ -597,7 +598,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def combine_agent(state: AgentState): 
         print('combine_agent in work')
         
-        ########## include RAG to promt!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # RAG response in included in content_message and input_params already
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
@@ -655,115 +656,3 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
 
     
     
-'''
-    print(output['final_answser'])
-    
-    input_params['user_message'] = 'What are the effects of the climate change on urbane zone like Berlin?'
-    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
-    state2= intro_agent(state)   
-    print(state2)
-
-    state = AgentState(messages=[], user='What are the effects of the climate change on urbane zone like Berlin?')
-    state = AgentState(messages=[], user='What are the effects of the climate change on urbane zone in center of Berlin? ann what are the effects of the climate change on Europe?')    
-    state = AgentState(messages=[], user='Hi')
-    state = AgentState(messages=[], user='I am going to grow tomatoes at my garden in center of Berlin, what problem could be due to climate change at my location?')
-    state = AgentState(messages=[], user='write a python code to print Hello World')                
-    state = AgentState(messages=[], user='Preapare a report about money history and python methods in data science, provide at least 10 pages.')                    
-
-    from IPython.display import display, Image
-    from langchain_core.runnables.graph import MermaidDrawMethod
-    image_data = app.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.API)
-    with open("graph.png", "wb") as f:
-        f.write(image_data)
-
-'''    
-
-'''
- supervisor_system_promt = """ 
-    You are the system that should help people to evaluate the impact of climate change
-    on decisions they are taking today (e.g. install wind turbines, solar panels, build a building,
-    parking lot, open a shop, buy crop land). You are working with data on a local level,
-    and decisions also should be given for particular locations. You will be given information 
-    about changes in environmental variables for particular location, and how they will 
-    change in a changing climate. 
-    Your task is to provide assessment of potential risks and/or benefits for the planned 
-    activity related to change in climate. Use information about the country to retrieve 
-    information about policies and regulations in the area related to climate change, 
-    environmental use and activity requested by the user.
-    
-    As supervisor you can request extra information by defining NEXT action from following workers : rag_agent.
-    workers_start
-    The workers are described as follows:
-    rag_agent is a system designed to help you retrieve information from reports like IPCC report;  
-    The IPCC prepares comprehensive Assessment Reports that cover extensive knowledge on climate change, including its causes, potential impacts, and response options.
-    When you need more general information, consider using the IPCC reports as a source.
-    Important: If you use information from the IPCC, make sure to mention the IPCC as the source in your response.
-    workers_end
-    If you decide to call on a worker, select next worker and include a specific question that the worker should answer (question_to_worker) 
-    and write None to final_answer.
-    When you are ready to finish the conversation, select FINISH and write your final answer to final_answer.
-    
-    You don't have to use all variables provided to you, if the effect is insignificant,
-    don't use variable in analysis. DON'T just list information about variables, don't 
-    just repeat what is given to you as input. I don't want to get the code, 
-    I want to receive a narrative, with your assessments and advice.
-    """    
-    supervisor_options = ["FINISH", "rag_agent"]
-    members = ["rag_agent",]
-    
-
-
-    class routeResponse(BaseModel):
-        next: Literal[*supervisor_options]
-        question_to_worker: str = ""
-        final_answer: str = ""
-        
-    supervisor_system_message_prompt = SystemMessagePromptTemplate.from_template(supervisor_system_promt)
-    content_message_message = HumanMessagePromptTemplate.from_template(content_message)
-
-    supervisor_prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", supervisor_system_promt),
-            content_message_message,
-            (
-                "system",
-                "\n RAG response:\n {rag_response} \n\n"
-                "Given the conversation above, who should act next, or give a final answer and FINISH? "
-                "If you decide to call on a worker, do not write a final answer. "
-                "If you decide to FINISH, prepare a final answer and write it to final_answser. "
-                "Select one of the following options: {options}."
-            ),
-        ]
-    ).partial(
-        options=str(supervisor_options)
-    )
-    
-    def supervisor_agent(state: AgentState):
-        """
-        Executes the supervisor agent logic based on the provided state.
-        Updates `input_params` with `rag_response` if present, constructs a 
-        supervisor chain using `supervisor_prompt` and `llm`, and invokes the 
-        chain with `input_params`.
-        Args:
-            state (AgentState): The agent's current state, including `rag_response`.
-        Returns:
-            response: The response from the supervisor chain.
-        """
-        input_params.update({"rag_response": "None;"})
-        if state.rag_response:
-            input_params.update({"rag_response": state.rag_response})
-            
-        # Now invoke the chain with the dictionary
-        supervisor_chain = (
-            supervisor_prompt
-            | llm.with_structured_output(routeResponse)
-        )
-        # Pass the dictionary to invoke
-        response = supervisor_chain.invoke(input_params)
-        state.question_to_worker = response.question_to_worker
-        state.final_answser = response.final_answer
-        state.next = response.next 
-        return state
-    
-    
-'''
