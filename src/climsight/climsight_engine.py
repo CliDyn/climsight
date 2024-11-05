@@ -435,11 +435,12 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     ## === RAG integration === ##
     rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
-    if rag_response:
-        content_message = content_message + "\n        RAG(text) response: {rag_response} " 
+    # Check if rag_response is valid and not the string "None"
+    if rag_response and rag_response != "None":
+        content_message += f"\n        RAG(text) response: {rag_response}"
         input_params['rag_response'] = rag_response
     else:
-        #content_message = content_message
+        # Log the absence of a valid RAG response
         logger.info("RAG response is None. Proceeding without RAG context.")
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
@@ -593,8 +594,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         print('combine_agent in work')
         
         #add RAG response to content_message and input_params
-        if state.rag_agent_response:
-            state.content_message +="\n        RAG(text) response: {rag_response} "
+        if state.rag_agent_response != "None" and state.rag_agent_response != "":
+            state.content_message += "\n        RAG(text) response: {rag_response} "
             state.input_params['rag_response'] = state.rag_agent_response
                     
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
