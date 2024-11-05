@@ -1,5 +1,5 @@
 # model_name: "gpt-3.5-turbo"
-model_name: "gpt-4o"
+model_name: "gpt-4-turbo"
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 data_settings:
@@ -24,22 +24,22 @@ rag_settings:
     chunk_overlap: 200
     separators: [" ", ",", "\n"]
 rag_template: |
-    You are an assistant for retrieving information from IPCC reports for 
-    a particular location that is given to you. Use the following pieces of context 
-    to answer the question at the end.
-    Focus on retrieving the most relevant and concise information that 
-    addresses the question. If you cannot find information for that particular region,
-    you are allowed to extend the answer to something more general. However, in that case
-    you have to make clear that it is a general answer and does not apply particularly to 
-    the given region / coutry. Avoid including unrelated details. 
-    Consider the geographical location mentioned.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    You are an assistant specialized in extracting information from IPCC reports for a given location. 
+
+    Instructions:
+    1. **Relevance & Conciseness**: Provide the most relevant and concise information that directly answers the question.
+    2. **Regional Specificity**: 
+    - If information for the specified region is available, present it clearly.
+    - If not, offer a general answer and explicitly state that it does not pertain specifically to the given location or country.
+    3. **Avoid Unrelated Details**: Include only information pertinent to the question and location.
+    4. **Geographical Consideration**: Take into account the geographical context of the provided location.
+    5. **Uncertainty Handling**: 
+    - If you cannot determine a clear answer from the context, respond with: None
+    - Do not provide extended explanations or comments in this case.
 
     Content from IPCC reports: {context}
     Location: {location}
     Question: {question}
-
-    Helpful Answer:
 coastline_shapefile: "./data/natural_earth/coastlines/ne_10m_coastline.shp"
 haz_path: './data/natural_hazards/pend-gdis-1960-2018-disasterlocations.csv'
 pop_path: './data/population/WPP2022_Demographic_Indicators_Medium.csv'
