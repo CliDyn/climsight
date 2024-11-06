@@ -278,7 +278,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             # Natural Hazards
             if 'haz_fig' in figs:
                 fname = "natural_hazards.png"
-                print_verbose(verbose, "Figure with natural hazards was saved in {fname}.")
+                print_verbose(verbose, f"Figure with natural hazards was saved in {fname}.")
                 figs['haz_fig']['fig'].savefig(fname)
                 print_verbose(verbose, "Source for this figure: ")
                 print_verbose(verbose, figs['haz_fig']['source'])
@@ -286,7 +286,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             # Population Data
             if 'population_plot' in figs:
                 fname = "population_data.png"            
-                print_verbose(verbose, "Figure with population data was saved in {fname}.")
+                print_verbose(verbose, f"Figure with population data was saved in {fname}.")
                 figs['population_plot']['fig'].savefig(fname)
                 print_verbose(verbose, "Source for this figure: ")
                 print_verbose(verbose, figs['population_plot']['source'])
