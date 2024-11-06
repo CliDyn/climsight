@@ -808,7 +808,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
                 ("user", "{user_text}"),
             ])
         class routeResponse(BaseModel):
-            next: Literal[*intro_options]  # Accepts single value only
+            next: Literal["FINISH", "continue"]  # Accepts single value only
             final_answer: str = ""  
               
         chain = (
