@@ -13,9 +13,12 @@ from rag import load_rag
 
 # climsight modules
 from stream_handler import StreamHandler
-from climsight_engine import llm_request, forming_request
+from climsight_engine import llm_request, forming_request, location_request
+from data_container import DataContainer
 
 logger = logging.getLogger(__name__)
+
+data_pocket = DataContainer()
 
 def input_with_default(prompt, default_value):
     user_input = input(prompt)
@@ -146,24 +149,43 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             rag_db = None
     
     is_on_land = True
-    generator = forming_request(config, lat, lon, user_message)
-    while True:
-        try:
-            # Get the next intermediate result from the generator
-            result = next(generator)
-            print_verbose(verbose, f"{result}")
-        except StopIteration as e:
-            # The generator is exhausted, and e.value contains the final result
-            gen_output = e.value
-            # check if Error ocure:
-            if isinstance(gen_output,str):
-                if "Error" in gen_output:
-                    if "point_is_in_ocean" in gen_output:
-                        is_on_land = False
-                        print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
-            else:    
-                content_message, input_params, df_data, figs, data = e.value
-            break     
+
+    if config['llmModeKey'] == "direct_llm":
+        generator = forming_request(config, lat, lon, user_message)
+        while True:
+            try:
+                # Get the next intermediate result from the generator
+                result = next(generator)
+                print_verbose(verbose, f"{result}")
+            except StopIteration as e:
+                # The generator is exhausted, and e.value contains the final result
+                gen_output = e.value
+                # check if Error ocure:
+                if isinstance(gen_output,str):
+                    if "Error" in gen_output:
+                        if "point_is_in_ocean" in gen_output:
+                            is_on_land = False
+                            print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
+                else:    
+                    content_message, input_params, df_data, figs, data = e.value
+                    data_pocket.df_data = df_data
+                    data_pocket.figs = figs
+                    data_pocket.data = data                
+                break     
+    else:
+        # Agent LLM mode (load only location info)
+        # get first location information only, input_params and content_message are only partly filled
+        content_message, input_params = location_request(config, lat, lon)
+        if not input_params:
+            is_on_land = False
+            print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
+        else:
+            # extend input_params with user_message
+            input_params['user_message'] = user_message
+            print_verbose(verbose, f"{input_params['location_str_for_print']}")
+            if input_params['is_inland_water']:
+                print_verbose(verbose, f"""{input_params['water_body_status']}: Our analyses are currently only meant for land areas. Please select another location for a better result.""")
+    
     # Record the start time
     forming_request_time = time.time() - start_time
         
@@ -172,7 +194,10 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler = StreamHandler()
         output = ''
         if not skip_llm_call:
-            output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)   
+            output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)   
+            figs = data_pocket.figs
+            data = data_pocket.data
+            df_data = data_pocket.df_data            
                 
             print_verbose(verbose, "|=============================================================================")    
             print_verbose(verbose, "")    
@@ -195,12 +220,18 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         # PLOTTING ADDITIONAL INFORMATION
         if show_add_info: 
             print_verbose(verbose, "Additional information")
-            print_verbose(verbose, f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-            print_verbose(verbose, f"**Elevation:** {input_params['elevation']} m")
-            print_verbose(verbose, f"**Current land use:** {input_params['current_land_use']}")
-            print_verbose(verbose, f"**Soil type:** {input_params['soil']}")
-            print_verbose(verbose, f"**Occuring species:** {input_params['biodiv']}")
-            print_verbose(verbose, f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+            if 'lat' and 'lon' in input_params:
+                print_verbose(verbose, f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+            if 'elevation' in input_params:
+                print_verbose(verbose, f"**Elevation:** {input_params['elevation']} m")
+            if 'current_land_use' in input_params:
+                print_verbose(verbose, f"**Current land use:** {input_params['current_land_use']}")
+            if 'soil' in input_params:
+                print_verbose(verbose, f"**Soil type:** {input_params['soil']}")
+            if 'biodiv' in input_params:
+                print_verbose(verbose, f"**Occuring species:** {input_params['biodiv']}")
+            if 'distance_to_coastline' in input_params:
+                print_verbose(verbose, f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
             # figures need to move to engine
             # Climate Data
             # print("**Climate data:**")

@@ -5,6 +5,7 @@
 import logging
 import yaml
 import os
+import pandas as pd
 
 #streamlit packeges
 import streamlit as st
@@ -16,9 +17,12 @@ from rag import load_rag
 
 # climsight modules
 from stream_handler import StreamHandler
+from data_container import DataContainer
 from climsight_engine import llm_request, forming_request, location_request
 
 logger = logging.getLogger(__name__)
+
+data_pocket = DataContainer()
 
 def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, embedding_model='', chroma_path=''):
     """
@@ -129,7 +133,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                     rag_db = None
                  
             is_on_land = True
-            
+
             if config['llmModeKey'] == "direct_llm":
                 # Call the forming_request function
                 with st.spinner("Getting info on a point..."):
@@ -152,6 +156,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                                         st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
                             else:    
                                 content_message, input_params, df_data, figs, data = e.value
+                                data_pocket.df_data = df_data
+                                data_pocket.figs = figs
+                                data_pocket.data = data
                             break            
             else:
                 # Agent LLM mode (load only location info)
@@ -174,17 +181,26 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                     chat_box = st.empty()
                     stream_handler = StreamHandler(chat_box, display_method="write")
                     if not skip_llm_call:
-                        output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)   
+                        output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)   
 
                     # PLOTTING ADDITIONAL INFORMATION
                     if show_add_info: 
+                        figs = data_pocket.figs
+                        data = data_pocket.data
+                        df_data = data_pocket.df_data
                         st.subheader("Additional information", divider='rainbow')
-                        st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-                        st.markdown(f"**Elevation:** {input_params['elevation']} m")
-                        st.markdown(f"**Current land use:** {input_params['current_land_use']}")
-                        st.markdown(f"**Soil type:** {input_params['soil']}")
-                        st.markdown(f"**Occuring species:** {input_params['biodiv']}")
-                        st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+                        if 'lat' and 'lon' in input_params:
+                            st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+                        if 'elevation' in input_params:
+                            st.markdown(f"**Elevation:** {input_params['elevation']} m")
+                        if 'current_land_use' in input_params:  
+                            st.markdown(f"**Current land use:** {input_params['current_land_use']}")
+                        if 'soil' in input_params:
+                            st.markdown(f"**Soil type:** {input_params['soil']}")
+                        if 'biodiv' in input_params:    
+                            st.markdown(f"**Occuring species:** {input_params['biodiv']}")
+                        if 'distance_to_coastline' in input_params:  
+                            st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
                         
                         # Climate Data
                         st.markdown("**Climate data:**")

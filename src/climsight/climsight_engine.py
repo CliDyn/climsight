@@ -17,6 +17,7 @@ import logging
 # import classes for climsight
 from stream_handler import StreamHandler
 import pandas as pd
+from data_container import DataContainer
 
 # import langchain functions
 # from langchain_community.chat_models import ChatOpenAI
@@ -459,7 +460,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     }               
     return content_message, input_params, df_data, figs, data
 
-def llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db):
+def llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket):
     """
     Handles LLM requests based on the mode specified in the configuration.
 
@@ -481,7 +482,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)
+        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
@@ -548,7 +549,7 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     return output
 
-def agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data={}):
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not
@@ -559,7 +560,6 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
     lat = float(input_params['lat']) # should be already present in input_params
     lon = float(input_params['lon']) # should be already present in input_params
-    df_data=pd.DataFrame() 
     
     logger.info(f"start agent_request")
     
@@ -723,7 +723,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         ## == create pandas dataframe
         logger.debug(f"extract_climate_data for: {lat, lon}")              
         try:
-            df_data, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
+            df_data_local, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
+            df_data = df_data_local
         except Exception as e:
             logging.error(f"Unexpected error in extract_climate_data: {e}")
             raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
@@ -866,7 +867,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         
     workflow = StateGraph(AgentState)
 
-    figs = {}
+    figs = data_pocket.figs
+    data = data_pocket.data
+    df_data = data_pocket.df_data
+    
      # Add nodes to the graph
     workflow.add_node("intro_agent", intro_agent)
     workflow.add_node("rag_agent", rag_agent)
@@ -884,10 +888,20 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     # Compile the graph
     app = workflow.compile()
     
+    #from IPython.display import Image, display
+    #graph_image_path = 'graph_image.png'  # Specify the desired path for the image
+    #graph_img= app.get_graph().draw_mermaid_png()
+    #with open(graph_image_path, 'wb') as f:
+    #    f.write(graph_img)  # Write the image bytes to the file
+    
     state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
     
     output = app.invoke(state)
     stream_handler.send_text(output['final_answser'])
+    
+    input_params = state.input_params
+    content_message = state.content_message
+    
     return output['final_answser'] 
 
     
