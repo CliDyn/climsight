@@ -153,6 +153,7 @@ def location_request(config, lat, lon):
         "add_properties": add_properties,
         "location_str_for_print": location_str_for_print,
         "is_inland_water": is_inland_water,
+        "country": country
     }         
     return content_message, input_params
 
@@ -556,8 +557,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logging.error(f"stream_handler must be an instance of StreamHandler")
         raise TypeError("stream_handler must be an instance of StreamHandler")
     
-    lat = input_params['lat'] # should be already present in input_params
-    lon = input_params['lon'] # should be already present in input_params
+    lat = float(input_params['lat']) # should be already present in input_params
+    lon = float(input_params['lon']) # should be already present in input_params
     df_data=pd.DataFrame() 
     
     logger.info(f"start agent_request")
@@ -573,15 +574,141 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         user: str = "" #user question
         next: str = "" #list of next actions
         rag_agent_response: str = ""
-        data_agent_response: str = ""
+        data_agent_response: dict = {}
+        zero_agent_response: dict = {}
         final_answser: str = ""
         content_message: str = ""
         input_params: dict = {}
         # stream_handler: StreamHandler
                
-    def zero_rag_agent(state: AgentState):
-        state.rag_agent_response = "None"
-        return state
+    def zero_rag_agent(state: AgentState, figs = {}):
+      
+        logger.debug(f"get_elevation_from_api from: {lat}, {lon}")        
+        try:
+            elevation = get_elevation_from_api(lat, lon)
+        except Exception as e:
+            elevation = None
+            logging.exception(f"elevation = Not known: {e}")
+        ##  == land use        
+        logger.debug(f"fetch_land_use from: {lat}, {lon}")        
+        try:
+            land_use_data = fetch_land_use(lon, lat)
+        except Exception as e:
+            land_use_data = None
+            logging.exception(f"land_use_data = None: {e}")
+
+        logger.debug(f"get current_land_use from land_use_data")              
+        try:
+            current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+        except Exception as e:
+            current_land_use = None
+            logging.exception(f"{e}. Continue with: current_land_use = None")
+        ##  == soil
+        logger.debug(f"get current_land_use from land_use_data")              
+        try:
+            soil = get_soil_from_api(lat, lon)
+        except Exception as e:
+            soil = None
+            logging.exception(f"soil = None: {e}")
+        ##  == biodiversity
+        logger.debug(f"fetch_biodiversity from: {round(lat), round(lon)}")              
+        try:
+            biodiv = fetch_biodiversity(round(lat), round(lon))
+        except Exception as e:
+            biodiv = None
+            logging.error(f"Unexpected error in fetch_biodiversity: {e}")
+        ##  == coast distance
+        logger.debug(f"closest_shore_distance from: {lat, lon}")              
+        try:
+            distance_to_coastline = closest_shore_distance(lat, lon, config['coastline_shapefile'])
+        except Exception as e:
+            distance_to_coastline = None
+            logging.error(f"Unexpected error in closest_shore_distance: {e}")
+
+        ## == hazards
+        logger.debug(f"filter_events_within_square for: {lat, lon}")              
+        try:
+            filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, config['haz_path'], config['distance_from_event'])
+        except Exception as e:
+            promt_hazard_data = None
+            filtered_events_square = None
+            logging.error(f"Unexpected error in filter_events_within_square: {e}")
+            raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+              ## !!!!!!!!! raise should be changed to logging (add exceptions for ploting below)  
+        ## == population
+        logger.debug(f"x_year_mean_population for: {config['pop_path'], state.input_params['country']}")              
+        try:
+            population = x_year_mean_population(config['pop_path'], state.input_params['country'], 
+                                                year_step=config['year_step'], start_year=config['start_year'], end_year=config['end_year'])
+        except Exception as e:
+            population = None
+            logging.error(f"Unexpected error in filter_events_within_square: {e}")
+            raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+            ## !!!!!!!!! raise should be changed to logging (add exceptions for ploting below)  
+
+        
+        zero_agent_response = {}
+        zero_agent_response['input_params'] = {}
+        zero_agent_response['content_message'] = ""
+        if elevation:
+            zero_agent_response['input_params']['elevation'] = str(elevation)
+            zero_agent_response['content_message'] += "Elevation above sea level: {elevation} \n"
+        if current_land_use:
+            zero_agent_response['input_params']['current_land_use'] = current_land_use
+            zero_agent_response['content_message'] += "Current landuse: {current_land_use} \n"  
+        if soil:
+            zero_agent_response['input_params']['soil'] = soil
+            zero_agent_response['content_message'] += "Current soil type: {soil} \n"        
+        if biodiv:
+            zero_agent_response['input_params']['biodiv'] = biodiv
+            zero_agent_response['content_message'] += "Occuring species: {biodiv} \n"                    
+        if distance_to_coastline:
+            zero_agent_response['input_params']['distance_to_coastline'] = str(distance_to_coastline)
+            zero_agent_response['content_message'] += "Distance to the closest coastline: {distance_to_coastline} \n"     
+        if promt_hazard_data is not None:
+            zero_agent_response['input_params']['nat_hazards'] = promt_hazard_data
+            zero_agent_response['content_message'] += "Natural hazards: {nat_hazards} \n"    
+        if population is not None:
+            zero_agent_response['input_params']['population'] = population
+            zero_agent_response['content_message'] += "Population data: {population} \n"                               
+
+        ##  ===================  plotting      =========================   
+        if config['show_add_info']:
+            logger.debug(f"plot_disaster_counts for filtered_events_square")              
+            try:
+                haz_fig = plot_disaster_counts(filtered_events_square)
+                source = '''
+                            *The GDIS data descriptor*  
+                            Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                            61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                            *The GDIS dataset*  
+                            Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                            Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                            Accessed DAY MONTH YEAR.  
+                            *The EM-DAT dataset*  
+                            Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                            disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+                        '''
+                if not (haz_fig is None):
+                    figs['haz_fig'] = {'fig':haz_fig,'source':source}
+            except Exception as e:
+                logging.error(f"Unexpected error in plot_disaster_counts: {e}")
+                raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
+
+            logger.debug(f"plot_population for: {config['pop_path'], state.input_params['country'] }")              
+            try:
+                population_plot = plot_population(config['pop_path'], state.input_params['country'] )
+                source = '''
+                        United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
+                        Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
+                        '''
+                if not (population_plot is None):
+                    figs['population_plot'] = {'fig':population_plot,'source':source}        
+            except Exception as e:
+                logging.error(f"Unexpected error in population_plot: {e}")
+                raise RuntimeError(f"Unexpected error in population_plot: {e}")    
+        
+        return {'zero_agent_response': zero_agent_response}
                     
     def data_agent(state: AgentState, data={}, df_data=pd.DataFrame()):
         # data
@@ -600,16 +727,20 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         except Exception as e:
             logging.error(f"Unexpected error in extract_climate_data: {e}")
             raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
+        
+        data_agent_response = {}
+        data_agent_response['input_params'] = {}
+        data_agent_response['content_message'] = ""
 
-        state.input_params["hist_temp_str"]   = data_dict["hist_Temperature"],
-        state.input_params["future_temp_str"] = data_dict["future_Temperature"],
-        state.input_params["hist_pr_str"]     = data_dict["hist_Precipitation"],
-        state.input_params["future_pr_str"]   = data_dict["future_Precipitation"],
-        state.input_params["hist_uas_str"]    = data_dict["hist_u_wind"],
-        state.input_params["future_uas_str"]  = data_dict["future_u_wind"],
-        state.input_params["hist_vas_str"]    = data_dict["hist_v_wind"],
-        state.input_params["future_vas_str"]  = data_dict["future_v_wind"],       
-        state.content_message += """\n
+        data_agent_response['input_params']["hist_temp_str"]   = data_dict["hist_Temperature"],
+        data_agent_response['input_params']["future_temp_str"] = data_dict["future_Temperature"],
+        data_agent_response['input_params']["hist_pr_str"]     = data_dict["hist_Precipitation"],
+        data_agent_response['input_params']["future_pr_str"]   = data_dict["future_Precipitation"],
+        data_agent_response['input_params']["hist_uas_str"]    = data_dict["hist_u_wind"],
+        data_agent_response['input_params']["future_uas_str"]  = data_dict["future_u_wind"],
+        data_agent_response['input_params']["hist_vas_str"]    = data_dict["hist_v_wind"],
+        data_agent_response['input_params']["future_vas_str"]  = data_dict["future_v_wind"],       
+        data_agent_response['content_message'] += """\n
         Current mean monthly temperature for each month: {hist_temp_str} \n
         Future monthly temperatures for each month at the location: {future_temp_str}\n
         Current precipitation flux (mm/month): {hist_pr_str} \n
@@ -621,7 +752,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         
         print(f"Data agent in work.")
 
-        return {'content_message': state.content_message, 'input_params': state.input_params}
+        return {'data_agent_response': data_agent_response}
 
       
     def rag_agent(state: AgentState):
@@ -699,7 +830,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         if state.rag_agent_response != "None" and state.rag_agent_response != "":
             state.content_message += "\n        RAG(text) response: {rag_response} "
             state.input_params['rag_response'] = state.rag_agent_response
-                    
+
+        #add zero_agent response to content_message and input_params                    
+        if state.zero_agent_response != {}:
+            state.content_message += state.zero_agent_response['content_message']
+            state.input_params.update(state.zero_agent_response['input_params'])    
+        
+        #add data_agent response to content_message and input_params                    
+        if state.data_agent_response != {}:
+            state.content_message += state.data_agent_response['content_message']
+            state.input_params.update(state.data_agent_response['input_params'])    
+                   
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
@@ -719,23 +860,26 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         else:
             output.append("rag_agent")
             output.append("data_agent")
+            output.append("zero_rag_agent")
         return output
 
         
     workflow = StateGraph(AgentState)
 
-  
+    figs = {}
      # Add nodes to the graph
     workflow.add_node("intro_agent", intro_agent)
     workflow.add_node("rag_agent", rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df_data))  # Pass `data` as argument
+    workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
     workflow.add_node("combine_agent", combine_agent)   
 
     workflow.set_entry_point("intro_agent") # Set the entry point of the graph
-    path_map = {'rag_agent':'rag_agent', 'data_agent':'data_agent','FINISH':END}
+    path_map = {'rag_agent':'rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
     workflow.add_edge("rag_agent", "combine_agent")
     workflow.add_edge("data_agent", "combine_agent")
+    workflow.add_edge("zero_rag_agent", "combine_agent")
     workflow.add_edge("combine_agent", END)
     # Compile the graph
     app = workflow.compile()
