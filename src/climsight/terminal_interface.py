@@ -127,7 +127,8 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     else:
         show_add_info=True
         print_verbose(verbose, f"Additional inforamtion will be shown and saved in files.")                
-
+    config['show_add_info'] = show_add_info
+    
     print_verbose(verbose, "")
     print_verbose(verbose, "Getting info on a point...")
     

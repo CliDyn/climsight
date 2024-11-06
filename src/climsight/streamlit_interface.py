@@ -16,7 +16,7 @@ from rag import load_rag
 
 # climsight modules
 from stream_handler import StreamHandler
-from climsight_engine import llm_request, forming_request
+from climsight_engine import llm_request, forming_request, location_request
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
 
-    #read data while loading here 0000000000000000000000000000000000000000
+    #read data while loading here 
     ##### like hist, future = load_data(config)
 
     clicked_coords = None
@@ -68,7 +68,12 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
     # Define map and handle map clicks
     m = folium.Map(location=[lat_default, lon_default], zoom_start=13)
     with st.sidebar:
+        #with st.form(key='side_form'):
+        #    location_button = st.form_submit_button(label='Get location info')
+        #    if location_button:
+        #        st.markdown()
         map_data = st_folium(m)
+            
     if map_data:
         clicked_coords = map_data["last_clicked"]
         if clicked_coords:
@@ -96,6 +101,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
 
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
+
+        
         
     # RUN submit button 
         if submit_button and user_message:
@@ -106,6 +113,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                 st.stop()
             # Update config with the selected LLM mode
             config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            config['show_add_info'] = show_add_info
             
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
@@ -121,27 +129,46 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                     rag_db = None
                  
             is_on_land = True
-            with st.spinner("Getting info on a point..."):
-                # Create a generator object by calling func2
-                generator = forming_request(config, lat, lon, user_message)
-                while True:
-                    try:
-                        # Get the next intermediate result from the generator
-                        result = next(generator)
-                        st.markdown(f"{result}")
-                    except StopIteration as e:
-                        # The generator is exhausted, and e.value contains the final result
-                        
-                        gen_output = e.value
-                        # check if Error ocure:
-                        if isinstance(gen_output,str):
-                            if "Error" in gen_output:
-                                if "point_is_in_ocean" in gen_output:
-                                    is_on_land = False
-                                    st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
-                        else:    
-                            content_message, input_params, df_data, figs, data = e.value
-                        break            
+            
+            if config['llmModeKey'] == "direct_llm":
+                # Call the forming_request function
+                with st.spinner("Getting info on a point..."):
+                    # Create a generator object by calling func2
+                    generator = forming_request(config, lat, lon, user_message)
+                    while True:
+                        try:
+                            # Get the next intermediate result from the generator
+                            result = next(generator)
+                            st.markdown(f"{result}")
+                        except StopIteration as e:
+                            # The generator is exhausted, and e.value contains the final result
+                            
+                            gen_output = e.value
+                            # check if Error ocure:
+                            if isinstance(gen_output,str):
+                                if "Error" in gen_output:
+                                    if "point_is_in_ocean" in gen_output:
+                                        is_on_land = False
+                                        st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
+                            else:    
+                                content_message, input_params, df_data, figs, data = e.value
+                            break            
+            else:
+                # Agent LLM mode (load only location info)
+                with st.spinner("Getting info on a point..."):
+                    st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
+                    # get first location information only, input_params and content_message are only partly filled
+                    content_message, input_params = location_request(config, lat, lon)
+                    if not input_params:
+                        is_on_land = False
+                        st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
+                    else:
+                        # extend input_params with user_message
+                        input_params['user_message'] = user_message
+                        st.markdown(f"{input_params['location_str_for_print']}")
+                        if input_params['is_inland_water']:
+                            st.markdown(f"""{input_params['water_body_status']}: Our analyses are currently only meant for land areas. Please select another location for a better result.""")
+
             if is_on_land:        
                 with st.spinner("Generating..."):
                     chat_box = st.empty()
