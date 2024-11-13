@@ -168,7 +168,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
                             print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
                 else:    
                     content_message, input_params, df_data, figs, data = e.value
-                    data_pocket.df_data = df_data
+                    data_pocket.df['df_data'] = df_data
                     data_pocket.figs = figs
                     data_pocket.data = data                
                 break     
@@ -198,7 +198,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)   
             figs = data_pocket.figs
             data = data_pocket.data
-            df_data = data_pocket.df_data            
+            df_data = data_pocket.df['df_data']            
                 
             print_verbose(verbose, "|=============================================================================")    
             print_verbose(verbose, "")    

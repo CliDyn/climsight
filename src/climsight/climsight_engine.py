@@ -710,7 +710,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         
         return {'zero_agent_response': zero_agent_response}
                     
-    def data_agent(state: AgentState, data={}, df_data=pd.DataFrame()):
+    def data_agent(state: AgentState, data={}, df={}):
         # data
         # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
         datakeys = list(data)
@@ -724,7 +724,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.debug(f"extract_climate_data for: {lat, lon}")              
         try:
             df_data_local, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
-            df_data = df_data_local
+            df['df_data'] = df_data_local
         except Exception as e:
             logging.error(f"Unexpected error in extract_climate_data: {e}")
             raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
@@ -869,12 +869,12 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
 
     figs = data_pocket.figs
     data = data_pocket.data
-    df_data = data_pocket.df_data
+    df = data_pocket.df
     
      # Add nodes to the graph
     workflow.add_node("intro_agent", intro_agent)
     workflow.add_node("rag_agent", rag_agent)
-    workflow.add_node("data_agent", lambda s: data_agent(s, data, df_data))  # Pass `data` as argument
+    workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
     workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
     workflow.add_node("combine_agent", combine_agent)   
 

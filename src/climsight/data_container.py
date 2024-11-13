@@ -8,8 +8,8 @@ class DataContainer:
 
     Attributes:
     -----------
-    df_data : pd.DataFrame
-        A pandas DataFrame to store tabular data.
+    df   : dict
+        A dictionary to store pandas DataFrame to store tabular data.
     figs : dict
         A dictionary to store figures. example figs['haz_fig'] = {'fig':haz_fig,'source':source}
     data : dict
@@ -17,15 +17,15 @@ class DataContainer:
 
     Methods:
     --------
-    df_data:
-        Property to get or set the DataFrame. Raises ValueError if the input is not a pandas DataFrame.
+    df:
+        Property to get or set the DataFrame dictionary. Raises ValueError if the input is not a dictionary.
     figs:
         Property to get or set the figures dictionary. Raises ValueError if the input is not a dictionary.
     data:
         Property to get or set the data dictionary. Raises ValueError if the input is not a dictionary containing 'hist' and 'future' keys with xarray Datasets.
     """
     def __init__(self):
-        self._df_data = pd.DataFrame()  # Initialize as an empty DataFrame
+        self._df =   {}                  # Initialize as an empty dictionary for DataFrames
         self._figs = {}                  # Initialize as an empty dictionary for figures
         self._data = {}
         #{
@@ -34,17 +34,17 @@ class DataContainer:
         #}
 
     @property
-    def df_data(self):
-        """Property to access the DataFrame."""
-        return self._df_data
+    def df(self):
+        """Property to access the dictionary containing DataFrames."""
+        return self._df
 
-    @df_data.setter
-    def df_data(self, value):
+    @df.setter
+    def df(self, value):
         """Set the DataFrame, must be a pandas DataFrame."""
-        if isinstance(value, pd.DataFrame):
-            self._df_data = value
+        if isinstance(value, dict):
+            self._df = value
         else:
-            raise ValueError("df_data must be a pandas DataFrame")
+            raise ValueError("df must be a dictionary of pandas DataFrame")
 
     @property
     def figs(self):
