@@ -34,8 +34,11 @@ rag_template: |
     3. **Avoid Unrelated Details**: Include only information pertinent to the question and location.
     4. **Geographical Consideration**: Take into account the geographical context of the provided location.
     5. **Uncertainty Handling**: 
-    - If you cannot determine a clear answer from the context, respond with: None
-    - Do not provide extended explanations or comments in this case.
+    - If the answer is not directly available from the context, provide the best possible answer based solely on the provided context, and indicate any assumptions or generalizations made within it.
+    - Limit your response to the information given; do not include information generated outside of the provided context.
+    - Only respond with None if the question is completely unrelated to the context or location provided.
+    - Do not provide extended explanations or comments in this case.    
+ 
 
     Content from IPCC reports: {context}
     Location: {location}
