@@ -523,12 +523,20 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
         logger.info("RAG response is None. Proceeding without RAG context.")
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
+    #llm = ChatOpenAI(
+    #    openai_api_key=api_key,
+    #    model_name=config['model_name'],
+    #    streaming=True,
+    #    callbacks=[stream_handler],
+    #)
     llm = ChatOpenAI(
-        openai_api_key=api_key,
-        model_name=config['model_name'],
-        streaming=True,
-        callbacks=[stream_handler],
-    )
+        openai_api_key="dummy_key",  # Use any string if your API doesn't require a key
+        model_name="custom-model",   # Use the model name expected by your API
+        openai_api_base="http://localhost:8000/v1",  # Point to your local API endpoint
+        streaming=False,  # Set to True if you want to stream responses
+        verbose=True,     # Enable verbose to see more details
+    )       
+    
     system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
     human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
     chat_prompt = ChatPromptTemplate.from_messages(
