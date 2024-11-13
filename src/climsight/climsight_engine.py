@@ -16,6 +16,8 @@ import os
 import logging
 # import classes for climsight
 from stream_handler import StreamHandler
+import pandas as pd
+from data_container import DataContainer
 
 # import langchain functions
 # from langchain_community.chat_models import ChatOpenAI
@@ -25,6 +27,13 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
+# import components for used by agent
+from pydantic import BaseModel
+from typing import Annotated
+from typing import Sequence
+import operator
+from langchain_core.messages import BaseMessage
+from langgraph.graph import END, StateGraph, START
 
 # import RAG components
 from langchain_chroma import Chroma
@@ -36,6 +45,9 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from rag import query_rag
+from typing import Literal, Union, List
+
+
 
 # import climsight functions
 from geo_functions import (
@@ -68,6 +80,83 @@ from economic_functions import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def location_request(config, lat, lon):
+    content_message = None
+    input_params = None 
+
+    # ----- Check input types ------------
+    if not isinstance(lat, float) or not isinstance(lon, float):
+        logging.error(f"lat and lon must be floats in clim_request(...) ")
+        raise TypeError("lat and lon must be floats")
+    # Config
+    try:
+        natural_e_path = config['natural_e_path']
+    except KeyError as e:
+        logging.error(f"Missing configuration key: {e}")
+        raise RuntimeError(f"Missing configuration key: {e}")
+       
+    ##  =================== prepare data ==================
+    logger.debug(f"is_point_onland : {lat}, {lon}")        
+    try:
+        is_on_land, water_body_status = is_point_onland(lat, lon, natural_e_path)
+    except Exception as e:
+        logging.error(f"Unexpected error in is_point_onland: {e}")
+        raise RuntimeError(f"Unexpected error in is_point_onland: {e}")
+
+    ######################## Here is a critical point ######################
+    
+    if not is_on_land:
+        return content_message, input_params
+    ######################## Here is a critical point ######################
+    ##  ===== location
+    logger.debug(f"Retrieving location from: {lat}, {lon}")        
+    try:
+        location = get_location(lat, lon)
+    except Exception as e:
+        logging.error(f"Unexpected error in get_location: {e}")
+        raise RuntimeError(f"Unexpected error in get_location: {e}")
+    ##  == adress 
+    logger.debug(f"get_adress_string from: {lat}, {lon}")        
+    try:
+        location_str, location_str_for_print, country = get_adress_string(location)
+    except Exception as e:
+        logging.error(f"Unexpected error in get_adress_string: {e}")
+        raise RuntimeError(f"Unexpected error in get_adress_string: {e}")
+
+    logger.debug(f"is_point_onland from: {lat}, {lon}")            
+    try:
+        is_inland_water, water_body_status = is_point_in_inlandwater(lat, lon)
+    except Exception as e:
+        logging.error(f"Unexpected error in where_is_point: {e}")
+        raise RuntimeError(f"Unexpected error in where_is_point: {e}")
+
+    ##  == location details
+    logger.debug(f"get_location_details")            
+    try:
+        add_properties = get_location_details(location)
+    except Exception as e:
+        logging.error(f"Unexpected error in get_location_details: {e}")
+        raise RuntimeError(f"Unexpected error in get_location_details: {e}")
+    
+    content_message = """
+        Location: latitude = {lat}, longitude = {lon} \n
+        Adress: {location_str} \n
+        Where is this point?: {water_body_status} \n
+        Additional location information: {add_properties} \n
+        """        
+    input_params = {
+        "lat": str(lat),
+        "lon": str(lon),
+        "location_str": location_str,
+        "water_body_status": water_body_status,
+        "add_properties": add_properties,
+        "location_str_for_print": location_str_for_print,
+        "is_inland_water": is_inland_water,
+        "country": country
+    }         
+    return content_message, input_params
 
 
 def forming_request(config, lat, lon, user_message, data={}, show_add_info=True):
@@ -323,28 +412,28 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     ## == policy IS NOT IN USE
     policy = ""
     
-    content_message = "{user_message} \n \
-        Location: latitude = {lat}, longitude = {lon} \
-        Adress: {location_str} \
-        Where is this point?: {water_body_status} \
-        Policy: {policy} \
-        Additional location information: {add_properties} \
-        Distance to the closest coastline: {distance_to_coastline} \
-        Elevation above sea level: {elevation} \
-        Current landuse: {current_land_use} \
-        Current soil type: {soil} \
-        Occuring species: {biodiv} \
-        Current mean monthly temperature for each month: {hist_temp_str} \
-        Future monthly temperatures for each month at the location: {future_temp_str}\
-        Current precipitation flux (mm/month): {hist_pr_str} \
-        Future precipitation flux (mm/month): {future_pr_str} \
-        Current u wind component (in m/s): {hist_uas_str} \
-        Future u wind component (in m/s): {future_uas_str} \
-        Current v wind component (in m/s): {hist_vas_str} \
-        Future v wind component (in m/s): {future_vas_str} \
-        Natural hazards: {nat_hazards} \
-        Population data: {population} \
-        "        
+    content_message = """{user_message} \n \
+        Location: latitude = {lat}, longitude = {lon} \n
+        Adress: {location_str} \n
+        Where is this point?: {water_body_status} \n
+        Policy: {policy} \n
+        Additional location information: {add_properties} \n
+        Distance to the closest coastline: {distance_to_coastline} \n
+        Elevation above sea level: {elevation} \n
+        Current landuse: {current_land_use} \n
+        Current soil type: {soil} \n
+        Occuring species: {biodiv} \n
+        Current mean monthly temperature for each month: {hist_temp_str} \n
+        Future monthly temperatures for each month at the location: {future_temp_str}\n
+        Current precipitation flux (mm/month): {hist_pr_str} \n
+        Future precipitation flux (mm/month): {future_pr_str} \n
+        Current u wind component (in m/s): {hist_uas_str} \n
+        Future u wind component (in m/s): {future_uas_str} \n
+        Current v wind component (in m/s): {hist_vas_str} \n
+        Future v wind component (in m/s): {future_vas_str} \n
+        Natural hazards: {nat_hazards} \n
+        Population data: {population} \n
+        """        
     input_params = {
         "user_message": user_message,
         "lat": str(lat),
@@ -371,7 +460,35 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     }               
     return content_message, input_params, df_data, figs, data
 
-def llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db):
+def llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket):
+    """
+    Handles LLM requests based on the mode specified in the configuration.
+
+    Parameters:
+    - content_message (str): The message content for the LLM.
+    - input_params (dict): Input parameters for the LLM request.
+    - config (dict): Configuration settings, including 'llmModeKey'.
+    - api_key (str): API key for the LLM service.
+    - stream_handler (StreamHandler): An instance of the StreamHandler class, used for streaming responses from the LLM.
+    - rag_ready (bool): A flag indicating whether the RAG database is ready and available for queries.
+    - rag_db (Chroma or None): The loaded RAG database object, used to retrieve relevant documents for the LLM prompt.    
+
+    Returns:
+    output (any): The output from the LLM request.
+
+    Raises:
+    TypeError: If 'llmModeKey' in the config is not recognized.
+    """
+    if config['llmModeKey'] == "direct_llm":
+        output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)
+    elif config['llmModeKey'] == "agent_llm":
+        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)
+    else:
+        logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+        raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+    return output
+
+def direct_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db):
     """
     Sends a request to the LLM with optional RAG integration and returns the generated response.
 
@@ -397,10 +514,12 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
 
     ## === RAG integration === ##
     rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
-    if rag_response:
-        content_message = content_message + "\n\n" + rag_response
+    # Check if rag_response is valid and not the string "None"
+    if rag_response and rag_response != "None":
+        content_message += f"\n        RAG(text) response: {rag_response}"
+        input_params['rag_response'] = rag_response
     else:
-        content_message = content_message
+        # Log the absence of a valid RAG response
         logger.info("RAG response is None. Proceeding without RAG context.")
 
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
@@ -429,3 +548,361 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     logger.info("LLM request completed successfully.")
 
     return output
+
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket):
+    # function similar to llm_request but with agent structure
+    # agent is consist of supervisor and nod that is responsible to call RAG
+    # supervisor need to decide if call RAG or not
+
+    if not isinstance(stream_handler, StreamHandler):
+        logging.error(f"stream_handler must be an instance of StreamHandler")
+        raise TypeError("stream_handler must be an instance of StreamHandler")
+    
+    lat = float(input_params['lat']) # should be already present in input_params
+    lon = float(input_params['lon']) # should be already present in input_params
+    
+    logger.info(f"start agent_request")
+    
+    llm_agent = ChatOpenAI(
+        openai_api_key=api_key,
+        model_name=config['model_name'],
+    )
+        # streaming=True,
+        # callbacks=[stream_handler],    
+    class AgentState(BaseModel):
+        messages: Annotated[Sequence[BaseMessage], operator.add]  #not in use up to now
+        user: str = "" #user question
+        next: str = "" #list of next actions
+        rag_agent_response: str = ""
+        data_agent_response: dict = {}
+        zero_agent_response: dict = {}
+        final_answser: str = ""
+        content_message: str = ""
+        input_params: dict = {}
+        # stream_handler: StreamHandler
+               
+    def zero_rag_agent(state: AgentState, figs = {}):
+      
+        logger.debug(f"get_elevation_from_api from: {lat}, {lon}")        
+        try:
+            elevation = get_elevation_from_api(lat, lon)
+        except Exception as e:
+            elevation = None
+            logging.exception(f"elevation = Not known: {e}")
+        ##  == land use        
+        logger.debug(f"fetch_land_use from: {lat}, {lon}")        
+        try:
+            land_use_data = fetch_land_use(lon, lat)
+        except Exception as e:
+            land_use_data = None
+            logging.exception(f"land_use_data = None: {e}")
+
+        logger.debug(f"get current_land_use from land_use_data")              
+        try:
+            current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+        except Exception as e:
+            current_land_use = None
+            logging.exception(f"{e}. Continue with: current_land_use = None")
+        ##  == soil
+        logger.debug(f"get current_land_use from land_use_data")              
+        try:
+            soil = get_soil_from_api(lat, lon)
+        except Exception as e:
+            soil = None
+            logging.exception(f"soil = None: {e}")
+        ##  == biodiversity
+        logger.debug(f"fetch_biodiversity from: {round(lat), round(lon)}")              
+        try:
+            biodiv = fetch_biodiversity(round(lat), round(lon))
+        except Exception as e:
+            biodiv = None
+            logging.error(f"Unexpected error in fetch_biodiversity: {e}")
+        ##  == coast distance
+        logger.debug(f"closest_shore_distance from: {lat, lon}")              
+        try:
+            distance_to_coastline = closest_shore_distance(lat, lon, config['coastline_shapefile'])
+        except Exception as e:
+            distance_to_coastline = None
+            logging.error(f"Unexpected error in closest_shore_distance: {e}")
+
+        ## == hazards
+        logger.debug(f"filter_events_within_square for: {lat, lon}")              
+        try:
+            filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, config['haz_path'], config['distance_from_event'])
+        except Exception as e:
+            promt_hazard_data = None
+            filtered_events_square = None
+            logging.error(f"Unexpected error in filter_events_within_square: {e}")
+            raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+              ## !!!!!!!!! raise should be changed to logging (add exceptions for ploting below)  
+        ## == population
+        logger.debug(f"x_year_mean_population for: {config['pop_path'], state.input_params['country']}")              
+        try:
+            population = x_year_mean_population(config['pop_path'], state.input_params['country'], 
+                                                year_step=config['year_step'], start_year=config['start_year'], end_year=config['end_year'])
+        except Exception as e:
+            population = None
+            logging.error(f"Unexpected error in filter_events_within_square: {e}")
+            raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+            ## !!!!!!!!! raise should be changed to logging (add exceptions for ploting below)  
+
+        
+        zero_agent_response = {}
+        zero_agent_response['input_params'] = {}
+        zero_agent_response['content_message'] = ""
+        if elevation:
+            zero_agent_response['input_params']['elevation'] = str(elevation)
+            zero_agent_response['content_message'] += "Elevation above sea level: {elevation} \n"
+        if current_land_use:
+            zero_agent_response['input_params']['current_land_use'] = current_land_use
+            zero_agent_response['content_message'] += "Current landuse: {current_land_use} \n"  
+        if soil:
+            zero_agent_response['input_params']['soil'] = soil
+            zero_agent_response['content_message'] += "Current soil type: {soil} \n"        
+        if biodiv:
+            zero_agent_response['input_params']['biodiv'] = biodiv
+            zero_agent_response['content_message'] += "Occuring species: {biodiv} \n"                    
+        if distance_to_coastline:
+            zero_agent_response['input_params']['distance_to_coastline'] = str(distance_to_coastline)
+            zero_agent_response['content_message'] += "Distance to the closest coastline: {distance_to_coastline} \n"     
+        if promt_hazard_data is not None:
+            zero_agent_response['input_params']['nat_hazards'] = promt_hazard_data
+            zero_agent_response['content_message'] += "Natural hazards: {nat_hazards} \n"    
+        if population is not None:
+            zero_agent_response['input_params']['population'] = population
+            zero_agent_response['content_message'] += "Population data: {population} \n"                               
+
+        ##  ===================  plotting      =========================   
+        if config['show_add_info']:
+            logger.debug(f"plot_disaster_counts for filtered_events_square")              
+            try:
+                haz_fig = plot_disaster_counts(filtered_events_square)
+                source = '''
+                            *The GDIS data descriptor*  
+                            Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
+                            61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
+                            *The GDIS dataset*  
+                            Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
+                            Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
+                            Accessed DAY MONTH YEAR.  
+                            *The EM-DAT dataset*  
+                            Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
+                            disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
+                        '''
+                if not (haz_fig is None):
+                    figs['haz_fig'] = {'fig':haz_fig,'source':source}
+            except Exception as e:
+                logging.error(f"Unexpected error in plot_disaster_counts: {e}")
+                raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
+
+            logger.debug(f"plot_population for: {config['pop_path'], state.input_params['country'] }")              
+            try:
+                population_plot = plot_population(config['pop_path'], state.input_params['country'] )
+                source = '''
+                        United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
+                        Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
+                        '''
+                if not (population_plot is None):
+                    figs['population_plot'] = {'fig':population_plot,'source':source}        
+            except Exception as e:
+                logging.error(f"Unexpected error in population_plot: {e}")
+                raise RuntimeError(f"Unexpected error in population_plot: {e}")    
+        
+        return {'zero_agent_response': zero_agent_response}
+                    
+    def data_agent(state: AgentState, data={}, df={}):
+        # data
+        # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
+        datakeys = list(data)
+        if 'hist' and 'future' not in datakeys:
+            logger.info(f"reading data from: {config['data_settings']['data_path']}")        
+            data['hist'], data['future'] = load_data(config)
+        else:
+            logger.info(f"Data are preloaded in data dict")                
+
+        ## == create pandas dataframe
+        logger.debug(f"extract_climate_data for: {lat, lon}")              
+        try:
+            df_data_local, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
+            df['df_data'] = df_data_local
+        except Exception as e:
+            logging.error(f"Unexpected error in extract_climate_data: {e}")
+            raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
+        
+        data_agent_response = {}
+        data_agent_response['input_params'] = {}
+        data_agent_response['content_message'] = ""
+
+        data_agent_response['input_params']["hist_temp_str"]   = data_dict["hist_Temperature"],
+        data_agent_response['input_params']["future_temp_str"] = data_dict["future_Temperature"],
+        data_agent_response['input_params']["hist_pr_str"]     = data_dict["hist_Precipitation"],
+        data_agent_response['input_params']["future_pr_str"]   = data_dict["future_Precipitation"],
+        data_agent_response['input_params']["hist_uas_str"]    = data_dict["hist_u_wind"],
+        data_agent_response['input_params']["future_uas_str"]  = data_dict["future_u_wind"],
+        data_agent_response['input_params']["hist_vas_str"]    = data_dict["hist_v_wind"],
+        data_agent_response['input_params']["future_vas_str"]  = data_dict["future_v_wind"],       
+        data_agent_response['content_message'] += """\n
+        Current mean monthly temperature for each month: {hist_temp_str} \n
+        Future monthly temperatures for each month at the location: {future_temp_str}\n
+        Current precipitation flux (mm/month): {hist_pr_str} \n
+        Future precipitation flux (mm/month): {future_pr_str} \n
+        Current u wind component (in m/s): {hist_uas_str} \n
+        Future u wind component (in m/s): {future_uas_str} \n
+        Current v wind component (in m/s): {hist_vas_str} \n
+        Future v wind component (in m/s): {future_vas_str} \n """
+        
+        print(f"Data agent in work.")
+
+        return {'data_agent_response': data_agent_response}
+
+      
+    def rag_agent(state: AgentState):
+        ## === RAG integration === ##
+        rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
+        print(f"Rag agent in work.")
+        return {'rag_agent_response': rag_response}
+
+
+################# start of intro_agent #############################
+    def intro_agent(state: AgentState):
+        intro_message = """ 
+        You are the introductory interface for a system named ClimSight, designed to help individuals evaluate the impact of climate change
+        on current decision-making (e.g., installing wind turbines, solar panels, constructing buildings, creating parking lots, 
+        opening a shop, or purchasing cropland). ClimSight operates on a local scale, providing data-driven insights specific to particular
+        locations and aiding in climate-informed decision-making.
+
+        ClimSight answers questions regarding the impacts of climate change on planned activities,
+        using high-resolution climate data combined with an LLM to deliver actionable, location-specific information.
+        This approach supports local decisions effectively, removing scalability and expertise limitations.
+
+        Your task is to assess the potential climate-related risks and/or benefits associated with the user's planned activities.
+        Additionally, use information about the user's country to retrieve relevant policies and regulations regarding climate change,
+        environmental usage, and the specific activity the user has requested.
+
+        **What you should do now:**
+
+        At this stage, perform a quick pre-analysis of the user's question and decide on one of the following actions:
+
+        1. **FINISH:** If the question is unrelated to ClimSight's purpose or is a simple inquiry outside your primary objectives,
+        you can choose to finish the conversation by selecting FINISH and providing a concise answer. Examples of unrelated or simple questions:
+        - “Hi”
+        - “How are you?”
+        - “Who are you?”
+        - “Write an essay on the history of trains.”
+        - “Translate some text for me.”
+
+        2. **CONTINUE:** For all other cases, if the question relates to climate or location, select CONTINUE to proceed,
+        which will prompt other agents to address the user's question. Note that the specific location may not be mentioned in the user's initial question, 
+        but it will be clarified by subsequent agents.
+
+        Based on the conversation, decide on one of the following responses:
+        - **FINISH**: Provide a final answer to end the conversation.
+        - **CONTINUE**: Indicate that the process should proceed without a final answer at this stage.
+
+        Given this guidance, respond with either "FINISH" and the final answer, or "continue."
+        """        
+        intro_options = ["FINISH", "continue"]
+        intro_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", intro_message),
+                ("user", "{user_text}"),
+            ])
+        class routeResponse(BaseModel):
+            next: Literal["FINISH", "continue"]  # Accepts single value only
+            final_answer: str = ""  
+              
+        chain = (
+             intro_prompt
+             | llm_agent.with_structured_output(routeResponse)
+         )
+        # Pass the dictionary to invoke
+        input = {"user_text": state.user}
+        response = chain.invoke(input)
+        state.final_answser = response.final_answer
+        state.next = response.next
+        return state
+    
+    
+################# end of intro_agent #############################
+    def combine_agent(state: AgentState): 
+        print('combine_agent in work')
+        
+        #add RAG response to content_message and input_params
+        if state.rag_agent_response != "None" and state.rag_agent_response != "":
+            state.content_message += "\n        RAG(text) response: {rag_response} "
+            state.input_params['rag_response'] = state.rag_agent_response
+
+        #add zero_agent response to content_message and input_params                    
+        if state.zero_agent_response != {}:
+            state.content_message += state.zero_agent_response['content_message']
+            state.input_params.update(state.zero_agent_response['input_params'])    
+        
+        #add data_agent response to content_message and input_params                    
+        if state.data_agent_response != {}:
+            state.content_message += state.data_agent_response['content_message']
+            state.input_params.update(state.data_agent_response['input_params'])    
+                   
+        system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
+        chat_prompt = ChatPromptTemplate.from_messages(
+            [system_message_prompt, human_message_prompt]
+        )
+        chain = (
+            chat_prompt
+            | llm_agent
+        )
+        output = chain.invoke(state.input_params)
+        return {'final_answser': output.content}
+    
+    def route_fromintro(state: AgentState) -> Sequence[str]:
+        output = []
+        if "FINISH" in state.next:
+            return "FINISH"
+        else:
+            output.append("rag_agent")
+            output.append("data_agent")
+            output.append("zero_rag_agent")
+        return output
+
+        
+    workflow = StateGraph(AgentState)
+
+    figs = data_pocket.figs
+    data = data_pocket.data
+    df = data_pocket.df
+    
+     # Add nodes to the graph
+    workflow.add_node("intro_agent", intro_agent)
+    workflow.add_node("rag_agent", rag_agent)
+    workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
+    workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
+    workflow.add_node("combine_agent", combine_agent)   
+
+    workflow.set_entry_point("intro_agent") # Set the entry point of the graph
+    path_map = {'rag_agent':'rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
+    workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
+    workflow.add_edge("rag_agent", "combine_agent")
+    workflow.add_edge("data_agent", "combine_agent")
+    workflow.add_edge("zero_rag_agent", "combine_agent")
+    workflow.add_edge("combine_agent", END)
+    # Compile the graph
+    app = workflow.compile()
+    
+    #from IPython.display import Image, display
+    #graph_image_path = 'graph_image.png'  # Specify the desired path for the image
+    #graph_img= app.get_graph().draw_mermaid_png()
+    #with open(graph_image_path, 'wb') as f:
+    #    f.write(graph_img)  # Write the image bytes to the file
+    
+    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
+    
+    output = app.invoke(state)
+    stream_handler.send_text(output['final_answser'])
+    
+    input_params = state.input_params
+    content_message = state.content_message
+    
+    return output['final_answser'] 
+
+    
+    

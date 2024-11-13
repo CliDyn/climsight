@@ -25,4 +25,6 @@ dependencies:
     - langchain-core
     - osmnx
     - matplotlib
+    - pydantic
+    - langgraph
     - chardet

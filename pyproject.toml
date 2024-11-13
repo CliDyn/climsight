@@ -24,6 +24,8 @@ dependencies = [
     "langchain-openai",
     "langchain-chroma",
     "langchain-core",
+    "pydantic",
+    "langgraph"    
 ]
 
 
