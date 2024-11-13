@@ -172,6 +172,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                     else:
                         # extend input_params with user_message
                         input_params['user_message'] = user_message
+                        content_message = "Human request: {user_message} \n " + content_message
                         st.markdown(f"{input_params['location_str_for_print']}")
                         if input_params['is_inland_water']:
                             st.markdown(f"""{input_params['water_body_status']}: Our analyses are currently only meant for land areas. Please select another location for a better result.""")
