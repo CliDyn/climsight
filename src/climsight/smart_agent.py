@@ -234,4 +234,4 @@ def smart_agent(state: AgentState, config, api_key):
     smart_agent_response = result['output']
     state.smart_agent_response = {'output': smart_agent_response}
 
-    return {'state_agent_response': state.smart_agent_response}
+    return {'smart_agent_response': state.smart_agent_response}
