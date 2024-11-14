@@ -17,5 +17,5 @@ class AgentState(BaseModel):
     content_message: str = ""
     input_params: dict = {}
     smart_agent_response: dict = {}
-    wikipedia_tool_response: dict = {}
+    wikipedia_tool_response: str = ""
     # stream_handler: StreamHandler  # Uncomment if needed
