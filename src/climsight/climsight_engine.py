@@ -80,7 +80,12 @@ from economic_functions import (
 )
 
 logger = logging.getLogger(__name__)
-
+logging.basicConfig(
+   filename='climsight.log',
+   level=logging.INFO,
+   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+   datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 def location_request(config, lat, lon):
     content_message = None
@@ -460,7 +465,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     }               
     return content_message, input_params, df_data, figs, data
 
-def llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket):
+def llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket):
     """
     Handles LLM requests based on the mode specified in the configuration.
 
@@ -480,15 +485,15 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     TypeError: If 'llmModeKey' in the config is not recognized.
     """
     if config['llmModeKey'] == "direct_llm":
-        output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db)
+        output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)
+        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
     return output
 
-def direct_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db):
+def direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db):
     """
     Sends a request to the LLM with optional RAG integration and returns the generated response.
 
@@ -513,10 +518,26 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
     logging.info(f"Generating...")    
 
     ## === RAG integration === ##
-    rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
+    ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
+    general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
+    logger.debug(f"IPCC RAG is:", ipcc_rag_response)
+    logger.debug(f"General RAG is:", general_rag_response)
+
+    # Combine RAG responses with source labels
+    rag_response_parts = []
+    if ipcc_rag_response and ipcc_rag_response != "None":
+        rag_response_parts.append(f"Source: IPCC RAG\n{ipcc_rag_response}")
+    if general_rag_response and general_rag_response != "None":
+        rag_response_parts.append(f"Source: General RAG\n{general_rag_response}")
+
+    if rag_response_parts:
+        rag_response = "\n\n".join(rag_response_parts)
+    else:
+        rag_response = None
+
     # Check if rag_response is valid and not the string "None"
     if rag_response and rag_response != "None":
-        content_message += f"\n        RAG(text) response: {rag_response}"
+        content_message += f"\n        RAG(text) response:\n {rag_response}"
         input_params['rag_response'] = rag_response
     else:
         # Log the absence of a valid RAG response
@@ -549,7 +570,7 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     return output
 
-def agent_llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket):
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not
@@ -573,7 +594,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         messages: Annotated[Sequence[BaseMessage], operator.add]  #not in use up to now
         user: str = "" #user question
         next: str = "" #list of next actions
-        rag_agent_response: str = ""
+        ipcc_rag_agent_response: str = ""
+        general_rag_agent_response: str = ""
         data_agent_response: dict = {}
         zero_agent_response: dict = {}
         final_answser: str = ""
@@ -751,18 +773,25 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         Current v wind component (in m/s): {hist_vas_str} \n
         Future v wind component (in m/s): {future_vas_str} \n """
         
-        print(f"Data agent in work.")
+        logger.info(f"Data agent in work.")
 
         return {'data_agent_response': data_agent_response}
 
       
-    def rag_agent(state: AgentState):
+    def ipcc_rag_agent(state: AgentState):
         ## === RAG integration === ##
-        rag_response = query_rag(input_params, config, api_key, rag_ready, rag_db)
-        print(f"Rag agent in work.")
-        return {'rag_agent_response': rag_response}
+        logger.info(f"IPCC RAG agent in work.")
+        ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
+        # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
+        return {'ipcc_rag_agent_response': ipcc_rag_response}
 
-
+    def general_rag_agent(state: AgentState):
+        ## === RAG integration === ##
+        logger.info(f"General RAG agent in work.")
+        general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
+        # logger.info(f"General RAG says: {general_rag_response}")
+        return {'general_rag_agent_response': general_rag_response}
+    
 ################# start of intro_agent #############################
     def intro_agent(state: AgentState):
         intro_message = """ 
@@ -825,12 +854,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
 ################# end of intro_agent #############################
     def combine_agent(state: AgentState): 
-        print('combine_agent in work')
+        logger.info('combine_agent in work')
         
-        #add RAG response to content_message and input_params
-        if state.rag_agent_response != "None" and state.rag_agent_response != "":
-            state.content_message += "\n        RAG(text) response: {rag_response} "
-            state.input_params['rag_response'] = state.rag_agent_response
+        #add IPCC RAG response to content_message and input_params
+        if state.ipcc_rag_agent_response != "None" and state.ipcc_rag_agent_response != "":
+            state.content_message += "\n        RAG(text) response: {ipcc_rag_response} "
+            state.input_params['ipcc_rag_response'] = state.ipcc_rag_agent_response
+
+        #add general RAG response to content_message and input_params
+        if state.general_rag_agent_response != "None" and state.general_rag_agent_response != "":
+            state.content_message += "\n        RAG(text) response: {general_rag_response} "
+            state.input_params['general_rag_response'] = state.general_rag_agent_response
 
         #add zero_agent response to content_message and input_params                    
         if state.zero_agent_response != {}:
@@ -859,7 +893,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         if "FINISH" in state.next:
             return "FINISH"
         else:
-            output.append("rag_agent")
+            output.append("ipcc_rag_agent")
+            output.append("general_rag_agent")
             output.append("data_agent")
             output.append("zero_rag_agent")
         return output
@@ -873,15 +908,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
      # Add nodes to the graph
     workflow.add_node("intro_agent", intro_agent)
-    workflow.add_node("rag_agent", rag_agent)
+    workflow.add_node("ipcc_rag_agent", ipcc_rag_agent)
+    workflow.add_node("general_rag_agent", general_rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
     workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
     workflow.add_node("combine_agent", combine_agent)   
 
     workflow.set_entry_point("intro_agent") # Set the entry point of the graph
-    path_map = {'rag_agent':'rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
+    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
-    workflow.add_edge("rag_agent", "combine_agent")
+    workflow.add_edge("ipcc_rag_agent", "combine_agent")
+    workflow.add_edge("general_rag_agent", "combine_agent")
     workflow.add_edge("data_agent", "combine_agent")
     workflow.add_edge("zero_rag_agent", "combine_agent")
     workflow.add_edge("combine_agent", END)
