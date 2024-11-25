@@ -27,10 +27,16 @@ config_path = os.getenv('CONFIG_PATH', 'config.yml')
 with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 
-
-def uuid_pattern():
-    """Returns a regex pattern for matching any UUID folder name."""
-    return re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
+def get_folder_name(rag_db_path):
+    """
+    Extracts and returns part of the folder type (ipcc or general) from the rag_db_path that is needed for later distingushing.
+    """
+    if "ipcc_reports" in rag_db_path:
+        return "ipcc"
+    elif "general_reports" in rag_db_path:
+        return "general"
+    else:
+        return None
 
 
 def is_valid_rag_db(rag_db_path):
@@ -39,12 +45,12 @@ def is_valid_rag_db(rag_db_path):
     chroma_file = os.path.join(rag_db_path, 'chroma.sqlite3')
     if not os.path.exists(chroma_file):
         return False
-    # check for non-empty folder with UUID name
-    uuid_folder = [f for f in os.listdir(rag_db_path) if os.path.isdir(os.path.join(rag_db_path, f)) and uuid_pattern().match(f)]
-    for file in uuid_folder:
-        folder_path = os.path.join(rag_db_path, file)
-        if os.listdir(folder_path): # check if folder is non-empty
-            return True
+    folder_name = get_folder_name(rag_db_path)
+    if folder_name is None:
+        return False
+    folder_path = os.path.join(rag_db_path, folder_name)
+    if os.path.isdir(folder_path) and os.listdir(folder_path): # check if folder is non-empty
+        return True
         
     return False
 

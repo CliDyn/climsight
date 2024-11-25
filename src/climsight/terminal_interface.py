@@ -140,14 +140,23 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
 
     # RAG
     if not skip_llm_call and rag_activated:
+        chroma_path_ipcc = chroma_path[0]
+        chroma_path_general = chroma_path[1]
         try:
-            logger.info("RAG is activated and skipllmcall is False. Loading RAG database...")
-            rag_ready, rag_db = load_rag(embedding_model, chroma_path, api_key) # load the RAG database 
+            logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
+            ipcc_rag_ready, ipcc_rag_db = load_rag(embedding_model, chroma_path_ipcc, api_key) # load the RAG database 
         except Exception as e:
-            logger.warning(f"RAG database initialization skipped or failed: {e}")
+            logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
             rag_ready = False
             rag_db = None
-    
+        try:
+            logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
+            general_rag_ready, general_rag_db = load_rag(embedding_model, chroma_path_general, api_key) # load the RAG database 
+        except Exception as e:
+            logger.warning(f"(General) RAG database initialization skipped or failed: {e}")
+            general_rag_ready = False
+            general_rag_db = None
+            
     is_on_land = True
 
     if config['llmModeKey'] == "direct_llm":
@@ -195,7 +204,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler = StreamHandler()
         output = ''
         if not skip_llm_call:
-            output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)   
+            output = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
             figs = data_pocket.figs
             data = data_pocket.data
             df_data = data_pocket.df['df_data']            

@@ -18,13 +18,14 @@ dimension_mappings:
 rag_settings:
     rag_activated: True
     embedding_model: "text-embedding-3-large"
-    chroma_path: "rag_db"
-    document_path: './data/ipcc_text_reports/'
+    chroma_path_ipcc: "rag_db/ipcc_reports"
+    chroma_path_general: "rag_db/general_reports"
+    document_path: './data/general_reports/' # or ipcc_text_reports
     chunk_size: 2000
     chunk_overlap: 200
     separators: [" ", ",", "\n"]
 rag_template: |
-    You are an assistant specialized in extracting information from IPCC reports for a given location. 
+    You are an assistant specialized in extracting information from scientific reports for a given location. 
 
     Instructions:
     1. **Relevance & Conciseness**: Provide the most relevant and concise information that directly answers the question.
@@ -39,7 +40,7 @@ rag_template: |
     - Only respond with None if the question is completely unrelated to the context or location provided.
     - Do not provide extended explanations or comments in this case. 
 
-    Content from IPCC reports: {context}
+    Content from reports: {context}
     Location: {location}
     Question: {question}
 coastline_shapefile: "../climsight/data/natural_earth/coastlines/ne_10m_coastline.shp"

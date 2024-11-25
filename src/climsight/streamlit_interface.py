@@ -123,14 +123,24 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
             # for the moment. Just making a note here for any potential problems that might arise later one. 
             # Load RAG
             if not skip_llm_call and rag_activated:
+                chroma_path_ipcc = chroma_path[0]
+                chroma_path_general = chroma_path[1]
                 try:
-                    logger.info("RAG is activated and skipllmcall is False. Loading RAG database...")
-                    rag_ready, rag_db = load_rag(embedding_model, chroma_path, api_key) # load the RAG database 
+                    logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
+                    ipcc_rag_ready, ipcc_rag_db = load_rag(embedding_model, chroma_path_ipcc, api_key) # load the RAG database 
                 except Exception as e:
-                    st.error(f"Loading of the RAG database failed unexpectedly, please check the logs. {e}")
-                    logger.warning(f"RAG database initialization skipped or failed: {e}")
-                    rag_ready = False
-                    rag_db = None
+                    st.error(f"Loading of the IPCC RAG database failed unexpectedly, please check the logs. {e}")
+                    logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
+                    ipcc_rag_ready = False
+                    ipcc_rag_db = None
+                try:
+                    logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
+                    general_rag_ready, general_rag_db = load_rag(embedding_model, chroma_path_general, api_key) # load the RAG database 
+                except Exception as e:
+                    st.error(f"Loading of the (general) RAG database failed unexpectedly, please check the logs. {e}")
+                    logger.warning(f"(General) RAG database initialization skipped or failed: {e}")
+                    general_rag_ready = False
+                    general_rag_db = None
                  
             is_on_land = True
 
@@ -182,7 +192,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                     chat_box = st.empty()
                     stream_handler = StreamHandler(chat_box, display_method="write")
                     if not skip_llm_call:
-                        output = llm_request(content_message, input_params, config, api_key, stream_handler, rag_ready, rag_db, data_pocket)   
+                        output = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
 
                     # PLOTTING ADDITIONAL INFORMATION
                     if show_add_info: 
