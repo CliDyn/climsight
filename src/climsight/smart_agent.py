@@ -17,10 +17,10 @@ from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import quote_plus
-from langchain.schema import Document
+#import requests
+#from bs4 import BeautifulSoup
+#from urllib.parse import quote_plus
+#from langchain.schema import Document
 from langchain.document_loaders import WikipediaLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -257,35 +257,35 @@ def smart_agent(state: AgentState, config, api_key):
         Note: Replace the placeholders with the actual qualitative and quantitative information extracted from the article, ensuring that each piece of information is placed in the appropriate section.
         """
         
-        class EncyclopediaLoader:
-            def __init__(self, topic):
-                self.topic = topic
+        #class EncyclopediaLoader:
+        #    def __init__(self, topic):
+        #        self.topic = topic
 
-            def load(self):
-                # Encode the topic to be URL-friendly
-                encoded_topic = quote_plus(self.topic)
-                url = f'https://encyclopedia2.thefreedictionary.com/{encoded_topic}'
+        #    def load(self):
+        #        # Encode the topic to be URL-friendly
+        #        encoded_topic = quote_plus(self.topic)
+        #        url = f'https://encyclopedia2.thefreedictionary.com/{encoded_topic}'
                 
-                # Fetch the page
-                response = requests.get(url)
-                if response.status_code != 200:
-                    raise Exception(f"Failed to retrieve article for topic: {self.topic}")
+        #        # Fetch the page
+        #        response = requests.get(url)
+        #        if response.status_code != 200:
+        #            raise Exception(f"Failed to retrieve article for topic: {self.topic}")
                 
-                # Parse the HTML content
-                soup = BeautifulSoup(response.content, 'html.parser')
+        #        # Parse the HTML content
+        #        soup = BeautifulSoup(response.content, 'html.parser')
                 
-                # Find the div containing the article
-                article_div = soup.find('div', {'id': 'Definition'})
-                if not article_div:
-                    raise Exception(f"Article content not found for topic: {self.topic}")
+        #        # Find the div containing the article
+        #        article_div = soup.find('div', {'id': 'Definition'})
+        #        if not article_div:
+        #            raise Exception(f"Article content not found for topic: {self.topic}")
                 
-                # Extract text from all paragraphs within the article div
-                paragraphs = article_div.find_all('p')
-                article_text = '\n'.join([p.get_text(strip=True) for p in paragraphs])
-                document = Document(page_content=article_text, metadata={"source": url})
+        #        # Extract text from all paragraphs within the article div
+        #        paragraphs = article_div.find_all('p')
+        #        article_text = '\n'.join([p.get_text(strip=True) for p in paragraphs])
+        #        document = Document(page_content=article_text, metadata={"source": url})
 
                 
-                return document 
+        #        return document 
 
         #data_rag = config['rag_settings']['data_path']
 
@@ -301,16 +301,16 @@ def smart_agent(state: AgentState, config, api_key):
         )
         raw_documents = loader.load()
 
-        try:
-            loader = EncyclopediaLoader(query)
-            article_text = loader.load().page_content
-        except Exception as e:
-            print(f"Encyclopedia loader failed: {str(e)}")
-            article_text = ""  # Set empty string if encyclopedia lookup fails
+        #try:
+        #    loader = EncyclopediaLoader(query)
+        #    article_text = loader.load().page_content
+        #except Exception as e:
+        #    print(f"Encyclopedia loader failed: {str(e)}")
+        #    article_text = ""  # Set empty string if encyclopedia lookup fails
 
         #raw_documents.append(article_text) 
-        content_str = 'Encyclopedia article: ' + article_text + '\n' + 'Wikipedia article: ' + raw_documents[0].page_content
-
+        #content_str = 'Encyclopedia article: ' + article_text + '\n' + 'Wikipedia article: ' + raw_documents[0].page_content
+        content_str = 'Wikipedia article: ' + raw_documents[0].page_content
         if not raw_documents:
             return "No Wikipedia article found for the query."
 
