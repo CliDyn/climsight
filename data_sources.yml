@@ -97,3 +97,9 @@ sources:
     archive_type: 'zip'
     subdir: '../rag_db'
     citation:   
+
+  - filename: 'rag_articles.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/rag_articles.zip?temp_url_sig=99f288fd7404ab21d59dbbfff2494ffeccabb470&temp_url_expires=2298-09-09T09:58:53Z'
+    archive_type: 'zip'
+    subdir: '../rag_articles'
+    citation:

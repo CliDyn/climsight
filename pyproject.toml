@@ -25,7 +25,9 @@ dependencies = [
     "langchain-chroma",
     "langchain-core",
     "pydantic",
-    "langgraph"    
+    "langgraph",
+    "bs4",
+    "wikipedia"
 ]
 
 

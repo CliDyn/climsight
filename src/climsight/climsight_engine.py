@@ -29,10 +29,10 @@ from langchain.prompts.chat import (
 )
 # import components for used by agent
 from pydantic import BaseModel
-from typing import Annotated
+#from typing import Annotated
 from typing import Sequence
-import operator
-from langchain_core.messages import BaseMessage
+#import operator
+#from langchain_core.messages import BaseMessage
 from langgraph.graph import END, StateGraph, START
 
 # import RAG components
@@ -45,9 +45,13 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from rag import query_rag
-from typing import Literal, Union, List
+from typing import Optional, Literal, Union, List
 
+# import climsight classes
+from climsight_classes import AgentState
 
+# import smart_agent
+from smart_agent import smart_agent
 
 # import climsight functions
 from geo_functions import (
@@ -590,6 +594,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     )
         # streaming=True,
         # callbacks=[stream_handler],    
+    '''
     class AgentState(BaseModel):
         messages: Annotated[Sequence[BaseMessage], operator.add]  #not in use up to now
         user: str = "" #user question
@@ -601,7 +606,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         final_answser: str = ""
         content_message: str = ""
         input_params: dict = {}
+        smart_agent_response: dict = {}
         # stream_handler: StreamHandler
+    '''
                
     def zero_rag_agent(state: AgentState, figs = {}):
       
@@ -874,7 +881,19 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         #add data_agent response to content_message and input_params                    
         if state.data_agent_response != {}:
             state.content_message += state.data_agent_response['content_message']
-            state.input_params.update(state.data_agent_response['input_params'])    
+            state.input_params.update(state.data_agent_response['input_params']) 
+
+        if state.smart_agent_response != {}:
+            smart_analysis = state.smart_agent_response.get('output', '')
+            state.input_params['smart_agent_analysis'] = smart_analysis
+            state.content_message += "\n Smart Data Extractor Agent Analysis: {smart_agent_analysis} "
+
+            # Add Wikipedia tool response
+        if state.wikipedia_tool_response != {}:
+            wiki_response = state.wikipedia_tool_response
+            state.input_params['wikipedia_tool_response'] = wiki_response
+            state.content_message += "\n Wikipedia Search Response: {wikipedia_tool_response} "
+      
                    
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
@@ -897,6 +916,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             output.append("general_rag_agent")
             output.append("data_agent")
             output.append("zero_rag_agent")
+            output.append("smart_agent")
         return output
 
         
@@ -912,15 +932,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     workflow.add_node("general_rag_agent", general_rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
     workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
+    workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key))
     workflow.add_node("combine_agent", combine_agent)   
 
     workflow.set_entry_point("intro_agent") # Set the entry point of the graph
-    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
+    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','smart_agent':'smart_agent','FINISH':END}
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
     workflow.add_edge("ipcc_rag_agent", "combine_agent")
     workflow.add_edge("general_rag_agent", "combine_agent")
     workflow.add_edge("data_agent", "combine_agent")
     workflow.add_edge("zero_rag_agent", "combine_agent")
+    workflow.add_edge("smart_agent", "combine_agent")
     workflow.add_edge("combine_agent", END)
     # Compile the graph
     app = workflow.compile()
@@ -939,7 +961,4 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     input_params = state.input_params
     content_message = state.content_message
     
-    return output['final_answser'] 
-
-    
-    
+    return output['final_answser']

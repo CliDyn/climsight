@@ -8,5 +8,6 @@ cache/
 evaluation/evaluation_report.txt
 evaluation/evaluation_answers.yml
 rag_db/
+rag_articles/
 .*
 *.log
