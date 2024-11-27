@@ -82,6 +82,9 @@ from economic_functions import (
    plot_population,
    x_year_mean_population   
 )
+from extract_climatedata_functions import (
+    request_climate_data,
+)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -227,18 +230,6 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         logging.error(f"Missing configuration key: {e}")
         raise RuntimeError(f"Missing configuration key: {e}")
         
-    # data
-    datakeys = list(data)
-    if 'hist' and 'future' not in datakeys:
-        logger.info(f"reading data from: {data_path}")        
-        yield f"reading data"
-        hist, future = load_data(config)
-        data['hist'] = hist
-        data['future'] = future
-    else:
-        logger.info(f"Data are preloaded in data dict")                
-        hist, future = data['hist'], data['future']
-        
     #content_message defined below now
 
     ##  =================== prepare data ==================
@@ -355,14 +346,6 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         distance_to_coastline = "Not known"
         logging.error(f"Unexpected error in closest_shore_distance: {e}")
 
-    ##  =================== climate data 
-    ## == create pandas dataframe
-    logger.debug(f"extract_climate_data for: {lat, lon}")              
-    try:
-        df_data, data_dict = extract_climate_data(lat, lon, hist, future, config)
-    except Exception as e:
-        logging.error(f"Unexpected error in extract_climate_data: {e}")
-        raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
     ## == hazards
     logger.debug(f"filter_events_within_square for: {lat, lon}")              
     try:
@@ -416,8 +399,62 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
             logging.error(f"Unexpected error in population_plot: {e}")
             raise RuntimeError(f"Unexpected error in population_plot: {e}")       
         
-        
+    ##  =================== climate data 
+    # data
+    df_data = {}
+    if config['use_high_resolution_climate_model']:
+        try:
+            data_agent_response, df_list = request_climate_data(config, lon, lat)
+        except Exception as e:
+            logging.error(f"Unexpected error in request_climate_data: {e}")
+            raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
+        df_data['high_res_climate'] = {
+        'df_list': df_list,
+        'data_agent_response': data_agent_response,
+        'lon': lon,
+        'lat': lat
+        }
 
+    else:
+        datakeys = list(data)
+        if 'hist' and 'future' not in datakeys:
+            logger.info(f"reading data from: {data_path}")        
+            yield f"reading data"
+            hist, future = load_data(config)
+            data['hist'] = hist
+            data['future'] = future
+        else:
+            logger.info(f"Data are preloaded in data dict")                
+            hist, future = data['hist'], data['future']
+                
+        ## == create pandas dataframe
+        logger.debug(f"extract_climate_data for: {lat, lon}")              
+        try:
+            df_data, data_dict = extract_climate_data(lat, lon, hist, future, config)
+        except Exception as e:
+            logging.error(f"Unexpected error in extract_climate_data: {e}")
+            raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
+        data_agent_response['content_message'] = """ Current mean monthly temperature for each month: {hist_temp_str} \n
+         Future monthly temperatures for each month at the location: {future_temp_str}\n
+         Current precipitation flux (mm/month): {hist_pr_str} \n
+         Future precipitation flux (mm/month): {future_pr_str} \n
+         Current u wind component (in m/s): {hist_uas_str} \n
+         Future u wind component (in m/s): {future_uas_str} \n
+         Current v wind component (in m/s): {hist_vas_str} \n
+         Future v wind component (in m/s): {future_vas_str} \n 
+         """
+        data_agent_response['input_params'] = {
+        "hist_temp_str": data_dict["hist_Temperature"],
+        "future_temp_str": data_dict["future_Temperature"],
+        "hist_pr_str": data_dict["hist_Precipitation"],
+        "future_pr_str": data_dict["future_Precipitation"],
+        "hist_uas_str": data_dict["hist_u_wind"],
+        "future_uas_str": data_dict["future_u_wind"],
+        "hist_vas_str": data_dict["hist_v_wind"],
+        "future_vas_str": data_dict["future_v_wind"]
+        }
+
+    
     ## == policy IS NOT IN USE
     policy = ""
     
@@ -432,17 +469,11 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         Current landuse: {current_land_use} \n
         Current soil type: {soil} \n
         Occuring species: {biodiv} \n
-        Current mean monthly temperature for each month: {hist_temp_str} \n
-        Future monthly temperatures for each month at the location: {future_temp_str}\n
-        Current precipitation flux (mm/month): {hist_pr_str} \n
-        Future precipitation flux (mm/month): {future_pr_str} \n
-        Current u wind component (in m/s): {hist_uas_str} \n
-        Future u wind component (in m/s): {future_uas_str} \n
-        Current v wind component (in m/s): {hist_vas_str} \n
-        Future v wind component (in m/s): {future_vas_str} \n
         Natural hazards: {nat_hazards} \n
         Population data: {population} \n
-        """        
+        """  
+    content_message += data_agent_response['content_message']          
+
     input_params = {
         "user_message": user_message,
         "lat": str(lat),
@@ -456,17 +487,11 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         "current_land_use": current_land_use,
         "soil": soil,
         "biodiv": biodiv,
-        "hist_temp_str": data_dict["hist_Temperature"],
-        "future_temp_str": data_dict["future_Temperature"],
-        "hist_pr_str": data_dict["hist_Precipitation"],
-        "future_pr_str": data_dict["future_Precipitation"],
-        "hist_uas_str": data_dict["hist_u_wind"],
-        "future_uas_str": data_dict["future_u_wind"],
-        "hist_vas_str": data_dict["hist_v_wind"],
-        "future_vas_str": data_dict["future_v_wind"],
         "nat_hazards": promt_hazard_data,
         "population": population,
     }               
+    input_params.update(data_agent_response['input_params'])
+    
     return content_message, input_params, df_data, figs, data
 
 def llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket):
@@ -742,43 +767,56 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def data_agent(state: AgentState, data={}, df={}):
         # data
         # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
-        datakeys = list(data)
-        if 'hist' and 'future' not in datakeys:
-            logger.info(f"reading data from: {config['data_settings']['data_path']}")        
-            data['hist'], data['future'] = load_data(config)
-        else:
-            logger.info(f"Data are preloaded in data dict")                
+        if config['use_high_resolution_climate_model']:
+            try:
+                data_agent_response, df_list = request_climate_data(config, lon, lat)
+            except Exception as e:
+                logging.error(f"Unexpected error in request_climate_data: {e}")
+                raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
+            data['high_res_climate'] = {
+            'df_list': df_list,
+            'data_agent_response': data_agent_response,
+            'lon': lon,
+            'lat': lat
+            }    
+        else:    
+            datakeys = list(data)
+            if 'hist' and 'future' not in datakeys:
+                logger.info(f"reading data from: {config['data_settings']['data_path']}")        
+                data['hist'], data['future'] = load_data(config)
+            else:
+                logger.info(f"Data are preloaded in data dict")                
 
-        ## == create pandas dataframe
-        logger.debug(f"extract_climate_data for: {lat, lon}")              
-        try:
-            df_data_local, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
-            df['df_data'] = df_data_local
-        except Exception as e:
-            logging.error(f"Unexpected error in extract_climate_data: {e}")
-            raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
-        
-        data_agent_response = {}
-        data_agent_response['input_params'] = {}
-        data_agent_response['content_message'] = ""
+            ## == create pandas dataframe
+            logger.debug(f"extract_climate_data for: {lat, lon}")              
+            try:
+                df_data_local, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
+                df['df_data'] = df_data_local
+            except Exception as e:
+                logging.error(f"Unexpected error in extract_climate_data: {e}")
+                raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
+            
+            data_agent_response = {}
+            data_agent_response['input_params'] = {}
+            data_agent_response['content_message'] = ""
 
-        data_agent_response['input_params']["hist_temp_str"]   = data_dict["hist_Temperature"],
-        data_agent_response['input_params']["future_temp_str"] = data_dict["future_Temperature"],
-        data_agent_response['input_params']["hist_pr_str"]     = data_dict["hist_Precipitation"],
-        data_agent_response['input_params']["future_pr_str"]   = data_dict["future_Precipitation"],
-        data_agent_response['input_params']["hist_uas_str"]    = data_dict["hist_u_wind"],
-        data_agent_response['input_params']["future_uas_str"]  = data_dict["future_u_wind"],
-        data_agent_response['input_params']["hist_vas_str"]    = data_dict["hist_v_wind"],
-        data_agent_response['input_params']["future_vas_str"]  = data_dict["future_v_wind"],       
-        data_agent_response['content_message'] += """\n
-        Current mean monthly temperature for each month: {hist_temp_str} \n
-        Future monthly temperatures for each month at the location: {future_temp_str}\n
-        Current precipitation flux (mm/month): {hist_pr_str} \n
-        Future precipitation flux (mm/month): {future_pr_str} \n
-        Current u wind component (in m/s): {hist_uas_str} \n
-        Future u wind component (in m/s): {future_uas_str} \n
-        Current v wind component (in m/s): {hist_vas_str} \n
-        Future v wind component (in m/s): {future_vas_str} \n """
+            data_agent_response['input_params']["hist_temp_str"]   = data_dict["hist_Temperature"],
+            data_agent_response['input_params']["future_temp_str"] = data_dict["future_Temperature"],
+            data_agent_response['input_params']["hist_pr_str"]     = data_dict["hist_Precipitation"],
+            data_agent_response['input_params']["future_pr_str"]   = data_dict["future_Precipitation"],
+            data_agent_response['input_params']["hist_uas_str"]    = data_dict["hist_u_wind"],
+            data_agent_response['input_params']["future_uas_str"]  = data_dict["future_u_wind"],
+            data_agent_response['input_params']["hist_vas_str"]    = data_dict["hist_v_wind"],
+            data_agent_response['input_params']["future_vas_str"]  = data_dict["future_v_wind"],       
+            data_agent_response['content_message'] += """\n
+            Current mean monthly temperature for each month: {hist_temp_str} \n
+            Future monthly temperatures for each month at the location: {future_temp_str}\n
+            Current precipitation flux (mm/month): {hist_pr_str} \n
+            Future precipitation flux (mm/month): {future_pr_str} \n
+            Current u wind component (in m/s): {hist_uas_str} \n
+            Future u wind component (in m/s): {future_uas_str} \n
+            Current v wind component (in m/s): {hist_vas_str} \n
+            Future v wind component (in m/s): {future_vas_str} \n """
         
         logger.info(f"Data agent in work.")
 
@@ -835,16 +873,16 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         - **FINISH**: Provide a final answer to end the conversation.
         - **CONTINUE**: Indicate that the process should proceed without a final answer at this stage.
 
-        Given this guidance, respond with either "FINISH" and the final answer, or "continue."
+        Given this guidance, respond with either "FINISH" and the final answer, or "CONTINUE."
         """        
-        intro_options = ["FINISH", "continue"]
+        intro_options = ["FINISH", "CONTINUE"]
         intro_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", intro_message),
                 ("user", "{user_text}"),
             ])
         class routeResponse(BaseModel):
-            next: Literal["FINISH", "continue"]  # Accepts single value only
+            next: Literal["FINISH", "CONTINUE"]  # Accepts single value only
             final_answer: str = ""  
               
         chain = (
