@@ -451,13 +451,5 @@ def main():
         df_list=df_list,
     )
 
-    # Output the responses
-    for idx, resp in enumerate(response, 1):
-        print(f"--- Response {idx} ---\n{resp}\n")
-    
-    # Display the data_agent_response
-    print("Data Agent Response:")
-    print(data_agent_response['input_params']['simulation1'])
-
 if __name__ == "__main__":
     main()
