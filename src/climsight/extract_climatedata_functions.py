@@ -9,6 +9,8 @@ import pyproj
 import re
 import calendar
 import logging
+import matplotlib.pyplot as plt
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -40,6 +42,7 @@ def build_spatial_index_healpix(nc_file):
     # Build cKDTree directly on longitude and latitude
     points = np.column_stack((lons, lats))
     tree = cKDTree(points)
+    
     return tree, lons, lats
 
 def extract_data_healpix(nc_file, desired_lon, desired_lat, tree, lons, lats, months=None, variable_mapping=None):
@@ -194,7 +197,7 @@ def extract_data(nc_file, desired_lon, desired_lat, tree, coords, months=None, c
     else:
         warnings.warn(f"Coordinate system '{coordinate_system}' is not supported yet.")
         return None, []
-    return None, []
+
 
 def extract_all_data(input_files, desired_lon, desired_lat, variable_mapping, months=None):
     """
@@ -257,7 +260,8 @@ def extract_all_data(input_files, desired_lon, desired_lat, variable_mapping, mo
                 'description': meta.get('description', ''),
                 'dataframe': df,
                 'extracted_vars': df_vars,
-                'main': meta.get('is_main', False)  # Flag the main simulation
+                'main': meta.get('is_main', False),  # Flag the main simulation
+                'source': meta.get('source', '')
             })
     
     return df_list
@@ -359,21 +363,60 @@ def request_climate_data(config, desired_lon, desired_lat, months=[i for i in ra
     )
     return data_agent_response, df_list
 
+def plot_climate_data(df_list):
+
+    figs = []
+    # Get the list of parameters to plot (excluding 'Month', 'wind_u', 'wind_v')
+    parameters = df_list[0]['dataframe'].columns.tolist()
+    parameters_to_plot = [param for param in parameters if param not in ['Month', 'wind_u', 'wind_v']]
+
+    fs = 18
+    for param in parameters_to_plot:
+        fig, axes = plt.subplots(nrows=1, ncols=1,figsize=(10,6))
+
+        # Get parameter name and units from extracted_vars
+        var_info = df_list[0]['extracted_vars'][param]
+        source = df_list[0]['source']
+        param_full_name = var_info['full_name']
+        units = var_info['units']
+
+        for data in df_list:
+            df = data['dataframe']
+            plt.plot(df['Month'], df[param], marker='o', label=data['years_of_averaging'])
+
+        plt.title(f"{param_full_name} ({units})", fontsize=fs)
+        plt.xlabel('Month', fontsize=fs)
+        plt.ylabel(f"{param_full_name} ({units})", fontsize=fs)
+        plt.xticks(rotation=45)
+        axes.tick_params(labelsize=fs)
+        axes.grid(color='k', alpha=0.5, linestyle='--')
+        axes.legend(fontsize=fs)            
+        fig.tight_layout()
+        #fig.savefig(f"{param}_plot.png")    
+        figl = {'fig': fig, 'param': param, 'source': source, 'full_name': param_full_name, 'units': units}
+        figs.append(figl)
+    
+    return figs
+
+
 def main():
     # Example Input Dictionary
     input_files = {
         'climatology_IFS_9-FESOM_5-production_2020x_compressed.nc': {
+            'file_name': './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2020x_compressed.nc',
             'years_of_averaging': '2020-2029',
             'description': 'The nextGEMS pre-final simulations for years 2030x..',
             'coordinate_system': 'healpix',
             'is_main': True
         },
         'climatology_IFS_9-FESOM_5-production_2030x_compressed.nc': {
+            'file_name': './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2030x_compressed.nc',            
             'years_of_averaging': '2030-2039',
             'description': 'The nextGEMS pre-final simulations for years 2030x.',
             'coordinate_system': 'healpix'
         },
         'climatology_IFS_9-FESOM_5-production_2040x_compressed.nc': {
+            'file_name': './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2040x_compressed.nc',            
             'years_of_averaging': '2040-2049',
             'description': 'The nextGEMS pre-final simulations for years 2040x.',
             'coordinate_system': 'healpix'
@@ -407,6 +450,10 @@ def main():
     data_agent_response = prepare_data_agent_response(
         df_list=df_list,
     )
+
+    # Output the responses
+    for idx, resp in enumerate(response, 1):
+        print(f"--- Response {idx} ---\n{resp}\n")
     
     # Display the data_agent_response
     print("Data Agent Response:")
