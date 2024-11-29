@@ -30,3 +30,5 @@ dependencies:
     - chardet
     - bs4
     - wikipedia
+    - scipy
+    - pyproj

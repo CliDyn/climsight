@@ -27,7 +27,9 @@ dependencies = [
     "pydantic",
     "langgraph",
     "bs4",
-    "wikipedia"
+    "wikipedia",
+    "scipy",
+    "pyproj"
 ]
 
 
