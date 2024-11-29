@@ -16,6 +16,8 @@ from stream_handler import StreamHandler
 from climsight_engine import llm_request, forming_request, location_request
 from data_container import DataContainer
 
+from extract_climatedata_functions import plot_climate_data
+
 logger = logging.getLogger(__name__)
 
 data_pocket = DataContainer()
@@ -204,10 +206,9 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler = StreamHandler()
         output = ''
         if not skip_llm_call:
-            output = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
+            output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
             figs = data_pocket.figs
             data = data_pocket.data
-            df_data = data_pocket.df['df_data']            
                 
             print_verbose(verbose, "|=============================================================================")    
             print_verbose(verbose, "")    
@@ -284,7 +285,20 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
 
             # print("Climate model: ")
             # print("   ", model_info)
-
+            if config['use_high_resolution_climate_model']:
+                try:
+                    df_list = data_pocket.data['high_res_climate']['df_list']
+                    figs_climate = plot_climate_data(df_list)
+                    for fig_dict in figs_climate:
+                        fname=f"{fig_dict['full_name']}.png"
+                        print_verbose(verbose, f"Figure with {fig_dict['full_name']} was saved in {fname}.")
+                        fig_dict['fig'].savefig(fname)
+                    print_verbose(verbose, "Source for this figures: ")
+                    print_verbose(verbose, figs_climate[0]['source'])
+                    print_verbose(verbose, "\n")    
+                except KeyError as e:
+                    logger.warning(f"Error by ploting climate data: {e}")
+                                
             # Natural Hazards
             if 'haz_fig' in figs:
                 fname = "natural_hazards.png"

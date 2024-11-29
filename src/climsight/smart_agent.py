@@ -27,7 +27,7 @@ from langchain_openai import ChatOpenAI
 
 # Import AgentState from climsight_classes
 from climsight_classes import AgentState
-
+import calendar
 def smart_agent(state: AgentState, config, api_key):
 
     lat = float(state.input_params['lat'])
@@ -46,7 +46,8 @@ def smart_agent(state: AgentState, config, api_key):
     After retrieving the data, provide a concise summary of the parameters you retrieved, explaining briefly why they are important. Keep your response short and to the point.
     Do not include any additional explanations or reasoning beyond the concise summary.
     Do not include any chain-of-thought reasoning or action steps in your final answer.
-
+    Do not ask the user for any additional information, but you can include into the final answer what kind of information user should provide in the future.
+    
     <Important> 
     For the final response try to follow the following format:
     'The [retrieved values of the parameter] for the [object of interest] at [location] is [value for current and future are ...], [according to the Wikipedia article] the required [parameter] for [object of interest] is [value]. [Two sentence of clarification, with criitcal montly-based assessment of the potential changes]'
@@ -72,135 +73,169 @@ def smart_agent(state: AgentState, config, api_key):
             description="List of months to retrieve data for. Each month should be one of 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'. If not specified, data for all months will be retrieved."
         )
 
-
     def get_data_components(**kwargs):
-        # Parse the arguments using the args_schema
         args = get_data_components_args(**kwargs)
+        # Parse the arguments using the args_schema
         environmental_data = args.environmental_data
         months = args.months  # List of month names
         if environmental_data is None:
             return {"error": "No environmental data type specified."}
+       
+        if config['use_high_resolution_climate_model']:
+            df_list = state.df_list
+            response = {}                 
 
-        lat = float(state.input_params['lat'])
-        lon = float(state.input_params['lon'])
-        data_path = config['data_settings']['data_path']
+            environmental_mapping = {
+                "Temperature": "mean2t",
+                "Precipitation": "tp",
+                "u_wind": "wind_u",
+                "v_wind": "wind_v"
+            }
 
-        # Dictionaries for historical and SSP585 data files
-        data_files_historical = {
-            "Temperature": ("AWI_CM_mm_historical.nc", "tas"),
-            "Precipitation": ("AWI_CM_mm_historical_pr.nc", "pr"),
-            "u_wind": ("AWI_CM_mm_historical_uas.nc", "uas"),
-            "v_wind": ("AWI_CM_mm_historical_vas.nc", "vas")
-        }
+            if environmental_data not in environmental_mapping:
+                return {"error": f"Invalid environmental data type: {environmental_data}"}
+            
+            # Filter the DataFrame for the selected months and extract the values
+            var_name = environmental_mapping[environmental_data]
+            
+            if not months:
+                months = [calendar.month_abbr[m] for m in range(1, 13)]
+                
+            # Create a mapping from abbreviated to full month names
+            month_mapping = {calendar.month_abbr[m]: calendar.month_name[m] for m in range(1, 13)}
+            selected_months = [month_mapping[abbr] for abbr in months]
 
-        data_files_ssp585 = {
-            "Temperature": ("AWI_CM_mm_ssp585.nc", "tas"),
-            "Precipitation": ("AWI_CM_mm_ssp585_pr.nc", "pr"),
-            "u_wind": ("AWI_CM_mm_ssp585_uas.nc", "uas"),
-            "v_wind": ("AWI_CM_mm_ssp585_vas.nc", "vas")
-        }
+            for entry in df_list:
+                df = entry.get('dataframe')
+                var_meta = entry.get('extracted_vars').get(var_name)
+                if df is None:
+                    raise ValueError(f"Entry does not contain a 'dataframe' key.")
+                    
+                data_values = df[df['Month'].isin(selected_months)][var_name].tolist()
+                ext_data = {month: np.round(value,2) for month, value in zip(selected_months, data_values)}
+                ext_exp = f"Monthly mean values of {environmental_data}, {var_meta['units']} for years: " +entry['years_of_averaging']
+                response.update({ext_exp: ext_data})
+            return response    
+        else: #config['use_high_resolution_climate_model']
+            lat = float(state.input_params['lat'])
+            lon = float(state.input_params['lon'])
+            data_path = config['data_settings']['data_path']
 
-        if environmental_data not in data_files_historical:
-            return {"error": f"Invalid environmental data type: {environmental_data}"}
+            # Dictionaries for historical and SSP585 data files
+            data_files_historical = {
+                "Temperature": ("AWI_CM_mm_historical.nc", "tas"),
+                "Precipitation": ("AWI_CM_mm_historical_pr.nc", "pr"),
+                "u_wind": ("AWI_CM_mm_historical_uas.nc", "uas"),
+                "v_wind": ("AWI_CM_mm_historical_vas.nc", "vas")
+            }
 
-        # Get file names and variable names for both datasets
-        file_name_hist, var_name_hist = data_files_historical[environmental_data]
-        file_name_ssp585, var_name_ssp585 = data_files_ssp585[environmental_data]
+            data_files_ssp585 = {
+                "Temperature": ("AWI_CM_mm_ssp585.nc", "tas"),
+                "Precipitation": ("AWI_CM_mm_ssp585_pr.nc", "pr"),
+                "u_wind": ("AWI_CM_mm_ssp585_uas.nc", "uas"),
+                "v_wind": ("AWI_CM_mm_ssp585_vas.nc", "vas")
+            }
 
-        # Build file paths
-        file_path_hist = os.path.join(data_path, file_name_hist)
-        file_path_ssp585 = os.path.join(data_path, file_name_ssp585)
+            if environmental_data not in data_files_historical:
+                return {"error": f"Invalid environmental data type: {environmental_data}"}
 
-        # Check if files exist
-        if not os.path.exists(file_path_hist):
-            return {"error": f"Data file {file_name_hist} not found in {data_path}"}
-        if not os.path.exists(file_path_ssp585):
-            return {"error": f"Data file {file_name_ssp585} not found in {data_path}"}
+            # Get file names and variable names for both datasets
+            file_name_hist, var_name_hist = data_files_historical[environmental_data]
+            file_name_ssp585, var_name_ssp585 = data_files_ssp585[environmental_data]
 
-        # Open datasets
-        dataset_hist = nc.Dataset(file_path_hist)
-        dataset_ssp585 = nc.Dataset(file_path_ssp585)
+            # Build file paths
+            file_path_hist = os.path.join(data_path, file_name_hist)
+            file_path_ssp585 = os.path.join(data_path, file_name_ssp585)
 
-        # Get latitude and longitude arrays
-        lats_hist = dataset_hist.variables['lat'][:]
-        lons_hist = dataset_hist.variables['lon'][:]
-        lats_ssp585 = dataset_ssp585.variables['lat'][:]
-        lons_ssp585 = dataset_ssp585.variables['lon'][:]
+            # Check if files exist
+            if not os.path.exists(file_path_hist):
+                return {"error": f"Data file {file_name_hist} not found in {data_path}"}
+            if not os.path.exists(file_path_ssp585):
+                return {"error": f"Data file {file_name_ssp585} not found in {data_path}"}
 
-        # Find the nearest indices for historical data
-        lat_idx_hist = (np.abs(lats_hist - lat)).argmin()
-        lon_idx_hist = (np.abs(lons_hist - lon)).argmin()
+            # Open datasets
+            dataset_hist = nc.Dataset(file_path_hist)
+            dataset_ssp585 = nc.Dataset(file_path_ssp585)
 
-        # Find the nearest indices for SSP585 data
-        lat_idx_ssp585 = (np.abs(lats_ssp585 - lat)).argmin()
-        lon_idx_ssp585 = (np.abs(lons_ssp585 - lon)).argmin()
+            # Get latitude and longitude arrays
+            lats_hist = dataset_hist.variables['lat'][:]
+            lons_hist = dataset_hist.variables['lon'][:]
+            lats_ssp585 = dataset_ssp585.variables['lat'][:]
+            lons_ssp585 = dataset_ssp585.variables['lon'][:]
 
-        # Extract data at the specified location
-        data_hist = dataset_hist.variables[var_name_hist][:, :, :, lat_idx_hist, lon_idx_hist]
-        data_ssp585 = dataset_ssp585.variables[var_name_ssp585][:, :, :, lat_idx_ssp585, lon_idx_ssp585]
+            # Find the nearest indices for historical data
+            lat_idx_hist = (np.abs(lats_hist - lat)).argmin()
+            lon_idx_hist = (np.abs(lons_hist - lon)).argmin()
 
-        # Squeeze data to remove singleton dimensions (shape becomes (12,))
-        data_hist = np.squeeze(data_hist)
-        data_ssp585 = np.squeeze(data_ssp585)
+            # Find the nearest indices for SSP585 data
+            lat_idx_ssp585 = (np.abs(lats_ssp585 - lat)).argmin()
+            lon_idx_ssp585 = (np.abs(lons_ssp585 - lon)).argmin()
 
-        # Process data according to the variable
-        if environmental_data == "Temperature":
-            # Convert from Kelvin to Celsius
-            data_hist = data_hist - 273.15
-            data_ssp585 = data_ssp585 - 273.15
-            units = "°C"
-        elif environmental_data == "Precipitation":
-            # Convert from kg m-2 s-1 to mm/month
-            days_in_month = np.array([31, 28, 31, 30, 31, 30,
-                                    31, 31, 30, 31, 30, 31])
-            seconds_in_month = days_in_month * 24 * 3600  # seconds in each month
-            data_hist = data_hist * seconds_in_month
-            data_ssp585 = data_ssp585 * seconds_in_month
-            units = "mm/month"
-        elif environmental_data in ["u_wind", "v_wind"]:
-            # Units are already in m/s
-            units = "m/s"
-        else:
-            units = "unknown"
+            # Extract data at the specified location
+            data_hist = dataset_hist.variables[var_name_hist][:, :, :, lat_idx_hist, lon_idx_hist]
+            data_ssp585 = dataset_ssp585.variables[var_name_ssp585][:, :, :, lat_idx_ssp585, lon_idx_ssp585]
 
-        # Close datasets
-        dataset_hist.close()
-        dataset_ssp585.close()
+            # Squeeze data to remove singleton dimensions (shape becomes (12,))
+            data_hist = np.squeeze(data_hist)
+            data_ssp585 = np.squeeze(data_ssp585)
 
-        # List of all month names
-        all_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            # Process data according to the variable
+            if environmental_data == "Temperature":
+                # Convert from Kelvin to Celsius
+                data_hist = data_hist - 273.15
+                data_ssp585 = data_ssp585 - 273.15
+                units = "°C"
+            elif environmental_data == "Precipitation":
+                # Convert from kg m-2 s-1 to mm/month
+                days_in_month = np.array([31, 28, 31, 30, 31, 30,
+                                        31, 31, 30, 31, 30, 31])
+                seconds_in_month = days_in_month * 24 * 3600  # seconds in each month
+                data_hist = data_hist * seconds_in_month
+                data_ssp585 = data_ssp585 * seconds_in_month
+                units = "mm/month"
+            elif environmental_data in ["u_wind", "v_wind"]:
+                # Units are already in m/s
+                units = "m/s"
+            else:
+                units = "unknown"
 
-        # Map month names to indices
-        month_indices = {month: idx for idx, month in enumerate(all_months)}
+            # Close datasets
+            dataset_hist.close()
+            dataset_ssp585.close()
 
-        # If months are specified, select data for those months
-        if months:
-            # Validate months
-            valid_months = [month for month in months if month in month_indices]
-            if not valid_months:
-                return {"error": "Invalid months provided."}
-            selected_indices = [month_indices[month] for month in valid_months]
-            selected_months = valid_months
-        else:
-            # Use all months if none are specified
-            selected_indices = list(range(12))
-            selected_months = all_months
+            # List of all month names
+            all_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-        # Subset data for selected months
-        data_hist = data_hist[selected_indices]
-        data_ssp585 = data_ssp585[selected_indices]
+            # Map month names to indices
+            month_indices = {month: idx for idx, month in enumerate(all_months)}
 
-        # Create dictionaries mapping months to values with units
-        hist_data_dict = {month: f"{value:.2f} {units}" for month, value in zip(selected_months, data_hist)}
-        ssp585_data_dict = {month: f"{value:.2f} {units}" for month, value in zip(selected_months, data_ssp585)}
+            # If months are specified, select data for those months
+            if months:
+                # Validate months
+                valid_months = [month for month in months if month in month_indices]
+                if not valid_months:
+                    return {"error": "Invalid months provided."}
+                selected_indices = [month_indices[month] for month in valid_months]
+                selected_months = valid_months
+            else:
+                # Use all months if none are specified
+                selected_indices = list(range(12))
+                selected_months = all_months
 
-        # Return both historical and SSP585 data
-        return {
-            f"{environmental_data}_historical": hist_data_dict,
-            f"{environmental_data}_ssp585": ssp585_data_dict
-        }
+            # Subset data for selected months
+            data_hist = data_hist[selected_indices]
+            data_ssp585 = data_ssp585[selected_indices]
 
+            # Create dictionaries mapping months to values with units
+            hist_data_dict = {month: f"{value:.2f} {units}" for month, value in zip(selected_months, data_hist)}
+            ssp585_data_dict = {month: f"{value:.2f} {units}" for month, value in zip(selected_months, data_ssp585)}
+
+            # Return both historical and SSP585 data
+            return {
+                f"{environmental_data}_historical": hist_data_dict,
+                f"{environmental_data}_ssp585": ssp585_data_dict
+            }
 
     # Define the data_extraction_tool
     data_extraction_tool = StructuredTool.from_function(
@@ -428,7 +463,7 @@ def smart_agent(state: AgentState, config, api_key):
     rag_tool = StructuredTool.from_function(
         func=process_RAG_search,
         name="RAG_search",
-        description="A tool to answer questions about environmental conditions for growing corn. For search queries, provide expanded question. For example, if the question is about growing corn, the query should be 'limiting factors for corn growth'.",
+        description="A tool to answer questions about environmental conditions related to user question. For search queries, provide expanded question. For example, if the question is about growing corn, the query should be 'limiting factors for corn growth'.",
         args_schema=RAGSearchArgs
     )
 
@@ -443,6 +478,10 @@ def smart_agent(state: AgentState, config, api_key):
     tools = [data_extraction_tool, wikipedia_tool, rag_tool]
 
     # Create the agent with the tools and prompt
+    prompt += """\nadditional information:\n
+    question is related to this location: {location_str} \n
+    """
+    
     agent = create_openai_tools_agent(
         llm=llm,
         tools=tools,
@@ -468,8 +507,10 @@ def smart_agent(state: AgentState, config, api_key):
         "input": state.user,
         "chat_history": state.messages,
         "lat": lat,
-        "lon": lon
+        "lon": lon,
+        "location_str": state.input_params['location_str']        
     }
+
 
     # Run the agent
     result = agent_executor(agent_input)

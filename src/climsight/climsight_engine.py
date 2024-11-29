@@ -434,6 +434,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         except Exception as e:
             logging.error(f"Unexpected error in extract_climate_data: {e}")
             raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
+        data_agent_response = {}
         data_agent_response['content_message'] = """ Current mean monthly temperature for each month: {hist_temp_str} \n
          Future monthly temperatures for each month at the location: {future_temp_str}\n
          Current precipitation flux (mm/month): {hist_pr_str} \n
@@ -516,11 +517,11 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)
+        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
-    return output
+    return output, input_params, content_message
 
 def direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db):
     """
@@ -767,6 +768,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def data_agent(state: AgentState, data={}, df={}):
         # data
         # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
+        df_list = []
         if config['use_high_resolution_climate_model']:
             try:
                 data_agent_response, df_list = request_climate_data(config, lon, lat)
@@ -779,6 +781,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             'lon': lon,
             'lat': lat
             }    
+            state.df_list = df_list
         else:    
             datakeys = list(data)
             if 'hist' and 'future' not in datakeys:
@@ -819,8 +822,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             Future v wind component (in m/s): {future_vas_str} \n """
         
         logger.info(f"Data agent in work.")
-
-        return {'data_agent_response': data_agent_response}
+        
+        respond = {'data_agent_response': data_agent_response, 'df_list': df_list}
+    
+        return respond
 
       
     def ipcc_rag_agent(state: AgentState):
@@ -943,7 +948,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             | llm_agent
         )
         output = chain.invoke(state.input_params)
-        return {'final_answser': output.content}
+        return {'final_answser': output.content, 'input_params': state.input_params, 'content_message': state.content_message}
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
         output = []
@@ -954,9 +959,15 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             output.append("general_rag_agent")
             output.append("data_agent")
             output.append("zero_rag_agent")
-            output.append("smart_agent")
+            #output.append("smart_agent")
         return output
-
+    def route_fromdata(state: AgentState) -> Sequence[str]:
+        output = []
+        if config['use_smart_agent']:
+            output.append("smart_agent")
+        else:
+            output.append("combine_agent")
+        return output
         
     workflow = StateGraph(AgentState)
 
@@ -973,30 +984,41 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key))
     workflow.add_node("combine_agent", combine_agent)   
 
+    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
+    path_map_data = {'combine_agent':'combine_agent', 'smart_agent':'smart_agent'}    
+
     workflow.set_entry_point("intro_agent") # Set the entry point of the graph
-    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','smart_agent':'smart_agent','FINISH':END}
+    
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
-    workflow.add_edge("ipcc_rag_agent", "combine_agent")
-    workflow.add_edge("general_rag_agent", "combine_agent")
-    workflow.add_edge("data_agent", "combine_agent")
-    workflow.add_edge("zero_rag_agent", "combine_agent")
-    workflow.add_edge("smart_agent", "combine_agent")
+    workflow.add_conditional_edges("data_agent", route_fromdata, path_map=path_map_data)    
+
+    if config['use_smart_agent']:
+        workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
+    else:
+        workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
+        
+    #workflow.add_edge("ipcc_rag_agent", "combine_agent")
+    #workflow.add_edge("general_rag_agent", "combine_agent")
+    #workflow.add_edge("data_agent", "combine_agent")
+    #workflow.add_edge("zero_rag_agent", "combine_agent")
+    #workflow.add_edge("smart_agent", "combine_agent")
     workflow.add_edge("combine_agent", END)
     # Compile the graph
     app = workflow.compile()
     
-    #from IPython.display import Image, display
-    #graph_image_path = 'graph_image.png'  # Specify the desired path for the image
-    #graph_img= app.get_graph().draw_mermaid_png()
-    #with open(graph_image_path, 'wb') as f:
-    #    f.write(graph_img)  # Write the image bytes to the file
+    # from IPython.display import Image, display
+    # graph_image_path = 'graph_image.png'  # Specify the desired path for the image
+    # graph_img= app.get_graph().draw_mermaid_png()
+    # with open(graph_image_path, 'wb') as f:
+    #     f.write(graph_img)  # Write the image bytes to the file
     
     state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
     
     output = app.invoke(state)
+
+    input_params = output['input_params']
+    content_message = output['content_message']
+    
     stream_handler.send_text(output['final_answser'])
-    
-    input_params = state.input_params
-    content_message = state.content_message
-    
-    return output['final_answser']
+   
+    return output['final_answser'], input_params, content_message
