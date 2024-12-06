@@ -18,4 +18,7 @@ class AgentState(BaseModel):
     input_params: dict = {}
     smart_agent_response: dict = {}
     wikipedia_tool_response: str = ""
+    ipcc_rag_agent_response: str = ""
+    general_rag_agent_response: str = ""    
+    df_list: list = [] # List of dataframes with climate data
     # stream_handler: StreamHandler  # Uncomment if needed

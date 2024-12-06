@@ -2,6 +2,33 @@
 model_name: "gpt-4o"
 climatemodel_name: "tco1279"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
+use_high_resolution_climate_model: true
+use_smart_agent: false
+climate_model_input_files:
+  climatology_IFS_9-FESOM_5-production_2020x_compressed.nc:
+    file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2020x_compressed.nc'
+    years_of_averaging: '2020-2029'
+    description: 'The nextGEMS pre-final simulations for years 2030x..'
+    coordinate_system: 'healpix'
+    source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: FS_9-FESOM_5-production, 2020-2050 .'
+    is_main: true
+  climatology_IFS_9-FESOM_5-production_2030x_compressed.nc:
+    file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2030x_compressed.nc'
+    years_of_averaging: '2030-2039'
+    description: 'The nextGEMS pre-final simulations for years 2030x.'
+    coordinate_system: 'healpix'
+    source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: FS_9-FESOM_5-production, 2020-2050 .'
+  climatology_IFS_9-FESOM_5-production_2040x_compressed.nc:
+    file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2040x_compressed.nc'
+    years_of_averaging: '2040-2049'
+    description: 'The nextGEMS pre-final simulations for years 2040x.'
+    coordinate_system: 'healpix' 
+    source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: FS_9-FESOM_5-production, 2020-2050 .'
+climate_model_variable_mapping:
+    Temperature: mean2t
+    Total Precipitation: tp
+    Wind U: wind_u
+    Wind V: wind_v   
 data_settings:
     data_path: "../climsight/data/"
     historical: "2000" 

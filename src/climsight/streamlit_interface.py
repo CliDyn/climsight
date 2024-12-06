@@ -19,6 +19,7 @@ from rag import load_rag
 from stream_handler import StreamHandler
 from data_container import DataContainer
 from climsight_engine import llm_request, forming_request, location_request
+from extract_climatedata_functions import plot_climate_data
 
 logger = logging.getLogger(__name__)
 
@@ -94,15 +95,14 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
         show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                 that were taken into account for the analysis as well as some plots.""")
+        smart_agent   = st.toggle("Use smart agent feture", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
         llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
-    
         # Include the API key input within the form only if it's not found in the environment
         if not api_key:
             api_key_input = st.text_input(
                 "OpenAI API key",
                 placeholder="Enter your OpenAI API key here"
             )
-
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
 
@@ -118,6 +118,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
             # Update config with the selected LLM mode
             config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
             config['show_add_info'] = show_add_info
+            config['use_smart_agent'] = smart_agent
             
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
@@ -192,12 +193,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                     chat_box = st.empty()
                     stream_handler = StreamHandler(chat_box, display_method="write")
                     if not skip_llm_call:
-                        output = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
+                        output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
 
                     # PLOTTING ADDITIONAL INFORMATION
                     if show_add_info: 
                         figs = data_pocket.figs
-                        data = data_pocket.data
                         if 'df_data' in data_pocket.df:
                             df_data = data_pocket.df['df_data']
                         else:
@@ -216,7 +216,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                         if 'distance_to_coastline' in input_params:  
                             st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
                         # Climate Data
-                        if df_data is not None and not df_data.empty:
+                        if (not config['use_high_resolution_climate_model']) and  (df_data is not None):
                             st.markdown("**Climate data:**")
                             st.markdown(
                                 "Near surface temperature (in °C)",
@@ -258,6 +258,23 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                             with st.expander("Source"):
                                 st.markdown(model_info)
 
+                        if config['use_high_resolution_climate_model']:
+                            to_plot = False
+                            try:
+                                df_list = data_pocket.data['high_res_climate']['df_list']
+                                to_plot = True
+                            except Exception as e:
+                                logger.warning(f"Error by getting high resolution climate data from data pocket: {e}")
+                            if to_plot:    
+                                figs_climate = plot_climate_data(df_list)
+                                st.markdown("**Climate data:**")
+                                for fig_dict in figs_climate:
+                                    st.pyplot(fig_dict['fig'])
+                                
+                                with st.expander("Source"):
+                                    st.markdown(figs_climate[0]['source'])
+
+                                
                         # Natural Hazards
                         if 'haz_fig' in figs:
                             st.markdown("**Natural hazards:**")

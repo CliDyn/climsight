@@ -103,3 +103,9 @@ sources:
     archive_type: 'zip'
     subdir: '../rag_articles'
     citation:
+
+  - filename: 'IFS_9-FESOM_5-production.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/IFS_9-FESOM_5-production.zip?temp_url_sig=5cc6cdb3a10d7c43fa9a38da25c6aea40fbdb13c&temp_url_expires=2298-09-13T15:27:39Z'
+    archive_type: 'zip'
+    subdir: './'
+    citation:     
