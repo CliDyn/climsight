@@ -44,6 +44,10 @@ dimension_mappings:
     time: "month"
 rag_articles:
     data_path: "./rag_articles/"
+ecocrop:
+    ecocroploc_path: "./data/ecocrop/EcoCrop_DB.csv"
+    variable_expl_path: "./data/ecocrop/Ecocrop_variable_lookup.csv"
+    data_path: "./data/ecocrop/ecocrop_database/"
 rag_settings:
     rag_activated: True
     embedding_model: "text-embedding-3-large"
