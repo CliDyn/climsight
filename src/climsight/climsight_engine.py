@@ -936,6 +936,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             wiki_response = state.wikipedia_tool_response
             state.input_params['wikipedia_tool_response'] = wiki_response
             state.content_message += "\n Wikipedia Search Response: {wikipedia_tool_response} "
+        if state.ecocrop_search_response != {}:
+            ecocrop_response = state.ecocrop_search_response
+            state.input_params['ecocrop_search_response'] = ecocrop_response
+            state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
       
                    
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
