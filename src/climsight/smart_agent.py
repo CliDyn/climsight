@@ -552,7 +552,7 @@ def smart_agent(state: AgentState, config, api_key):
     )
 
     # List of tools
-    tools = [data_extraction_tool, rag_tool, ecocrop_tool]
+    tools = [data_extraction_tool, rag_tool,wikipedia_tool, ecocrop_tool]
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n
