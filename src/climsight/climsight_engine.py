@@ -996,10 +996,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
     workflow.add_conditional_edges("data_agent", route_fromdata, path_map=path_map_data)    
 
-    if config['use_smart_agent']:
-        workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
-    else:
-        workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
+    #if config['use_smart_agent']:
+    #    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
+    #else:
+    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
         
     #workflow.add_edge("ipcc_rag_agent", "combine_agent")
     #workflow.add_edge("general_rag_agent", "combine_agent")
