@@ -109,3 +109,9 @@ sources:
     archive_type: 'zip'
     subdir: './'
     citation:     
+  
+  - filename: 'ecocrop.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/ecocrop.zip?temp_url_sig=e7a4b9c7e8cdd5d01e86b399d24ec851769fc174&temp_url_expires=2052-04-21T10:46:16Z'
+    archive_type: 'zip'
+    subdir: './'
+    citation: Brown, M. J., Redhead, J., Pywell, R., & Price, J. EcoCrop Climatic Crop Suitability Scoring [Computer software]. https://github.com/OpenCLIM/ecocrop

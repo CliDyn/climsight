@@ -28,6 +28,7 @@ from langchain_openai import ChatOpenAI
 # Import AgentState from climsight_classes
 from climsight_classes import AgentState
 import calendar
+import pandas as pd
 def smart_agent(state: AgentState, config, api_key):
 
     lat = float(state.input_params['lat'])
@@ -36,12 +37,13 @@ def smart_agent(state: AgentState, config, api_key):
     # System prompt
     prompt = f"""
     You are the smart agent of ClimSight. Your task is to retrieve necessary components of the climatic datasets based on the user's request.
-    You have access to tools called "get_data_components", "wikipedia_search", and "RAG_search" which you can use to retrieve the necessary environmental data components.
+    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search" and "ECOCROP_search" which you can use to retrieve the necessary environmental data components.
     - "get_data_components" will retrieve the necessary data from the climatic datasets at the location of interest (latitude: {lat}, longitude: {lon}). It accepts an 'environmental_data' parameter to specify the type of data, and a 'months' parameter to specify which months to retrieve data for. The 'months' parameter is a list of month names (e.g., ['Jan', 'Feb', 'Mar']). If 'months' is not specified, data for all months will be retrieved.
     <Important> Call "get_data_components" tool multiple times if necessary, but only within one iteration, [chat_completion -> n * "get_data_components" -> chat_completion] after you recieve the necessary data from wikipedia_search and RAG_search. </Important>
     - "wikipedia_search" will help you determine the necessary data to retrieve with the get_data_components tool.
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
-    <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search and RAG_search; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+    - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
+    <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
     Use these tools to get the data you need to answer the user's question.
     After retrieving the data, provide a concise summary of the parameters you retrieved, explaining briefly why they are important. Keep your response short and to the point.
     Do not include any additional explanations or reasoning beyond the concise summary.
@@ -466,7 +468,82 @@ def smart_agent(state: AgentState, config, api_key):
         description="A tool to answer questions about environmental conditions related to user question. For search queries, provide expanded question. For example, if the question is about growing corn, the query should be 'limiting factors for corn growth'.",
         args_schema=RAGSearchArgs
     )
+    # [4] ECOCROP tool 
+    class EcoCropSearchArgs(BaseModel):
+        query: str = Field(
+            description="The name of the crop to search for in the ECOCROP database."
+        )
+    def process_ecocrop_search(query: str) -> str:
 
+
+        # Load the ECOCROP database
+        ecocroploc = config['ecocrop']['ecocroploc_path']
+        variable_expl_path = config['ecocrop']['variable_expl_path']
+        rag_ecocrop = config['ecocrop']['data_path']
+        if not os.path.exists(ecocroploc) or not os.path.exists(variable_expl_path):
+            return f"ECOCROP database files not found."
+
+        ecocropall = pd.read_csv(ecocroploc, encoding='latin1', engine="python")
+        variable_expl = pd.read_csv(variable_expl_path, engine='python')
+        variable_dict = dict(zip(variable_expl['Variable'], variable_expl['Explanation']))
+
+        # Initialize embeddings and vector store
+        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        vector_store = Chroma(
+            embedding_function=embeddings,
+            persist_directory=rag_ecocrop
+        )
+
+        # Initialize the GPT-4 model
+        llm = ChatOpenAI(
+            openai_api_key=api_key,
+            model_name=config['model_name']
+        )
+
+        # Create the prompt template
+        prompt = ChatPromptTemplate.from_template("""
+        Your task is to select the most relevant document for the following query:
+        Query: {query}
+        Here are the documents to choose from:
+        {documents}
+
+        Please analyze these documents and provide ONLY the SOURCE of the single most relevant one that best matches the query.
+        DO NOT add anything else in your response except the SOURCE of the document.
+        """)
+
+        # Perform the similarity search
+        query_result = vector_store.similarity_search(query=query, k=10)
+        if not query_result:
+            return f"No data found for {query}."
+
+        # Extract the document sources
+        messages = prompt.format_messages(query=query, documents=query_result)
+        response = llm.invoke(messages)
+    
+        # Filter the data
+        filtered_data = ecocropall[ecocropall['ScientificName'] == response.content.strip()]
+        if filtered_data.empty:
+            return f"No data found for {query}."
+
+        # Format the output
+        ecocrop_output = f"Data from ECOCROP database for {query}:\n"
+        ecocrop_output += f"Scientific Name: {filtered_data['ScientificName'].iloc[0]}\n"
+        for varname in variable_dict.keys():
+            value = filtered_data[varname].iloc[0]
+            if pd.notna(value):
+                ecocrop_output += f"{variable_dict[varname]}: {value}\n"
+
+        return ecocrop_output
+        # Create the ECOCROP tool
+    ecocrop_tool = StructuredTool.from_function(
+        func=process_ecocrop_search,
+        name="ECOCROP_search",
+        description=(
+            "A tool to retrieve crop-specific environmental requirements from the ECOCROP database. "
+            "Input should be the name of the crop."
+        ),
+        args_schema=EcoCropSearchArgs
+    )
     # Initialize the LLM
     llm = ChatOpenAI(
         openai_api_key=api_key,
@@ -475,7 +552,7 @@ def smart_agent(state: AgentState, config, api_key):
     )
 
     # List of tools
-    tools = [data_extraction_tool, wikipedia_tool, rag_tool]
+    tools = [data_extraction_tool, rag_tool,wikipedia_tool, ecocrop_tool]
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n
@@ -528,17 +605,24 @@ def smart_agent(state: AgentState, config, api_key):
                 tool_outputs['get_data_components'] = observation.content
             else:
                 tool_outputs['get_data_components'] = observation
+        elif action.tool == 'ECOCROP_search':
+            if isinstance(observation, AIMessage):
+                tool_outputs['ECOCROP_search'] = observation.content
+            else:
+                tool_outputs['ECOCROP_search'] = observation
 
     # Store the response from the wikipedia_search tool into state
     if 'wikipedia_search' in tool_outputs:
         state.wikipedia_tool_response = tool_outputs['wikipedia_search']
+    if 'ECOCROP_search' in tool_outputs:
+        state.ecocrop_search_response = tool_outputs['ECOCROP_search']
 
     # Also store the agent's final answer
     smart_agent_response = result['output']
     state.smart_agent_response = {'output': smart_agent_response}
-
     # Return both smart_agent_response and wikipedia_tool_response
     return {
         'smart_agent_response': state.smart_agent_response,
-        'wikipedia_tool_response': state.wikipedia_tool_response
+        'wikipedia_tool_response': state.wikipedia_tool_response,
+        'ecocrop_search_response': state.ecocrop_search_response
     }

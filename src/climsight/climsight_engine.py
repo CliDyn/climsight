@@ -936,6 +936,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             wiki_response = state.wikipedia_tool_response
             state.input_params['wikipedia_tool_response'] = wiki_response
             state.content_message += "\n Wikipedia Search Response: {wikipedia_tool_response} "
+        if state.ecocrop_search_response != {}:
+            ecocrop_response = state.ecocrop_search_response
+            state.input_params['ecocrop_search_response'] = ecocrop_response
+            state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
       
                    
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
@@ -992,10 +996,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
     workflow.add_conditional_edges("data_agent", route_fromdata, path_map=path_map_data)    
 
-    if config['use_smart_agent']:
-        workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
-    else:
-        workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
+    #if config['use_smart_agent']:
+    #    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
+    #else:
+    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
         
     #workflow.add_edge("ipcc_rag_agent", "combine_agent")
     #workflow.add_edge("general_rag_agent", "combine_agent")
