@@ -408,7 +408,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         except Exception as e:
             logging.error(f"Unexpected error in request_climate_data: {e}")
             raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
-        df_data['high_res_climate'] = {
+        data['high_res_climate'] = {
         'df_list': df_list,
         'data_agent_response': data_agent_response,
         'lon': lon,

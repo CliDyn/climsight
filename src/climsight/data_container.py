@@ -67,7 +67,7 @@ class DataContainer:
     @data.setter
     def data(self, value):
         if isinstance(value, dict):
-            self._figs = value
+            self._data = value
         else:
             raise ValueError("data must be a dictionary")        
         #"""Set the data dictionary, must be a dictionary with 'hist' and 'future' as xarray Datasets."""
