@@ -138,7 +138,14 @@ def request_answers_from_climsight(question_answers, series = 'ipcc'):
         user_message = user_message + ' ' + question_answers[series][qa_indx]['question']
         lon = question_answers[series][qa_indx].get('lon', 13.37)
         lat = question_answers[series][qa_indx].get('lat', 52.524)
-        output = run_terminal(config, skip_llm_call=False, lon=lon, lat=lat, user_message=user_message, show_add_info='n', verbose=False)
+
+        rag_settings = config['rag_settings']
+        embedding_model = rag_settings['embedding_model']
+        chroma_path_ipcc = rag_settings['chroma_path_ipcc']
+        chroma_path_general = rag_settings['chroma_path_general'] 
+        chroma_path = [chroma_path_ipcc, chroma_path_general]
+
+        output = run_terminal(config, skip_llm_call=False, lon=lon, lat=lat, user_message=user_message, show_add_info='n', verbose=False, rag_activated=True, embedding_model=embedding_model, chroma_path=chroma_path)
         output_answers.append(output)
 
     return output_answers
