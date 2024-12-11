@@ -459,7 +459,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     ## == policy IS NOT IN USE
     policy = ""
     
-    content_message = """{user_message} \n \
+    content_message = """Question from user: {user_message} \n \
+        \n\n Additional information: \n \
         Location: latitude = {lat}, longitude = {lon} \n
         Adress: {location_str} \n
         Where is this point?: {water_body_status} \n
@@ -471,8 +472,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         Current soil type: {soil} \n
         Occuring species: {biodiv} \n
         Natural hazards: {nat_hazards} \n
-        Population data: {population} \n
         """  
+    content_message += f"Population in {country} data: {{population}} \n"
     content_message += data_agent_response['content_message']          
 
     input_params = {
