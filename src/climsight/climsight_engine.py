@@ -581,7 +581,10 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
         streaming=True,
         callbacks=[stream_handler],
     )
-    system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+    if "o1" in config['model_name']:
+        system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
+    else:
+        system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
     human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
     chat_prompt = ChatPromptTemplate.from_messages(
         [system_message_prompt, human_message_prompt]
@@ -615,10 +618,14 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
     logger.info(f"start agent_request")
     
-    llm_agent = ChatOpenAI(
+    llm_tools = ChatOpenAI(
         openai_api_key=api_key,
-        model_name=config['model_name'],
-    )
+        model_name=config['model_name_tools'],
+    )    
+    llm_combine_agent = ChatOpenAI(
+        openai_api_key=api_key,
+        model_name=config['model_name_combine_agent'],
+    )    
         # streaming=True,
         # callbacks=[stream_handler],    
     '''
@@ -883,17 +890,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         """        
         intro_options = ["FINISH", "CONTINUE"]
         intro_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", intro_message),
-                ("user", "{user_text}"),
-            ])
+        [
+            ("system", intro_message),
+            ("user", "{user_text}"),
+        ])            
         class routeResponse(BaseModel):
             next: Literal["FINISH", "CONTINUE"]  # Accepts single value only
             final_answer: str = ""  
               
         chain = (
              intro_prompt
-             | llm_agent.with_structured_output(routeResponse)
+             | llm_tools.with_structured_output(routeResponse)
          )
         # Pass the dictionary to invoke
         input = {"user_text": state.user}
@@ -943,14 +950,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
       
                    
-        system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        if "o1" in config['model_name_combine_agent']:
+            system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
+        else:
+            system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
             [system_message_prompt, human_message_prompt]
         )
         chain = (
             chat_prompt
-            | llm_agent
+            | llm_combine_agent
         )
         output = chain.invoke(state.input_params)
         return {'final_answser': output.content, 'input_params': state.input_params, 'content_message': state.content_message}
