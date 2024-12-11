@@ -260,7 +260,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
 
                         if config['use_high_resolution_climate_model']:
                             to_plot = False
-                            try:
+                            try:                             
                                 df_list = data_pocket.data['high_res_climate']['df_list']
                                 to_plot = True
                             except Exception as e:
