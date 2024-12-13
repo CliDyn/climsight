@@ -733,7 +733,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             zero_agent_response['content_message'] += "Natural hazards: {nat_hazards} \n"    
         if population is not None:
             zero_agent_response['input_params']['population'] = population
-            zero_agent_response['content_message'] += "Population data: {population} \n"                               
+            zero_agent_response['content_message'] += f"Population in {state.input_params['country']} data: {{population}} \n"
 
         ##  ===================  plotting      =========================   
         if config['show_add_info']:
