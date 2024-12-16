@@ -134,7 +134,7 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
         # inspect chain - just for development
         def inspect(state):
             """Print the state passed between Runnables in a langchain and pass it on"""
-            logger.info(state)
+            logger.info(f"Chunks returned from RAG: {state}")
             return state
         rag_chain = (
             {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
@@ -144,7 +144,7 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
             | StrOutputParser()
         )
         rag_response = rag_chain.invoke(input_params['user_message'])
-        logging.info(f"RAG response: {rag_response}")
+        logging.info(f"Rendered RAG response: {rag_response}")
 
         return rag_response
 

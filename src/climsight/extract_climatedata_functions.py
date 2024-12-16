@@ -327,7 +327,7 @@ def prepare_data_agent_response(df_list):
         sim_name = 'simulation'+str(total_simulations +i+1)
         response2llm['content_message'] += "\n\n Difference between simulations (changes in climatological parameters (Δ)) for the years " +entry['years_of_averaging']+ " compared to the simulation for " +df_list[main_index]['years_of_averaging']+ ". :\n {"+sim_name+"}"
     
-    
+    # logger.info(f"Response to LLM from data agent is:, {response2llm}")
     return response2llm
 
 # Function to rename columns

@@ -769,8 +769,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
                     figs['population_plot'] = {'fig':population_plot,'source':source}        
             except Exception as e:
                 logging.error(f"Unexpected error in population_plot: {e}")
-                raise RuntimeError(f"Unexpected error in population_plot: {e}")    
-        
+                raise RuntimeError(f"Unexpected error in population_plot: {e}")
+  
+        logger.info(f"zero_agent_response: {zero_agent_response}")
         return {'zero_agent_response': zero_agent_response}
                     
     def data_agent(state: AgentState, data={}, df={}):
@@ -833,6 +834,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         
         respond = {'data_agent_response': data_agent_response, 'df_list': df_list}
     
+        logger.info(f"data_agent_response: {data_agent_response}")
         return respond
 
       
@@ -841,6 +843,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.info(f"IPCC RAG agent in work.")
         ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
         # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
+        logger.info(f"ipcc_rag_agent_response: {ipcc_rag_response}")
         return {'ipcc_rag_agent_response': ipcc_rag_response}
 
     def general_rag_agent(state: AgentState):
@@ -848,6 +851,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.info(f"General RAG agent in work.")
         general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
         # logger.info(f"General RAG says: {general_rag_response}")
+        logger.info(f"general_rag_agent_response: {general_rag_response}")
         return {'general_rag_agent_response': general_rag_response}
     
 ################# start of intro_agent #############################
@@ -938,16 +942,19 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             smart_analysis = state.smart_agent_response.get('output', '')
             state.input_params['smart_agent_analysis'] = smart_analysis
             state.content_message += "\n Smart Data Extractor Agent Analysis: {smart_agent_analysis} "
+            logger.info(f"smart_agent_response: {state.smart_agent_response}")
 
             # Add Wikipedia tool response
         if state.wikipedia_tool_response != {}:
             wiki_response = state.wikipedia_tool_response
             state.input_params['wikipedia_tool_response'] = wiki_response
             state.content_message += "\n Wikipedia Search Response: {wikipedia_tool_response} "
+            logger.info(f"Wikipedia_tool_reponse: {state.wikipedia_tool_response}")
         if state.ecocrop_search_response != {}:
             ecocrop_response = state.ecocrop_search_response
             state.input_params['ecocrop_search_response'] = ecocrop_response
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
+            logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
                    
         if "o1" in config['model_name_combine_agent']:
@@ -963,6 +970,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             | llm_combine_agent
         )
         output = chain.invoke(state.input_params)
+        logger.info(f"Final_answer: {output.content}")
         return {'final_answser': output.content, 'input_params': state.input_params, 'content_message': state.content_message}
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
