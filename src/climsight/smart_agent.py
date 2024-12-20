@@ -33,6 +33,9 @@ def smart_agent(state: AgentState, config, api_key):
 
     lat = float(state.input_params['lat'])
     lon = float(state.input_params['lon'])
+    temperature = 0
+    if "o1" in config['model_name_tools']:
+        temperature = 1
 
     # System prompt
     prompt = f"""
@@ -249,13 +252,12 @@ def smart_agent(state: AgentState, config, api_key):
     )
 
     #[2] Wikipedia processing tool
-    def process_wikipedia_article(query: str) -> str:
-
+    def process_wikipedia_article(query: str) -> str:        
         # Initialize the LLM
         llm = ChatOpenAI(
             openai_api_key=api_key,
             model_name=config['model_name_tools'],
-            temperature=0.0
+            temperature=temperature
         )
 
         # Define your custom prompt template
@@ -450,7 +452,7 @@ def smart_agent(state: AgentState, config, api_key):
         llm = ChatOpenAI(
             openai_api_key=api_key,
             model_name=config['model_name_tools'],
-            temperature=0.0
+            temperature=temperature
         )
         
         # Create the chain with the prompt and LLM
@@ -498,7 +500,8 @@ def smart_agent(state: AgentState, config, api_key):
         # Initialize the GPT-4 model
         llm = ChatOpenAI(
             openai_api_key=api_key,
-            model_name=config['model_name_tools']
+            model_name=config['model_name_tools'],
+            temperature = temperature
         )
 
         # Create the prompt template
@@ -548,7 +551,7 @@ def smart_agent(state: AgentState, config, api_key):
     # Initialize the LLM
     llm = ChatOpenAI(
         openai_api_key=api_key,
-        model_name=config['model_name_tools'],
+        model_name=config['model_name_agents'],
         temperature=0.0
     )
     # List of tools

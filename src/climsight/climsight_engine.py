@@ -617,10 +617,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     lon = float(input_params['lon']) # should be already present in input_params
     
     logger.info(f"start agent_request")
-    
-    llm_tools = ChatOpenAI(
+    llm_intro = ChatOpenAI(
         openai_api_key=api_key,
-        model_name=config['model_name_tools'],
+        model_name=config['model_name_agents'],
     )    
     llm_combine_agent = ChatOpenAI(
         openai_api_key=api_key,
@@ -904,7 +903,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
               
         chain = (
              intro_prompt
-             | llm_tools.with_structured_output(routeResponse)
+             | llm_intro.with_structured_output(routeResponse)
          )
         # Pass the dictionary to invoke
         input = {"user_text": state.user}

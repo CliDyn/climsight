@@ -1,7 +1,8 @@
-#model_names: gpt-4o, o1-preview
-model_name: "gpt-4o"
-model_name_tools: "gpt-4o"
-model_name_combine_agent: "gpt-4o" 
+#model_names: gpt-4o, o1-preview, o1-mini
+model_name: "o1-mini"
+model_name_tools: "o1-mini"
+model_name_combine_agent: "o1-mini" 
+model_name_agents: "gpt-4o"
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_high_resolution_climate_model: true
