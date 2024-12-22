@@ -459,7 +459,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     ## == policy IS NOT IN USE
     policy = ""
     
-    content_message = """{user_message} \n \
+    content_message = """Question from user: {user_message} \n \
+        \n\n Additional information: \n \
         Location: latitude = {lat}, longitude = {lon} \n
         Adress: {location_str} \n
         Where is this point?: {water_body_status} \n
@@ -471,8 +472,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         Current soil type: {soil} \n
         Occuring species: {biodiv} \n
         Natural hazards: {nat_hazards} \n
-        Population data: {population} \n
         """  
+    content_message += f"Population in {country} data: {{population}} \n"
     content_message += data_agent_response['content_message']          
 
     input_params = {
@@ -580,7 +581,10 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
         streaming=True,
         callbacks=[stream_handler],
     )
-    system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+    if "o1" in config['model_name']:
+        system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
+    else:
+        system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
     human_message_prompt = HumanMessagePromptTemplate.from_template(content_message)
     chat_prompt = ChatPromptTemplate.from_messages(
         [system_message_prompt, human_message_prompt]
@@ -613,11 +617,14 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     lon = float(input_params['lon']) # should be already present in input_params
     
     logger.info(f"start agent_request")
-    
-    llm_agent = ChatOpenAI(
+    llm_intro = ChatOpenAI(
         openai_api_key=api_key,
-        model_name=config['model_name'],
-    )
+        model_name=config['model_name_agents'],
+    )    
+    llm_combine_agent = ChatOpenAI(
+        openai_api_key=api_key,
+        model_name=config['model_name_combine_agent'],
+    )    
         # streaming=True,
         # callbacks=[stream_handler],    
     '''
@@ -725,7 +732,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             zero_agent_response['content_message'] += "Natural hazards: {nat_hazards} \n"    
         if population is not None:
             zero_agent_response['input_params']['population'] = population
-            zero_agent_response['content_message'] += "Population data: {population} \n"                               
+            zero_agent_response['content_message'] += f"Population in {state.input_params['country']} data: {{population}} \n"
 
         ##  ===================  plotting      =========================   
         if config['show_add_info']:
@@ -886,17 +893,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         """        
         intro_options = ["FINISH", "CONTINUE"]
         intro_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", intro_message),
-                ("user", "{user_text}"),
-            ])
+        [
+            ("system", intro_message),
+            ("user", "{user_text}"),
+        ])            
         class routeResponse(BaseModel):
             next: Literal["FINISH", "CONTINUE"]  # Accepts single value only
             final_answer: str = ""  
               
         chain = (
              intro_prompt
-             | llm_agent.with_structured_output(routeResponse)
+             | llm_intro.with_structured_output(routeResponse)
          )
         # Pass the dictionary to invoke
         input = {"user_text": state.user}
@@ -949,14 +956,17 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
                    
-        system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        if "o1" in config['model_name_combine_agent']:
+            system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
+        else:
+            system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
             [system_message_prompt, human_message_prompt]
         )
         chain = (
             chat_prompt
-            | llm_agent
+            | llm_combine_agent
         )
         output = chain.invoke(state.input_params)
         logger.info(f"Final_answer: {output.content}")

@@ -33,6 +33,9 @@ def smart_agent(state: AgentState, config, api_key):
 
     lat = float(state.input_params['lat'])
     lon = float(state.input_params['lon'])
+    temperature = 0
+    if "o1" in config['model_name_tools']:
+        temperature = 1
 
     # System prompt
     prompt = f"""
@@ -43,6 +46,7 @@ def smart_agent(state: AgentState, config, api_key):
     - "wikipedia_search" will help you determine the necessary data to retrieve with the get_data_components tool.
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
+    call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
     <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
     Use these tools to get the data you need to answer the user's question.
     After retrieving the data, provide a concise summary of the parameters you retrieved, explaining briefly why they are important. Keep your response short and to the point.
@@ -248,13 +252,12 @@ def smart_agent(state: AgentState, config, api_key):
     )
 
     #[2] Wikipedia processing tool
-    def process_wikipedia_article(query: str) -> str:
-
+    def process_wikipedia_article(query: str) -> str:        
         # Initialize the LLM
         llm = ChatOpenAI(
             openai_api_key=api_key,
-            model_name=config['model_name'],
-            temperature=0.0
+            model_name=config['model_name_tools'],
+            temperature=temperature
         )
 
         # Define your custom prompt template
@@ -448,8 +451,8 @@ def smart_agent(state: AgentState, config, api_key):
         # Initialize the LLM
         llm = ChatOpenAI(
             openai_api_key=api_key,
-            model_name=config['model_name'],
-            temperature=0.0
+            model_name=config['model_name_tools'],
+            temperature=temperature
         )
         
         # Create the chain with the prompt and LLM
@@ -497,7 +500,8 @@ def smart_agent(state: AgentState, config, api_key):
         # Initialize the GPT-4 model
         llm = ChatOpenAI(
             openai_api_key=api_key,
-            model_name=config['model_name']
+            model_name=config['model_name_tools'],
+            temperature = temperature
         )
 
         # Create the prompt template
@@ -547,10 +551,9 @@ def smart_agent(state: AgentState, config, api_key):
     # Initialize the LLM
     llm = ChatOpenAI(
         openai_api_key=api_key,
-        model_name=config['model_name'],
+        model_name=config['model_name_agents'],
         temperature=0.0
     )
-
     # List of tools
     tools = [data_extraction_tool, rag_tool,wikipedia_tool, ecocrop_tool]
 
