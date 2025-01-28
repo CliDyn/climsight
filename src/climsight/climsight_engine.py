@@ -94,6 +94,11 @@ logging.basicConfig(
    datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+def normalize_longitude(lon):
+    if lon < -180 or lon > 180:
+        lon = (lon + 180) % 360 - 180
+    return lon
+ 
 def location_request(config, lat, lon):
     content_message = None
     input_params = None 
