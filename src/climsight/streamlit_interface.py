@@ -18,7 +18,7 @@ from rag import load_rag
 # climsight modules
 from stream_handler import StreamHandler
 from data_container import DataContainer
-from climsight_engine import llm_request, forming_request, location_request
+from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
 from extract_climatedata_functions import plot_climate_data
 
 logger = logging.getLogger(__name__)
@@ -84,6 +84,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         if clicked_coords:
             lat_default = clicked_coords["lat"]
             lon_default = clicked_coords["lng"]
+        # normalize longitude in case map has been move around global (more than) once
+        lon_default = normalize_longitude(lon_default)
 
     # Wrap the input fields and the submit button in a form
     with st.form(key='my_form'):
