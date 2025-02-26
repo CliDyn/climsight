@@ -908,7 +908,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
               
         chain = (
              intro_prompt
-             | llm_intro.with_structured_output(routeResponse)
+             | llm_intro.with_structured_output(routeResponse, method="function_calling")
          )
         # Pass the dictionary to invoke
         input = {"user_text": state.user}
