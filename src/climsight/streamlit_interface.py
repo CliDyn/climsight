@@ -98,7 +98,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                 that were taken into account for the analysis as well as some plots.""")
         smart_agent   = st.toggle("Use smart agent feture", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
-        llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
+        # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
+        #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
         # Include the API key input within the form only if it's not found in the environment
         if not api_key:
             api_key_input = st.text_input(
@@ -118,7 +119,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
             # Update config with the selected LLM mode
-            config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
             config['show_add_info'] = show_add_info
             config['use_smart_agent'] = smart_agent
             
