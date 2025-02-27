@@ -82,23 +82,43 @@ python download_data.py
 
 ### Option B: Using pip
 
+It's recommended to create a virtual environment to avoid dependency conflicts:
 ```bash
+# Option 1: Install from source
+git clone https://github.com/CliDyn/climsight.git
+cd climsight
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install ClimSight
+pip install -e .
+python download_data.py
+```
+
+Or if you prefer to set up without cloning the repository:
+
+```bash
+# Option 2: Install from PyPI
+# Create and activate a virtual environment
+python -m venv climsight_env
+source climsight_env/bin/activate  # On Windows: climsight_env\Scripts\activate
+
 # Install the package
 pip install climsight
 
-# Create a directory for climsight
-mkdir climsight
+# Create a directory for data
+mkdir -p climsight
 cd climsight
 
-# You'll need to download data_sources.yml and download_data.py from the repository
+# Download necessary configuration files
 wget https://raw.githubusercontent.com/CliDyn/climsight/main/data_sources.yml
 wget https://raw.githubusercontent.com/CliDyn/climsight/main/download_data.py
+wget https://raw.githubusercontent.com/CliDyn/climsight/main/config.yml
 
 # Download the required data (about 8 GB)
 python download_data.py
-
-# Download a sample config
-wget https://raw.githubusercontent.com/CliDyn/climsight/main/config.yml
 ```
 
 ## Configuration
