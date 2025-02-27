@@ -8,7 +8,7 @@ RUN micromamba install -f ./environment.yml && \
   micromamba clean --all --yes
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # Streamlit settings
-ENV STREAMLIT_SERVER_PORT 8501
+ENV STREAMLIT_SERVER_PORT=8501
 
 # Expose port
 EXPOSE 8501
