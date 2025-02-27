@@ -1,139 +1,156 @@
-# Climate Foresight
+# ClimSight
 
-Prototype of a system that answers questions about climate change impacts on planned human activities.
+ClimSight is an advanced tool that integrates Large Language Models (LLMs) with climate data to provide localized climate insights for decision-making. ClimSight transforms complex climate data into actionable insights for agriculture, urban planning, disaster management, and policy development.
+
+The target audience includes researchers, providers of climate services, policymakers, agricultural planners, urban developers, and other stakeholders who require detailed climate information to support decision-making. ClimSight is designed to democratize access to climate 
+data, empowering users with insights relevant to their specific contexts.
+
 ![screencast](https://github.com/koldunovn/climsight/assets/3407313/bf7cd327-c8a9-4a09-bfb5-778269fcd15c)
 
+ClimSight distinguishes itself through several key advancements:
+- **Integration of LLMs**: ClimSight leverages state-of-the-art LLMs to interpret complex climate-related queries, synthesizing information from diverse data sources.
+- **Multi-Source Data Integration**: Unlike conventional systems that rely solely on structured climate data, ClimSight integrates information from multiple sources.
+- **Evidence-Based Approach**: ClimSight ensures contextually accurate answers by retrieving relevant knowledge from scientific reports, IPCC documents, and geographical databases.
+- **Modular Architecture**: Specialized components handle distinct tasks, such as data retrieval, contextual understanding, and result synthesis, leading to more accurate outputs.
+- **Real-World Applications**: ClimSight is validated through practical examples, such as assessing climate risks for specific agricultural activities and urban planning scenarios.
 
-## Running with docker
 
-### simplest: running prebuild container
+## Installation Options
 
-You should have [Docker](https://docs.docker.com/engine/install/) installed. Then execute:
+You can use ClimSight in three ways:
+1. Run a pre-built Docker container (simplest approach)
+2. Build and run a Docker container from source
+3. Install the Python package (via pip or conda/mamba)
+
+Using ClimSight requires an OpenAI API key unless using the `skipLLMCall` mode for testing. The API key is only needed when running the application, not during installation.
+
+## 1. Running with Docker (Pre-built Container)
+
+The simplest way to get started is with our pre-built Docker container:
 
 ```bash
+# Make sure your OpenAI API key is set as an environment variable
+export OPENAI_API_KEY="your-api-key-here"
+
+# Pull and run the container
 docker pull koldunovn/climsight:stable
-docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
+docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY koldunovn/climsight:stable
 ```
 
 Then open `http://localhost:8501/` in your browser.
 
-### Build and run container with the latest code
+## 2. Building and Running from Source with Docker
 
-You should have the following packages installed:
-
-- git
-- wget
-- docker
-
-As long as you have them, do:
+If you prefer to build from the latest source:
 
 ```bash
-git clone https://github.com/koldunovn/climsight.git
+# Clone the repository
+git clone https://github.com/CliDyn/climsight.git
 cd climsight
-./download_data.sh
-docker build -t climsight .
-docker run -p 8501:8501 climsight
-```
-Then open `http://localhost:8501/` in your browser. If you don't want to add OpenAI key every time, you can expose it through:
 
-```bash
+# Download required data
+python download_data.py
+
+# Build and run the container
+docker build -t climsight .
 docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
 ```
-where `$OPENAI_API_KEY` not necessarily should be environment variable, you can insert the key directly.
 
-If you do not have an OpenAI key but want to test Climsight without sending requests to OpenAI, you can run Climsight with the `skipLLMCall` argument:
+Visit `http://localhost:8501/` in your browser once the container is running.
+
+For testing without OpenAI API calls:
 ```bash
 docker run -p 8501:8501 -e STREAMLIT_ARGS="skipLLMCall" climsight
 ```
 
-## Installation
+## 3. Python Package Installation
 
-The easiest way is to install it through conda or mamba. We recommend mamba, as it's faster. 
-
-[Install mamba](https://mamba.readthedocs.io/en/latest/mamba-installation.html#mamba-install) if you don't have it.
+### Option A: Building from source with conda/mamba
 
 ```bash
-git clone https://github.com/koldunovn/climsight.git
+# Clone the repository
+git clone https://github.com/CliDyn/climsight.git
 cd climsight
-```
 
-Create environment and install necessary packages:
-
-```bash
-
+# Create and activate the environment
 mamba env create -f environment.yml
-```
-
-Activate the environment:
-
-```bash
 conda activate climsight
-```
-## Climsight package installation 
-```bash
-pip install climsight
-```
 
-For installation, use either pip alone for all packages and dependencies in a pure Python setup, or use mamba for dependencies followed by pip for Climsight in a Conda environment. Mixing package sources can lead to conflicts and is generally not recommended.
-
-## Before you run
-
-You have to download example climate data, NaturalEarth coastlines, and the RAG database. To do it simply run:
-
-```bash
+# Download required data
 python download_data.py
 ```
-In case you are a developer and want to experiment with the text file based RAG, set the ```--source_files``` flag to ```True``` to also download the origial source files.
+
+### Option B: Using pip
 
 ```bash
-python download_data.py --source_files=True
-```
+# Install the package
+pip install climsight
 
-You would also need an [OpenAI API key](https://platform.openai.com/docs/api-reference) to run the prototype. You can provide it as environment variable:
-
-```bash
-export OPENAI_API_KEY="???????"
-```
-<ins>config settings</ins>
-There is a possibility to also provide it in the running app. The cost of each request (status September 2023) is about 6 cents with `gpt-4` and about 0.3 cents with `gpt-3.5-turbo` (you can change it in the config file).
-Moreover, if you want to use your own climate data, please adjust the data_settings, variable_mappings, and dimension_mappings according to the structure of your NetCDF files.
-
-And you need to export the path of the configuration file. If you don't want to exchange anything and just test the prepared version, simply run
-```bash
-export CONFIG_PATH="./config.yml"
-```
-Otherwise you might want to adjust this path to direct to an individual config file, but keep in mind that it must be a path relative to the one from where you are running climsight. Also, you will have to adjust the paths in the config file you are using to point back to the climsight data folder. 
-
-
-There is a possibility to also provide it in the running app. The cost of each request (status September 2023) is about 6 cents with `gpt-4` and about 0.3 cents with `gpt-3.5-turbo` (you can change it in the beggining of `climsight.py` script).
-
-
-### Running 
-
-Change to the `climsight` folder:
-
-```bash
+# Create a directory for climsight
+mkdir climsight
 cd climsight
+
+# You'll need to download data_sources.yml and download_data.py from the repository
+wget https://raw.githubusercontent.com/CliDyn/climsight/main/data_sources.yml
+wget https://raw.githubusercontent.com/CliDyn/climsight/main/download_data.py
+
+# Download the required data (about 8 GB)
+python download_data.py
+
+# Download a sample config
+wget https://raw.githubusercontent.com/CliDyn/climsight/main/config.yml
+```
+
+## Configuration
+
+ClimSight will automatically use a `config.yml` file from the current directory. You can modify this file to customize settings:
+
+```yaml
+# Key settings you can modify in config.yml:
+# - LLM model (gpt-4, ...)
+# - Climate data sources
+# - RAG database configuration
+# - Agent parameters
+```
+## Running ClimSight
+
+### If installed with conda/mamba from source:
+
+```bash
+# Run from the repository root
 streamlit run src/climsight/climsight.py
 ```
 
-If you install climsight via pip, make sure to run it in the directory where the data folder has been downloaded:
+### If installed with pip:
+
 ```bash
+# Make sure you're in the directory with your data and config
 climsight
 ```
 
-The browser window should pop up, with the app running. Ask the questions and don't forget to press "Generate".
-
-<img width="800" alt="Screenshot 2023-09-26 at 15 26 51" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
-
-If you do not have an OpenAI key but want to test Climsight without sending requests to OpenAI, you can run Climsight with the `skipLLMCall` argument:
+You can optionally set your OpenAI API key as an environment variable:
 ```bash
-streamlit run src/climsight/climsight.py skipLLMCall
+export OPENAI_API_KEY="your-api-key-here"
 ```
 
+Otherwise, you can enter your API key directly in the browser interface when prompted.
+
+### Testing without an OpenAI API key:
+
+```bash
+# From source:
+streamlit run src/climsight/climsight.py skipLLMCall
+
+# Or if installed with pip:
+climsight skipLLMCall
+```
+
+The application will open in your browser automatically. Just type your climate-related questions and press "Generate" to get insights.
+
+<img width="800" alt="ClimSight Interface" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
 
 ## Citation
 
-If you use or refer to ClimSight in your work, please cite the following publication:
+If you use or refer to ClimSight in your work, please cite:
 
-Koldunov, N., Jung, T. Local climate services for all, courtesy of large language models. _Commun Earth Environ_ **5**, 13 (2024). https://doi.org/10.1038/s43247-023-01199-1 
+Koldunov, N., Jung, T. Local climate services for all, courtesy of large language models. _Commun Earth Environ_ **5**, 13 (2024). https://doi.org/10.1038/s43247-023-01199-1
