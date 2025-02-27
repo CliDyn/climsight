@@ -1,7 +1,17 @@
 [project]
 name = "climsight"
-version = "0.2.0"
+version = "1.0.0"
+description = "A tool that combines LLMs with climate data to provide localized insights for decision-making in agriculture, urban planning, disaster management, and policy development."
 readme = "README.md"
+authors = [
+    {name = "kuivi"},
+    {name = "AntoniaJost"},
+    {name = "koldunovn"},
+    {name = "dmpantiu"},
+    {name = "boryasbora"}
+]
+license = {text = "BSD-3-Clause"}
+keywords = ["climate", "llm", "climate-assessment", "rag", "decision-support"]                                                                               
 dependencies = [
     "streamlit",
     "xarray",
@@ -36,9 +46,18 @@ dependencies = [
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
-#[tool.setuptools.packages]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 #find = {}  # Scan the project directory with the default parameters
 
 
 [project.scripts]
 climsight = "climsight.launch:launch_streamlit"
+
+[project.urls]
+"Source" = "https://github.com/CliDyn/climsight"
+"Citation" = "https://doi.org/10.1038/s43247-023-01199-1"
