@@ -90,7 +90,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
     # Wrap the input fields and the submit button in a form
     with st.form(key='my_form'):
         user_message = st.text_input(
-            "Describe the activity that you would like to evaluate for this location:"
+            "Describe the activity that you would like to evaluate for this location:",
+            placeholder="Are the conditions suitable for setting up a solar panel field in this area over the next decade?",
         )
         col1, col2 = st.columns(2)
         lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
