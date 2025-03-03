@@ -650,7 +650,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
                
     def zero_rag_agent(state: AgentState, figs = {}):
       
-        logger.debug(f"get_elevation_from_api from: {lat}, {lon}")        
+        logger.debug(f"get_elevation_from_api from: {lat}, {lon}")      
+        #ik stream_handler.update_progress("Gathering geographic and environmental information...")
         try:
             elevation = get_elevation_from_api(lat, lon)
         except Exception as e:
@@ -781,6 +782,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def data_agent(state: AgentState, data={}, df={}):
         # data
         # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
+        #ik stream_handler.update_progress("Analyzing climate model data for your location...")        
         df_list = []
         if config['use_high_resolution_climate_model']:
             try:
@@ -845,6 +847,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def ipcc_rag_agent(state: AgentState):
         ## === RAG integration === ##
         logger.info(f"IPCC RAG agent in work.")
+        #ik stream_handler.update_progress("Searching IPCC reports for relevant climate information...")
         ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
         # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
         logger.info(f"ipcc_rag_agent_response: {ipcc_rag_response}")
@@ -853,6 +856,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     def general_rag_agent(state: AgentState):
         ## === RAG integration === ##
         logger.info(f"General RAG agent in work.")
+        #ik stream_handler.update_progress("Searching general knowledge base for relevant information...")        
         general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
         # logger.info(f"General RAG says: {general_rag_response}")
         logger.info(f"general_rag_agent_response: {general_rag_response}")
@@ -860,6 +864,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
 ################# start of intro_agent #############################
     def intro_agent(state: AgentState):
+        stream_handler.update_progress("Starting analysis...")
         intro_message = """ 
         You are the introductory interface for a system named ClimSight, designed to help individuals evaluate the impact of climate change
         on current decision-making (e.g., installing wind turbines, solar panels, constructing buildings, creating parking lots, 
@@ -913,6 +918,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         # Pass the dictionary to invoke
         input = {"user_text": state.user}
         response = chain.invoke(input)
+        
+        stream_handler.update_progress("Retrieve climate model data and search reports for relevant information ...")
+
         state.final_answser = response.final_answer
         state.next = response.next
         return state
@@ -921,6 +929,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
 ################# end of intro_agent #############################
     def combine_agent(state: AgentState): 
         logger.info('combine_agent in work')
+        stream_handler.update_progress("Compiling final analysis and recommendations...")
         
         #add IPCC RAG response to content_message and input_params
         if state.ipcc_rag_agent_response != "None" and state.ipcc_rag_agent_response != "":
@@ -1008,7 +1017,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     workflow.add_node("general_rag_agent", general_rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
     workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
-    workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key))
+    workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key, stream_handler))
     workflow.add_node("combine_agent", combine_agent)   
 
     path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
@@ -1041,10 +1050,13 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
     state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
     
+    stream_handler.update_progress("Starting workflow...")
     output = app.invoke(state)
 
     input_params = output['input_params']
     content_message = output['content_message']
+    
+    stream_handler.update_progress("Analysis complete!")
     
     stream_handler.send_text(output['final_answser'])
    

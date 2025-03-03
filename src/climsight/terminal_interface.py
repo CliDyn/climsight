@@ -205,6 +205,10 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         start_time = time.time()
         stream_handler = StreamHandler()
         output = ''
+        def print_progress(message):
+            print(f"[PROGRESS] {message}")     
+        stream_handler.update_progress = print_progress
+               
         if not skip_llm_call:
             output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
             figs = data_pocket.figs
