@@ -104,7 +104,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         if not api_key:
             api_key_input = st.text_input(
                 "OpenAI API key",
-                placeholder="Enter your OpenAI API key here"
+                placeholder="Enter your OpenAI API key here",
+                type="password",
             )
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
