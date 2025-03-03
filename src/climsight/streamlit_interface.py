@@ -193,104 +193,126 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                             st.markdown(f"""{input_params['water_body_status']}: Our analyses are currently only meant for land areas. Please select another location for a better result.""")
 
             if is_on_land:        
-                with st.spinner("Generating..."):
-                    chat_box = st.empty()
-                    stream_handler = StreamHandler(chat_box, display_method="write")
+            #with st.spinner("Generating..."):
+                #chat_box = st.empty()
+                #stream_handler = StreamHandler(chat_box, display_method="write")
+                #if not skip_llm_call:
+                #    output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
+                progress_area = st.empty()  # This will display progress updates
+                result_area = st.empty()    # This will display the final LLM response
+    
+                # Initialize the spinner outside, but we'll use our own progress messages
+                with st.spinner("Processing your request..."):
+                    # Create StreamHandler with both components
+                    stream_handler = StreamHandler(result_area, display_method="write")
+        
+                    # Add a method to update the progress area
+                    def update_progress_ui(message):
+                        progress_area.info(message)
+        
+                    # Attach this method to your StreamHandler
+                    stream_handler.update_progress = update_progress_ui
+        
+                    # Now call llm_request with this enhanced stream_handler
                     if not skip_llm_call:
-                        output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
+                        output, input_params, content_message = llm_request(
+                            content_message, input_params, config, api_key, 
+                            stream_handler, ipcc_rag_ready, ipcc_rag_db, 
+                            general_rag_ready, general_rag_db, data_pocket
+                        )
 
-                    # PLOTTING ADDITIONAL INFORMATION
-                    if show_add_info: 
-                        figs = data_pocket.figs
-                        if 'df_data' in data_pocket.df:
-                            df_data = data_pocket.df['df_data']
+                # PLOTTING ADDITIONAL INFORMATION
+                if show_add_info: 
+                    figs = data_pocket.figs
+                    if 'df_data' in data_pocket.df:
+                        df_data = data_pocket.df['df_data']
+                    else:
+                        df_data = None
+                    st.subheader("Additional information", divider='rainbow')
+                    if 'lat' and 'lon' in input_params:
+                        st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
+                    if 'elevation' in input_params:
+                        st.markdown(f"**Elevation:** {input_params['elevation']} m")
+                    if 'current_land_use' in input_params:  
+                        st.markdown(f"**Current land use:** {input_params['current_land_use']}")
+                    if 'soil' in input_params:
+                        st.markdown(f"**Soil type:** {input_params['soil']}")
+                    if 'biodiv' in input_params:    
+                        st.markdown(f"**Occuring species:** {input_params['biodiv']}")
+                    if 'distance_to_coastline' in input_params:  
+                        st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
+                    # Climate Data
+                    if (not config['use_high_resolution_climate_model']) and  (df_data is not None):
+                        st.markdown("**Climate data:**")
+                        st.markdown(
+                            "Near surface temperature (in °C)",
+                        )
+                        st.line_chart(
+                            df_data,
+                            x="Month",
+                            y=["Present Day Temperature", "Future Temperature"],
+                            color=["#1f77b4", "#d62728"],
+                        )
+                        st.markdown(
+                            "Precipitation (in mm)",
+                        )
+                        st.line_chart(
+                            df_data,
+                            x="Month",
+                            y=["Present Day Precipitation", "Future Precipitation"],
+                            color=["#1f77b4", "#d62728"],
+                        )
+                        st.markdown(
+                            "Wind speed (in m*s-1)",
+                        )
+                        st.line_chart(
+                            df_data,
+                            x="Month",
+                            y=["Present Day Wind Speed", "Future Wind Speed"],
+                            color=["#1f77b4", "#d62728"],
+                        )
+                        # Determine the model information string based on climatemodel_name
+                        if climatemodel_name == 'AWI_CM':
+                            model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+                        elif climatemodel_name == 'tco1279':
+                            model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+                        elif climatemodel_name == 'tco319':
+                            model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
                         else:
-                            df_data = None
-                        st.subheader("Additional information", divider='rainbow')
-                        if 'lat' and 'lon' in input_params:
-                            st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-                        if 'elevation' in input_params:
-                            st.markdown(f"**Elevation:** {input_params['elevation']} m")
-                        if 'current_land_use' in input_params:  
-                            st.markdown(f"**Current land use:** {input_params['current_land_use']}")
-                        if 'soil' in input_params:
-                            st.markdown(f"**Soil type:** {input_params['soil']}")
-                        if 'biodiv' in input_params:    
-                            st.markdown(f"**Occuring species:** {input_params['biodiv']}")
-                        if 'distance_to_coastline' in input_params:  
-                            st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
-                        # Climate Data
-                        if (not config['use_high_resolution_climate_model']) and  (df_data is not None):
+                            model_info = 'unknown climate model'
+
+                        with st.expander("Source"):
+                            st.markdown(model_info)
+
+                    if config['use_high_resolution_climate_model']:
+                        to_plot = False
+                        try:                             
+                            df_list = data_pocket.data['high_res_climate']['df_list']
+                            to_plot = True
+                        except Exception as e:
+                            logger.warning(f"Error by getting high resolution climate data from data pocket: {e}")
+                        if to_plot:    
+                            figs_climate = plot_climate_data(df_list)
                             st.markdown("**Climate data:**")
-                            st.markdown(
-                                "Near surface temperature (in °C)",
-                            )
-                            st.line_chart(
-                                df_data,
-                                x="Month",
-                                y=["Present Day Temperature", "Future Temperature"],
-                                color=["#1f77b4", "#d62728"],
-                            )
-                            st.markdown(
-                                "Precipitation (in mm)",
-                            )
-                            st.line_chart(
-                                df_data,
-                                x="Month",
-                                y=["Present Day Precipitation", "Future Precipitation"],
-                                color=["#1f77b4", "#d62728"],
-                            )
-                            st.markdown(
-                                "Wind speed (in m*s-1)",
-                            )
-                            st.line_chart(
-                                df_data,
-                                x="Month",
-                                y=["Present Day Wind Speed", "Future Wind Speed"],
-                                color=["#1f77b4", "#d62728"],
-                            )
-                            # Determine the model information string based on climatemodel_name
-                            if climatemodel_name == 'AWI_CM':
-                                model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
-                            elif climatemodel_name == 'tco1279':
-                                model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
-                            elif climatemodel_name == 'tco319':
-                                model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
-                            else:
-                                model_info = 'unknown climate model'
-
+                            for fig_dict in figs_climate:
+                                st.pyplot(fig_dict['fig'])
+                            
                             with st.expander("Source"):
-                                st.markdown(model_info)
+                                st.markdown(figs_climate[0]['source'])
 
-                        if config['use_high_resolution_climate_model']:
-                            to_plot = False
-                            try:                             
-                                df_list = data_pocket.data['high_res_climate']['df_list']
-                                to_plot = True
-                            except Exception as e:
-                                logger.warning(f"Error by getting high resolution climate data from data pocket: {e}")
-                            if to_plot:    
-                                figs_climate = plot_climate_data(df_list)
-                                st.markdown("**Climate data:**")
-                                for fig_dict in figs_climate:
-                                    st.pyplot(fig_dict['fig'])
-                                
-                                with st.expander("Source"):
-                                    st.markdown(figs_climate[0]['source'])
+                            
+                    # Natural Hazards
+                    if 'haz_fig' in figs:
+                        st.markdown("**Natural hazards:**")
+                        st.pyplot(figs['haz_fig']['fig'])
+                        with st.expander("Source"):
+                            st.markdown(figs['haz_fig']['source'])
 
-                                
-                        # Natural Hazards
-                        if 'haz_fig' in figs:
-                            st.markdown("**Natural hazards:**")
-                            st.pyplot(figs['haz_fig']['fig'])
-                            with st.expander("Source"):
-                                st.markdown(figs['haz_fig']['source'])
-
-                        # Population Data
-                        if 'population_plot' in figs:
-                            st.markdown("**Population Data:**")
-                            st.pyplot(figs['population_plot']['fig'])
-                            with st.expander("Source"):
-                                st.markdown(figs['population_plot']['source'])
+                    # Population Data
+                    if 'population_plot' in figs:
+                        st.markdown("**Population Data:**")
+                        st.pyplot(figs['population_plot']['fig'])
+                        with st.expander("Source"):
+                            st.markdown(figs['population_plot']['source'])
                             
     return

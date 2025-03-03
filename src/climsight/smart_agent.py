@@ -29,8 +29,9 @@ from langchain_openai import ChatOpenAI
 from climsight_classes import AgentState
 import calendar
 import pandas as pd
-def smart_agent(state: AgentState, config, api_key):
-
+def smart_agent(state: AgentState, config, api_key, stream_handler):
+#def smart_agent(state: AgentState, config, api_key):
+    stream_handler.update_progress("Running advanced analysis with smart agent...")
     lat = float(state.input_params['lat'])
     lon = float(state.input_params['lon'])
     temperature = 0
@@ -80,6 +81,7 @@ def smart_agent(state: AgentState, config, api_key):
         )
 
     def get_data_components(**kwargs):
+        stream_handler.update_progress("Retrieving data for advanced analysis with a smart agent...")
         args = get_data_components_args(**kwargs)
         # Parse the arguments using the args_schema
         environmental_data = args.environmental_data
@@ -252,7 +254,9 @@ def smart_agent(state: AgentState, config, api_key):
     )
 
     #[2] Wikipedia processing tool
-    def process_wikipedia_article(query: str) -> str:        
+    def process_wikipedia_article(query: str) -> str:     
+        stream_handler.update_progress("Searching Wikipedia for related information with a smart agent...")
+   
         # Initialize the LLM
         llm = ChatOpenAI(
             openai_api_key=api_key,
@@ -478,7 +482,7 @@ def smart_agent(state: AgentState, config, api_key):
         )
     def process_ecocrop_search(query: str) -> str:
 
-
+        stream_handler.update_progress("Searching ECOCROP for related information with a smart agent...")
         # Load the ECOCROP database
         ecocroploc = config['ecocrop']['ecocroploc_path']
         variable_expl_path = config['ecocrop']['variable_expl_path']
