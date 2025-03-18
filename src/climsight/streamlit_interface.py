@@ -98,7 +98,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
         show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                 that were taken into account for the analysis as well as some plots.""")
-        smart_agent   = st.toggle("Use smart agent feture", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
+        smart_agent   = st.toggle("Use smart agent feature", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
         # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
         #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
         # Include the API key input within the form only if it's not found in the environment
