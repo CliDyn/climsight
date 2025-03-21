@@ -96,18 +96,41 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         col1, col2 = st.columns(2)
         lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
-        show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
-                                that were taken into account for the analysis as well as some plots.""")
-        smart_agent   = st.toggle("Use smart agent feature", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
-        # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
-        #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
-        # Include the API key input within the form only if it's not found in the environment
+
+        # Predefined options
+        options = ["gpt-3.5-turbo", "gpt-4o", "o1", "o1-mini", "o1-pro", "o3-mini", "gpt-4.5-preview"]
+        # Determine the default value and modify the options list if needed
+        default_model = config.get('model_name_combine_agent')
+        if default_model:
+            if default_model not in options:
+                options.insert(0, default_model)
+                default_index = 0
+            else:
+                default_index = options.index(default_model)
+        else:
+            default_index = 1
+        col1, col2 = st.columns([1, 1])
+        with col2:
+            config['model_name_combine_agent'] = st.selectbox(
+                "Model for synthesis:",
+                options,
+                index=default_index
+            )            
+        with col1:         
+            show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
+                                    that were taken into account for the analysis as well as some plots.""")
+            smart_agent   = st.toggle("Use smart agent feature", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
+            # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
+            #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
+            # Include the API key input within the form only if it's not found in the environment
         if not api_key:
             api_key_input = st.text_input(
                 "OpenAI API key",
                 placeholder="Enter your OpenAI API key here",
                 type="password",
             )
+
+       
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
 
