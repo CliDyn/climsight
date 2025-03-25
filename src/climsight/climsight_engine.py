@@ -626,7 +626,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         openai_api_key=api_key,
         model_name=config['model_name_agents'],
     )    
-    if ("o1" in config['model_name_combine_agent']) or ("o3" in config['model_name_combine_agent']) or ("4.5" in config['model_name_combine_agent']):
+    if ("o1" in config['model_name_combine_agent']) or ("o3" in config['model_name_combine_agent']):
         llm_combine_agent = ChatOpenAI(
             openai_api_key=api_key,
             model_name=config['model_name_combine_agent'],
