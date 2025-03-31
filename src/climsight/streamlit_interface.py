@@ -21,6 +21,10 @@ from data_container import DataContainer
 from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
 from extract_climatedata_functions import plot_climate_data
 
+from langchain_community.callbacks.streamlit import (
+    StreamlitCallbackHandler,
+)
+
 logger = logging.getLogger(__name__)
 
 data_pocket = DataContainer()
@@ -223,12 +227,14 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                 #if not skip_llm_call:
                 #    output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
                 progress_area = st.empty()  # This will display progress updates
+                st_callback = StreamlitCallbackHandler(st.container())                
                 result_area = st.empty()    # This will display the final LLM response
-    
+
+                
                 # Initialize the spinner outside, but we'll use our own progress messages
                 with st.spinner("Processing your request..."):
                     # Create StreamHandler with both components
-                    stream_handler = StreamHandler(result_area, display_method="write")
+                    stream_handler = StreamHandler(result_area, display_method="write",st_callback=st_callback)
         
                     # Add a method to update the progress area
                     def update_progress_ui(message):

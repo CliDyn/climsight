@@ -1064,7 +1064,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
     
     stream_handler.update_progress("Starting workflow...")
-    output = app.invoke(state)
+    #output = app.invoke(state)
+    output = app.invoke(state, config = {"callback": [stream_handler.st_callback]})
 
     input_params = output['input_params']
     content_message = output['content_message']

@@ -5,11 +5,12 @@ class StreamHandler(BaseCallbackHandler):
     Handles streaming output from LLM and agent workflow progress.
     """
 
-    def __init__(self, container=None, display_method="markdown"):
+    def __init__(self, container=None, display_method="markdown",st_callback=None):
         self.container = container
         self.display_method = display_method
         self.text = ""
         self.progress_text = ""  # New field for workflow progress
+        self.st_callback = st_callback
 
     def send_text(self, text: str) -> None:
         self.text += text
