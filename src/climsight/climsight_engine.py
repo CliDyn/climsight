@@ -501,7 +501,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     
     return content_message, input_params, df_data, figs, data
 
-def llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket):
+def llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=None):
     """
     Handles LLM requests based on the mode specified in the configuration.
 
@@ -513,6 +513,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     - stream_handler (StreamHandler): An instance of the StreamHandler class, used for streaming responses from the LLM.
     - rag_ready (bool): A flag indicating whether the RAG database is ready and available for queries.
     - rag_db (Chroma or None): The loaded RAG database object, used to retrieve relevant documents for the LLM prompt.    
+    - references (dict, optional): A dictionary containing references for the LLM response. Default is None.
 
     Returns:
     output (any): The output from the LLM request.
@@ -523,7 +524,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)
+        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=references)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
@@ -609,11 +610,10 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     return output
 
-def agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket):
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=None):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not
-
     if not isinstance(stream_handler, StreamHandler):
         logging.error(f"stream_handler must be an instance of StreamHandler")
         raise TypeError("stream_handler must be an instance of StreamHandler")
@@ -662,11 +662,13 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     '''
                
     def zero_rag_agent(state: AgentState, figs = {}):
-      
         logger.debug(f"get_elevation_from_api from: {lat}, {lon}")      
         #ik stream_handler.update_progress("Gathering geographic and environmental information...")
         try:
             elevation = get_elevation_from_api(lat, lon)
+            if 'get_elevation_from_api' in references['references']:
+                for ref in references['references']['get_elevation_from_api']:
+                    references['used'].append(ref)
         except Exception as e:
             elevation = None
             logging.exception(f"elevation = Not known: {e}")
@@ -674,6 +676,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.debug(f"fetch_land_use from: {lat}, {lon}")        
         try:
             land_use_data = fetch_land_use(lon, lat)
+            if 'fetch_land_use' in references['references']:
+                for ref in references['references']['fetch_land_use']:
+                    references['used'].append(ref)            
         except Exception as e:
             land_use_data = None
             logging.exception(f"land_use_data = None: {e}")
@@ -688,6 +693,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.debug(f"get current_land_use from land_use_data")              
         try:
             soil = get_soil_from_api(lat, lon)
+            if 'get_soil_from_api' in references['references']:
+                for ref in references['references']['get_soil_from_api']:
+                    references['used'].append(ref)              
         except Exception as e:
             soil = None
             logging.exception(f"soil = None: {e}")
@@ -695,6 +703,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.debug(f"fetch_biodiversity from: {round(lat), round(lon)}")              
         try:
             biodiv = fetch_biodiversity(round(lat), round(lon))
+            if 'fetch_biodiversity' in references['references']:
+                for ref in references['references']['fetch_biodiversity']:
+                    references['used'].append(ref)
         except Exception as e:
             biodiv = None
             logging.error(f"Unexpected error in fetch_biodiversity: {e}")
@@ -702,6 +713,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.debug(f"closest_shore_distance from: {lat, lon}")              
         try:
             distance_to_coastline = closest_shore_distance(lat, lon, config['coastline_shapefile'])
+            if 'closest_shore_distance' in references['references']:
+                for ref in references['references']['closest_shore_distance']:
+                    references['used'].append(ref)
         except Exception as e:
             distance_to_coastline = None
             logging.error(f"Unexpected error in closest_shore_distance: {e}")
@@ -710,6 +724,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.debug(f"filter_events_within_square for: {lat, lon}")              
         try:
             filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, config['haz_path'], config['distance_from_event'])
+            if 'filtered_events_square' in references['references']:
+                for ref in references['references']['filtered_events_square']:
+                    references['used'].append(ref)
         except Exception as e:
             promt_hazard_data = None
             filtered_events_square = None
@@ -810,6 +827,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             'lat': lat
             }    
             state.df_list = df_list
+            if 'high_resolution_climate_model' in references['references']:
+                for ref in references['references']['high_resolution_climate_model']:
+                    references['used'].append(ref)
+            
         else:    
             datakeys = list(data)
             if 'hist' and 'future' not in datakeys:
@@ -826,7 +847,9 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             except Exception as e:
                 logging.error(f"Unexpected error in extract_climate_data: {e}")
                 raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
-            
+            if 'cmip6_awi_cm' in references['references']:
+                for ref in references['references']['cmip6_awi_cm']:
+                    references['used'].append(ref)
             data_agent_response = {}
             data_agent_response['input_params'] = {}
             data_agent_response['content_message'] = ""
@@ -862,6 +885,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.info(f"IPCC RAG agent in work.")
         #ik stream_handler.update_progress("Searching IPCC reports for relevant climate information...")
         ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
+        if ipcc_rag_response:
+            if 'ipcc_rag' in references['references']:
+                for ref in references['references']['ipcc_rag']:
+                    references['used'].append(ref)
         # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
         logger.info(f"ipcc_rag_agent_response: {ipcc_rag_response}")
         return {'ipcc_rag_agent_response': ipcc_rag_response}
@@ -871,6 +898,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         logger.info(f"General RAG agent in work.")
         #ik stream_handler.update_progress("Searching general knowledge base for relevant information...")        
         general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
+        if general_rag_response:
+            if 'reports_rag' in references['references']:
+                for ref in references['references']['reports_rag']:
+                    references['used'].append(ref)
         # logger.info(f"General RAG says: {general_rag_response}")
         logger.info(f"general_rag_agent_response: {general_rag_response}")
         return {'general_rag_agent_response': general_rag_response}
@@ -1072,5 +1103,8 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     stream_handler.update_progress("Analysis complete!")
     
     stream_handler.send_text(output['final_answser'])
-   
+
+    for ref in references['used']:
+        stream_handler.send_reference_text('- '+ref+'  \n')             
+    
     return output['final_answser'], input_params, content_message

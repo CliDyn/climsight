@@ -5,18 +5,24 @@ class StreamHandler(BaseCallbackHandler):
     Handles streaming output from LLM and agent workflow progress.
     """
 
-    def __init__(self, container=None, display_method="markdown"):
+    def __init__(self, container=None, container2=None, display_method="markdown"):
         self.container = container
+        self.container2 = container2
         self.display_method = display_method
         self.text = ""
-        self.progress_text = ""  # New field for workflow progress
+        self.reference_text = ""
+        self.progress_text = ""
 
     def send_text(self, text: str) -> None:
         self.text += text
         self._display_text()
         
+    def send_reference_text(self, text: str) -> None:
+        """Send separate text to the second container"""
+        self.reference_text += text
+        self._display_reference_text()
+
     def update_progress(self, progress: str) -> None:
-        """Update UI with progress information from the agent workflow"""
         self.progress_text = progress
         self._display_progress()
 
@@ -32,14 +38,22 @@ class StreamHandler(BaseCallbackHandler):
             else:
                 raise ValueError(f"Invalid display_method: {self.display_method}")
                 
+    def _display_reference_text(self):
+        if self.container2:
+            display_function = getattr(self.container2, self.display_method, None)
+            if display_function is not None:
+                display_function(self.reference_text)
+            else:
+                raise ValueError(f"Invalid display_method: {self.display_method}")
+
     def _display_progress(self):
-        """Display progress information"""
         if self.container:
-            # For Streamlit, we can display progress above the main text area
-            # You might need to adjust based on your UI structure
             display_function = getattr(self.container, "info", None)
             if display_function is not None:
                 display_function(self.progress_text)
 
     def get_text(self):
         return self.text
+
+    def get_reference_text(self):
+        return self.reference_text
