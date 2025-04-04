@@ -99,6 +99,17 @@ def format_docs(docs):
     """
     return "\n\n".join(doc.page_content for doc in docs)
 
+def extract_sources(docs):
+    """
+    Extracts the 'source' metadata from each document and returns them as a list.
+    
+    Args:
+        docs (list): List of Document objects.
+        
+    Returns:
+        list: A list containing the source of each document.
+    """
+    return [doc.metadata.get("source", "Unknown") for doc in docs]
 
 def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
     """
@@ -136,6 +147,32 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
             """Print the state passed between Runnables in a langchain and pass it on"""
             logger.info(f"Chunks returned from RAG: {state}")
             return state
+        
+        
+        # # Retrieve documents based on the user's message
+        #docs = list(retriever.get_documents(input_params['user_message']))
+        #docs = list(retriever.get_relevant_documents(input_params['user_message']))
+        # # Extract sources from the documents
+        #sources_list = extract_sources(docs)
+        # # Format the document content into a single string
+        # context = format_docs(docs)
+        # Build chain input as a dictionary.
+        # # Note: In this chain, we only pass the context, location, and question to the prompt.
+        # # The sources are kept separately.
+        # chain_input = {
+        #     "context": context,
+        #     "location": get_loci(None),
+        #     "question": input_params['user_message']
+        # }
+        
+        # # Build the chain
+        # rag_chain = (
+        #     chain_input
+        #     | RunnableLambda(inspect)
+        #     | custom_rag_prompt
+        #     | ChatOpenAI(model=config['model_name'], api_key=openai_api_key)
+        #     | StrOutputParser()
+        # )   
         rag_chain = (
             {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
             | RunnableLambda(inspect)

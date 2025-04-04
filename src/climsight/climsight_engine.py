@@ -1092,7 +1092,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     # with open(graph_image_path, 'wb') as f:
     #     f.write(graph_img)  # Write the image bytes to the file
     
-    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message)
+    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message, references=[])
     
     stream_handler.update_progress("Starting workflow...")
     output = app.invoke(state)
@@ -1105,6 +1105,10 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     stream_handler.send_text(output['final_answser'])
 
     for ref in references['used']:
-        stream_handler.send_reference_text('- '+ref+'  \n')             
+        stream_handler.send_reference_text('- '+ref+'  \n')     
+
+    for ref in output['references']:
+        stream_handler.send_reference_text('- '+ref+'  \n')     
+                
     
     return output['final_answser'], input_params, content_message

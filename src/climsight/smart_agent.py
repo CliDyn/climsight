@@ -361,8 +361,12 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         # Run the chain
         chain = prompt | llm
         result = chain.invoke({"wikipage": content_str, "question": query})
-
-        return result
+        title = raw_documents[0].metadata.get("title", "").replace(" ", "_")
+        ref = "Wikipedia URL: " + f"https://en.wikipedia.org/wiki/{title}"
+        return {
+            "result": result,
+            "references": ref
+                }
 
     # Define the args schema for the Wikipedia tool
     class WikipediaSearchArgs(BaseModel):
@@ -411,6 +415,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         
         # Combine the documents into a single string
         rag_content = '\n\n'.join([doc.page_content for doc in retrieved_docs])
+        rag_references = [doc.metadata.get("source", "") for doc in retrieved_docs]
         
             # Define your custom prompt template
         template = """
@@ -437,13 +442,13 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         Example Format:
 
             • Temperature:
-                • Quantitative: Requires warm days above 10 °C (50 °F) for flowering.
+                • Quantitative: Requires warm days above 10 °C (50 °F) for flowering.
                 • Qualitative: Maize is cold-intolerant and must be planted in the spring in temperate zones.
             • Wind:
-                • Quantitative: Can be uprooted by winds exceeding 60 km/h due to shallow roots.
+                • Quantitative: Can be uprooted by winds exceeding 60 km/h due to shallow roots.
                 • Qualitative: Maize pollen is dispersed by wind.
             • Soil Type:
-                • Quantitative: Prefers soils with a pH between 6.0–7.5.
+                • Quantitative: Prefers soils with a pH between 6.0-7.5.
                 • Qualitative: Maize is intolerant of nutrient-deficient soils and depends on adequate soil moisture.
 
         Note: Replace the placeholders with the actual qualitative and quantitative information extracted from the article, ensuring that each piece of information is placed in the appropriate section.
@@ -465,7 +470,10 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         # Run the chain with the provided content and question
         result = chain.invoke({"rag_content": rag_content, "question": query})
         
-        return result
+        return {
+            "result": result,
+            "references": rag_references
+                }
 
 
     # Create the RAG tool
@@ -606,7 +614,13 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
             if isinstance(observation, AIMessage):
                 tool_outputs['wikipedia_search'] = observation.content
             else:
-                tool_outputs['wikipedia_search'] = observation
+                output = observation
+            # Assuming output_data is a dict now
+            if isinstance(output, dict):
+                tool_outputs['wikipedia_search'] = output.get('result').content
+                state.references.append(output.get('references', []))
+            else:
+                tool_outputs['wikipedia_search'] = output
         elif action.tool == 'get_data_components':
             if isinstance(observation, AIMessage):
                 tool_outputs['get_data_components'] = observation.content
@@ -617,13 +631,31 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
                 tool_outputs['ECOCROP_search'] = observation.content
             else:
                 tool_outputs['ECOCROP_search'] = observation
+            if any("FAO, IIASA" not in element for element in state.references):    
+                state.references.append("FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en")    
+        if action.tool == 'RAG_search':
+            if isinstance(observation, AIMessage):
+                tool_outputs['RAG_search'] = observation.content
+            else:
+                output = observation
+            # Assuming output_data is a dict now
+            if isinstance(output, dict):
+                tool_outputs['RAG_search'] = output.get('result').content
+                # If refs is a list, extend; if it's a string, append.
+                refs = output.get('references', [])
+                if isinstance(refs, list):
+                    state.references.extend(refs)
+                elif isinstance(refs, str):
+                    state.references.append(refs)                
 
     # Store the response from the wikipedia_search tool into state
     if 'wikipedia_search' in tool_outputs:
         state.wikipedia_tool_response = tool_outputs['wikipedia_search']
     if 'ECOCROP_search' in tool_outputs:
         state.ecocrop_search_response = tool_outputs['ECOCROP_search']
-
+    if 'RAG_search' in tool_outputs:
+        state.rag_search_response = tool_outputs['RAG_search']
+        
     # Also store the agent's final answer
     smart_agent_response = result['output']
     state.smart_agent_response = {'output': smart_agent_response}
@@ -631,5 +663,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
     return {
         'smart_agent_response': state.smart_agent_response,
         'wikipedia_tool_response': state.wikipedia_tool_response,
-        'ecocrop_search_response': state.ecocrop_search_response
+        'ecocrop_search_response': state.ecocrop_search_response,
+        'rag_search_response': state.rag_search_response,
+        'references': state.references
     }
