@@ -65,7 +65,19 @@ except KeyError as e:
 
 chroma_path = [chroma_path_ipcc, chroma_path_general]
 
+references = {}
+# reading references file
+if not references:
+   references_path = os.getenv('CONFIG_PATH', 'references.yml')
+   logger.info(f"reading references from: {config_path}")
+   try:
+      with open(references_path, 'r') as file:
+            references = yaml.safe_load(file)
+            references['used'] = []
+   except Exception as e:
+      logging.error(f"An error occurred while reading the file: {references_path}")
+      raise RuntimeError(f"An error occurred while reading the file: {references_path}") from e
 if not terminal_call:
-   run_streamlit(config, skip_llm_call=skip_llm_call, rag_activated=rag_activated, embedding_model=embedding_model, chroma_path=chroma_path)
+   run_streamlit(config, skip_llm_call=skip_llm_call, rag_activated=rag_activated, embedding_model=embedding_model, chroma_path=chroma_path, references=references)
 else:   
-   output = run_terminal(config, skip_llm_call=skip_llm_call, embedding_model=embedding_model, chroma_path=chroma_path)
+   output = run_terminal(config, skip_llm_call=skip_llm_call, embedding_model=embedding_model, chroma_path=chroma_path, references=references)
