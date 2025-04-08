@@ -521,10 +521,13 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     Raises:
     TypeError: If 'llmModeKey' in the config is not recognized.
     """
+    if not references:
+        references = {'references': {}, 'used': []}
+
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=references)
+        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
@@ -610,7 +613,7 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     return output
 
-def agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=None):
+def agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not

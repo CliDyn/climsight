@@ -65,11 +65,11 @@ except KeyError as e:
 
 chroma_path = [chroma_path_ipcc, chroma_path_general]
 
-references = {}
+references = {'references': {}, 'used': []}
 # reading references file
 if not references:
-   references_path = os.getenv('CONFIG_PATH', 'references.yml')
-   logger.info(f"reading references from: {config_path}")
+   references_path = 'references.yml'
+   logger.info(f"reading references from: {references_path}")
    try:
       with open(references_path, 'r') as file:
             references = yaml.safe_load(file)
