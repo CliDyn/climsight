@@ -225,7 +225,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                 #    output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
                 progress_area = st.empty()  # This will display progress updates
                 if show_add_info:
-                    tab_text, tab_refs, tab_add = st.tabs(["Report", "References", "Additional information"])
+                    tab_text, tab_add, tab_refs  = st.tabs(["Report", "Additional information", "References"])
                 else:
                     tab_text, tab_refs = st.tabs(["Report", "References"])
                 
