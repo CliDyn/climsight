@@ -521,6 +521,9 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     Raises:
     TypeError: If 'llmModeKey' in the config is not recognized.
     """
+    if not references:
+        references = {'references': {}, 'used': []}
+
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":

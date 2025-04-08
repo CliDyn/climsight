@@ -32,7 +32,7 @@ def print_verbose(verbose, message):
     if verbose:
         print(message)  
 
-def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True, rag_activated=None, embedding_model='', chroma_path=''):
+def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True, rag_activated=None, embedding_model='', chroma_path='', references=None):
     '''
         Inputs:
         - config (dict): Configuration, default is an empty dictionary.   
@@ -210,7 +210,14 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler.update_progress = print_progress
                
         if not skip_llm_call:
-            output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
+            output, input_params, content_message = llm_request(content_message, 
+                                                                input_params, 
+                                                                config, 
+                                                                api_key, 
+                                                                stream_handler, 
+                                                                ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, 
+                                                                data_pocket,
+                                                                references=references)   
             figs = data_pocket.figs
             data = data_pocket.data
                 
