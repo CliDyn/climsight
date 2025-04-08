@@ -1,3 +1,10 @@
+
+import sys
+import os
+
+# Add src/climsight to sys.path
+sys.path.insert(0, os.path.abspath("src/climsight"))
+
 from terminal_interface import run_terminal
 import logging
 import yaml
@@ -32,32 +39,42 @@ logging.basicConfig(
 # Create the parser
 parser = argparse.ArgumentParser(description="Process the arguments")
 # Add the argument with a default value of an empty string
-parser.add_argument('--qa_file', type=str, default='', help='Path to the QA file')
-parser.add_argument('--config_path', type=str, default='', help='Path to the config file file')
+parser.add_argument('--qa_file', type=str, default='evaluation/QA.yml', help='Path to the QA file')
+parser.add_argument('--config_path', type=str, default='config.yml', help='Path to the config file file')
 parser.add_argument('--api_key', type=str, default='', help='API key for the OpenAI API')
-parser.add_argument('--llm_model', type=str, default='gpt-3.5-turbo-0125', help='model used for the evaluation (default: gpt-3.5-turbo-0125)')
+parser.add_argument('--llm_model_request', type=str, default='gpt-4o', help='model used for the Climsight answer generation (default: gpt-4o)')
+parser.add_argument('--llm_model_evaluation', type=str, default='gpt-4o', help='model used for the evaluation (default: gpt-4o)')
+parser.add_argument('--file_answers_climsight', type=str, default='evaluation/answers_climsight.yml', help='Path to the file with answers from Climsight')
+parser.add_argument('--file_evaluation_climsight', type=str, default='evaluation/evaluation_climsight.yml', help='Path to the file with evaluation of the answers from Climsight')
+parser.add_argument('--questions_series', type=str, default='climsight', help='Series of questions to be used (default: climsight)')                    
+parser.add_argument('--file_report', type=str, default='evaluation/evaluation_report_climsight.txt', help='Path to the file where the report will be saved')
 # Parse the arguments
 args = parser.parse_args()
+
+#qa_file = os.path.join("evaluation", "QA.yml")
+#config_path = os.path.join("config.yml")
+#llm_model_request = 'gpt-4o'
+#llm_model_evaluation = 'gpt-4o'
+#file_answers_climsight = os.path.join("evaluation", "answers_climsight.yml")
+#file_evaluation_climsight = os.path.join("evaluation", "evaluation_climsight.yml")
+#file_report = os.path.join("evaluation", "evaluation_report_climsight.txt")
 
 qa_file = args.qa_file
 config_path = args.config_path
 api_key = args.api_key
+llm_model_request = args.llm_model_request
+llm_model_evaluation = args.llm_model_evaluation
+file_answers_climsight = args.file_answers_climsight
+file_evaluation_climsight = args.file_evaluation_climsight
+questions_series = args.questions_series
+file_report = args.file_report
+
 
 if not api_key:
     api_key = os.environ.get("OPENAI_API_KEY") # get the API key from the environment variable
     if not api_key:
         raise ValueError("API key is not provided in the arguments or in the environment variable")
-                         
-# model used for the evaluation
-#llm_model = 'gpt-3.5-turbo-0125'
-#llm_model = 'gpt-4o'
-llm_model = args.llm_model
 
-
-# if config path is not provided in arguments, use ENV variable, otherwise use the default value
-if not config_path:
-    config_path = os.getenv('CONFIG_PATH', 'config.yml')
-  
 logger.info(f"reading config from: {config_path}")
 try:
     with open(config_path, 'r') as file:
@@ -66,9 +83,7 @@ except Exception as e:
     logging.error(f"An error occurred while reading the file: {config_path}")
     raise RuntimeError(f"An error occurred while reading the file: {config_path}") from e
 
-# if qa path is not provided in arguments, use default value
-if not qa_file:
-    qa_file = os.path.join("evaluation", "QA.yml")
+
 
 logger.info(f"reading QA from: {qa_file}")
 try:
@@ -77,6 +92,19 @@ try:
 except Exception as e:
     logging.error(f"An error occurred while reading the file: {qa_file}")
     raise RuntimeError(f"An error occurred while reading the file: {qa_file}") from e
+
+references = {}
+# reading references file
+if not references:
+   references_path = 'references.yml'
+   logger.info(f"reading references from: {references_path}")
+   try:
+      with open(references_path, 'r') as file:
+            references = yaml.safe_load(file)
+            references['used'] = []
+   except Exception as e:
+      logging.error(f"An error occurred while reading the file: {references_path}")
+      raise RuntimeError(f"An error occurred while reading the file: {references_path}") from e
 
 evaluation_template = """You are the evaluation expert. You are going to compare two answers. The first answer is the correct answer. The second answer is from the project Climsight. You will also have the question to which the answers were given.
 Your primary goal is to evaluate how well the ClimSight answer utilizes specific and relevant climate model data, location-based information, and actionable insights related to the requested activity or scenario. While clarity and coherence still matter, your main focus is on the precision, specificity, and relevance of the climate information and guidance offered.
@@ -136,6 +164,8 @@ Relevance, <your score>
 Clarity and Coherence, <your score>
 Mean, <your score>
 """
+
+# valid_criteria = ["Localization_Specificity", "Numerical_Detail", "Activity_Crop_Relevance", "Actionability", "Overall_Fidelity_to_Data_Driven_Approach"]
 valid_criteria = ["Completeness", "Accuracy", "Relevance", "Clarity and coherence", "Mean"]
 
 def request_llm_answers(question_answers, llm_model_gen, series = 'climsight'):
@@ -203,7 +233,7 @@ def request_llm_answers(question_answers, llm_model_gen, series = 'climsight'):
         
     return output_answers
 
-def request_answers_from_climsight(question_answers, series = 'ipcc'):
+def request_answers_from_climsight(question_answers, llm_model_request, series = 'climsight'):
     """_summary_
     return answers from the climsight for the given series of questions
 
@@ -229,8 +259,20 @@ def request_answers_from_climsight(question_answers, series = 'ipcc'):
         chroma_path_ipcc = rag_settings['chroma_path_ipcc']
         chroma_path_general = rag_settings['chroma_path_general'] 
         chroma_path = [chroma_path_ipcc, chroma_path_general]
+        
+        #set LLM to be used for the Climsight 
+        config['model_name_combine_agent']=llm_model_request
 
-        output, chat_prompt, input_params, content_message  = run_terminal(config, skip_llm_call=False, lon=lon, lat=lat, user_message=user_message, show_add_info='n', verbose=False, rag_activated=True, embedding_model=embedding_model, chroma_path=chroma_path)
+        output  = run_terminal(config, 
+                            skip_llm_call=False, 
+                            lon=lon, lat=lat, 
+                            user_message=user_message, 
+                            show_add_info='n', 
+                            verbose=False, 
+                            rag_activated=True, 
+                            embedding_model=embedding_model, 
+                            chroma_path=chroma_path)
+   
         output_answers.append(output)
 
     return output_answers
@@ -277,7 +319,7 @@ def evaluate_answers(question_answers, climsight_answers, series, llm_model, eva
         evaluation.append(result)
     return evaluation
 
-def parse_evaluation(evaluation, valid_criteria):
+def parse_evaluation_old(evaluation, valid_criteria):
     """Parse the evaluation and extract the scores for each criterion 
     Args:
         evaluation (dict): evaluation of the answers (from evaluate_answers)
@@ -389,6 +431,7 @@ def save_answers(answers_list, filename):
     with open(filename, 'w') as file:
         # Use safe_dump for safer output formatting
         yaml.safe_dump(answers_list, file)
+        
 def read_answers(filename):
     try:
         with open(filename, 'r') as file:
@@ -402,95 +445,42 @@ def read_answers(filename):
         print(f"An unexpected error occurred: {e}")
     return None
              
+def save_report(filetosave, llm_model_request, llm_model_evaluation, mean_scores_climsight):    
+    with open(filetosave, "w") as file:
+        file.write("Evaluation of the Climsight\n")
+        file.write("LLM model used for the Climsight answers: " + llm_model_request + "\n")
+        file.write("LLM model used for the evaluation: " + llm_model_evaluation + "\n")
+        file.write("    Results of the evaluation for Climsight quesitons: \n")
+        file.write("        mean scores: \n")
+        for k in mean_scores_climsight.keys():
+            file.write('            ' + k + ': ' + str(mean_scores_climsight[k])+ '\n')
+    return 
+             
 #  request Climsight for answers
-#answers_ipcc = request_answers_from_climsight(question_answers, series = 'ipcc')
-#answers_gerics = request_answers_from_climsight(question_answers, series = 'gerics')
-answers_climsight = request_answers_from_climsight(question_answers, series = 'climsight')
+answers_climsight = request_answers_from_climsight(question_answers, llm_model_request, series = questions_series)
 print("---------   Answers from Climsight ready. ------------------------------")
-save_answers(answers_climsight, os.path.join("evaluation", "answers_climsight_4o-nosmart.yml"))
+save_answers(answers_climsight, file_answers_climsight)
 
-#answers_purellm = request_llm_answers(question_answers, 'gpt-4o', series = 'climsight')
-#save_answers(answers_purellm, os.path.join("evaluation", "answers_4o.yml"))
+# request evaluation of the answers from Climsight  
+evaluation_climsight = evaluate_answers(question_answers, answers_climsight, questions_series, llm_model_evaluation, evaluation_template)
+save_answers(evaluation_climsight, file_evaluation_climsight)
 
-
-#answers_climsight = read_answers(os.path.join("evaluation", "answers_climsight_o1-mini.yml"))
-#evaluation_ipcc = evaluate_answers(question_answers, answers_ipcc, 'ipcc', llm_model, evaluation_template)
-#all_scores_ipcc, mean_scores_ipcc = parse_evaluation(evaluation_ipcc, valid_criteria)
-
-#evaluation_gerics = evaluate_answers(question_answers, answers_gerics, 'gerics', llm_model, evaluation_template)
-#all_scores_gerics, mean_scores_gerics = parse_evaluation(evaluation_gerics, valid_criteria)
-# control_answers = []
-# for clim in question_answers['climsight']:
-#     control_answers.append(clim['answer'])
-    
-evaluation_climsight = evaluate_answers(question_answers, answers_climsight, 'climsight', llm_model, evaluation_template)
-save_answers(evaluation_climsight, os.path.join("evaluation", "evaluation_climsight_4o-nosmart-o1-mini.yml"))
-
-#evaluation_purellm = evaluate_answers(question_answers, answers_purellm, 'climsight', llm_model, evaluation_template)
-#save_answers(evaluation_purellm, os.path.join("evaluation", "evaluation_4o-o1-mini.yml"))
-
-
-# evaluation_climsight = evaluate_answers(question_answers, control_answers, 'climsight', llm_model, evaluation_template)
-
+# parse the evaluation
 all_scores_climsight, mean_scores_climsight = parse_evaluation(evaluation_climsight, valid_criteria)
 
-#all_scores_climsight, mean_scores_climsight = parse_evaluation(evaluation_purellm, valid_criteria)
+#save report
+save_report(file_report, llm_model_request, llm_model_evaluation, mean_scores_climsight)
 
-
-#evaluation_climsight_1to1 = evaluation_climsight.copy()
-#all_scores_climsight_1to1 = all_scores_climsight.copy()
-#mean_scores_climsight_1to1 = mean_scores_climsight.copy()
-
-#evaluation_climsight_35 = evaluation_climsight.copy()
-#all_scores_climsight_35 = all_scores_climsight.copy()
-#mean_scores_climsight_35 = mean_scores_climsight.copy()
-### print all scores, with explanaiton
+### print all scores
 print("-----------------------------------------------------------------------")
 print("-----------------------------------------------------------------------")
 print("-----------------------------------------------------------------------")
-#print(" Results of the evaluation for IPCC quesitons: ")
-#print("Mean scores: ", mean_scores_ipcc)
-#print("-----------------------------------------------------------------------")
-#print(" Results of the evaluation for GERICS quesitons: ")
-#print("Mean scores: ", mean_scores_gerics)
-print(" Results of the evaluation for Climsight quesitons: ")
+print(" Results of the evaluation for {questions_series} quesitons: ")
 print("Mean scores: ", mean_scores_climsight)
 
-    
-    
-# Write text content to a text file
-filetosave = os.path.join("evaluation", "evaluation_report.txt")
-with open(filetosave, "w") as file:
-    file.write("Evaluation of the Climsight\n")
-    file.write("LLM model used for the Climsight answers: " + config['model_name'] + "\n")
-    file.write("LLM model used for the evaluation: " + llm_model + "\n")
-#    file.write("    Results of the evaluation for IPCC quesitons: \n")
-#    file.write("        mean scores: \n")
-#    for k in mean_scores_ipcc.keys():
-#        file.write('            ' + k + ': ' + str(mean_scores_ipcc[k])+ '\n')
-#    file.write("    Results of the evaluation for GERICS quesitons: \n")
-#    file.write("        mean scores: \n")
-#    for k in mean_scores_gerics.keys():
-#        file.write('            ' + k + ': ' + str(mean_scores_gerics[k]) + '\n')
-    file.write("    Results of the evaluation for Climsight quesitons: \n")
-    file.write("        mean scores: \n")
-    for k in mean_scores_climsight.keys():
-        file.write('            ' + k + ': ' + str(mean_scores_climsight[k])+ '\n')
-#    file.write(" -------------------------------------------------------------------------- \n")
-#    file.write("    Detailed scores for IPCC questions: \n")
-#    for k in mean_scores_ipcc.keys():
-#        file.write('            ' + k + ': ' + str(all_scores_ipcc[k])+ '\n')
-#    file.write("\n")        
-#    file.write("    Detailed scores for GERICS questions: \n")
-#    for k in mean_scores_ipcc.keys():
-#        file.write('            ' + k + ': ' + str(all_scores_gerics[k])+ '\n')            
-        
-filetosave = os.path.join("evaluation", "evaluation_answers_climsight_3.yml")
-#evaluation_dict = {'ipcc': evaluation_ipcc, 'all_scores_ipcc':all_scores_ipcc, 'mean_scores_ipcc':mean_scores_ipcc, 
-#                        'gerics': evaluation_gerics, 'all_scores_gerics':all_scores_gerics,'mean_scores_gerics':mean_scores_gerics}
-evaluation_dict = {'ipcc': evaluation_climsight, 'all_scores_ipcc':all_scores_climsight, 'mean_scores_ipcc':mean_scores_climsight, 
-                        }
 
-# Save combined_dict to a YAML file
-with open(filetosave, "w") as file:
-    yaml.dump(evaluation_dict, file, default_flow_style=False)
+
+
+
+
+            
