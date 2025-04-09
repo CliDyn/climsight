@@ -101,8 +101,11 @@ def main():
         data_config = yaml.safe_load(file)
 
     base_path = data_config['base_path']
-    sources = data_config['sources']
+    sources0 = data_config['sources']
 
+    if not args.source_files: # remove IPCC text reports from the list
+        sources = [d for d in sources0 if d['filename'] != 'ipcc_text_reports.zip']
+    
     #make subdirs list and clean it
     subdirs = []
     for entry in sources:
