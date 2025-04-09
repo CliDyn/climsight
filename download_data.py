@@ -17,6 +17,7 @@ def download_file(url, local_filename):
             if total_length is not None:
                 total_length = int(total_length)
                 downloaded = 0
+                next_threshold = 0
 
             with open(local_filename, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
@@ -26,8 +27,10 @@ def download_file(url, local_filename):
                         # Calculate the percentage of the file downloaded and update the progress bar
                         done_percentage = int(100 * downloaded / total_length)
                         # Update the progress bar
-                        sys.stdout.write(f"\rDownloading {local_filename}: {done_percentage}%")
-                        sys.stdout.flush()
+                        if done_percentage >= next_threshold:
+                            sys.stdout.write(f"\rDownloading {local_filename}: {done_percentage}%")
+                            sys.stdout.flush()
+                            next_threshold += 5
             if total_length is not None:
                 sys.stdout.write('\n')  # Move the cursor to the next line after download completes
 
@@ -94,6 +97,7 @@ def main():
     # Parse command-line argument (--source_files)
     parser = argparse.ArgumentParser(description="Download and extract the raw source files of the RAG.")
     parser.add_argument('--source_files', type=bool, default=False, help='Whether to download and extract source files (IPCC text reports).')
+    parser.add_argument('--CMIP_OIFS', type=bool, default=False, help='Whether to download CMIP6 low resolution AWI model data and ECE4/OIFS data.')
     args = parser.parse_args()
 
     # Load the YAML file
@@ -103,6 +107,12 @@ def main():
     base_path = data_config['base_path']
     sources = data_config['sources']
 
+    # Skip downloading source files of RAG unless --source_files is set to True
+    if not args.source_files: # remove IPCC text reports from the list
+        sources = [d for d in sources if d['filename'] != 'ipcc_text_reports.zip']
+    if not args.CMIP_OIFS:
+        sources = [d for d in sources if d['filename'] != 'data_climate_foresight.zip']
+        
     #make subdirs list and clean it
     subdirs = []
     for entry in sources:
@@ -126,11 +136,6 @@ def main():
         url  = entry['url']
         subdir = os.path.join(base_path, entry['subdir'])
 
-        # Skip downloading source files of RAG unless --source_files is set to True
-        if file == 'ipcc_text_reports.zip' and not args.source_files:
-            print("Skipping IPCC text report download as --source_files flag is not set or False.")
-            continue
-
         if download_file(url, file):
             extract_arch(file, subdir)
             files_downloaded.append(file)        
@@ -150,12 +155,5 @@ def main():
             print(f"\033[93munpack it into the:\033[0m ", subdirs_skiped[i])            
             print('--------')        
 
-    # I would leave it for a while
-    #print('\n')                      
-    #print('----------------------------------------------')                      
-    #print("You also need to download the natural hazard data (for which you have to create a free account). Please download the CSV - Disaster Location Centroids [zip file] and unpack it into the 'data/natural_hazards' folder. Your file should automatically be called 'pend-gdis-1960-2018-disasterlocations.csv'. If not, please change the file name accordingly.")
-    #print(f"\033[93mhttps://sedac.ciesin.columbia.edu/data/set/pend-gdis-1960-2018/data-download\033[0m")
-    #print('-------------------')                      
-    
 if __name__ == "__main__":
     main()
