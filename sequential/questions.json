@@ -1,0 +1,564 @@
+{
+  "themes": {
+    "General Climate Risks": {
+      "general": [
+        {
+          "question": "Is the location at risk of future flooding due to climate change?",
+          "lon": 16.3738,
+          "lat": 48.2082
+        },
+        {
+          "question": "Will the area experience more severe storms as climate change progresses?",
+          "lon": 8.5417,
+          "lat": 47.3769
+        },
+        {
+          "question": "How much are temperatures projected to rise at this location?",
+          "lon": 12.5683,
+          "lat": 55.6761
+        },
+        {
+          "question": "Is drought expected to become more frequent at the specified site?",
+          "lon": 13.405,
+          "lat": 52.52
+        },
+        {
+          "question": "What are the climate-related risks associated with living at this location?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected flood risk for the property at this location?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        },
+        {
+          "question": "How will future storms impact our facility situated here?",
+          "lon": -6.2603,
+          "lat": 53.3498
+        },
+        {
+          "question": "Will our building at this site require additional cooling due to rising temperatures?",
+          "lon": 14.4378,
+          "lat": 50.0755
+        },
+        {
+          "question": "What is the long-term drought outlook for agricultural activities at these coordinates?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "Is our infrastructure at this location at increased risk from wildfires due to climate change?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        }
+      ]
+    },
+    "Business-Specific Concerns": {
+      "general": [
+        {
+          "question": "How will climate change affect energy needs at this facility?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        },
+        {
+          "question": "What impact will climate change have on supply chains connected to this location?",
+          "lon": 19.0402,
+          "lat": 47.4979
+        },
+        {
+          "question": "Will insurance costs rise for businesses operating at these coordinates due to climate risks?",
+          "lon": 12.4964,
+          "lat": 41.9028
+        },
+        {
+          "question": "How might changing weather patterns affect worker productivity at this site?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "What is the risk of asset depreciation at this location due to climate impacts?",
+          "lon": 10.7522,
+          "lat": 59.9139
+        }
+      ],
+      "specific": [
+        {
+          "question": "Will our data center located here require significant cooling upgrades in the future?",
+          "lon": 4.3517,
+          "lat": 50.8503
+        },
+        {
+          "question": "How will increased heatwaves disrupt operations at our construction site at this location?",
+          "lon": 4.9041,
+          "lat": 52.3676
+        },
+        {
+          "question": "Are supply routes to our facility here vulnerable to extreme weather events?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "What is the likelihood of rising insurance premiums for our property at these coordinates?",
+          "lon": 24.9384,
+          "lat": 60.1699
+        },
+        {
+          "question": "How can our warehouse at this location remain operational during extreme weather conditions?",
+          "lon": -9.1393,
+          "lat": 38.7223
+        }
+      ]
+    },
+    "Agriculture and Food Production": {
+      "general": [
+        {
+          "question": "How will climate change impact agricultural yields at this location?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "Which crops are best suited for future climate conditions at these coordinates?",
+          "lon": 24.9384,
+          "lat": 60.1699
+        },
+        {
+          "question": "How might pests and diseases evolve due to climate change in this area?",
+          "lon": -9.1393,
+          "lat": 38.7223
+        },
+        {
+          "question": "Will water resources for irrigation become scarce at this location?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "What is the expected impact of climate change on growing seasons here?",
+          "lon": 19.0402,
+          "lat": 47.4979
+        }
+      ],
+      "specific": [
+        {
+          "question": "Can we continue growing grapes at our vineyard located here under future climate scenarios?",
+          "lon": 12.4964,
+          "lat": 41.9028
+        },
+        {
+          "question": "Will our farm at this location face water shortages due to prolonged droughts?",
+          "lon": 12.5683,
+          "lat": 55.6761
+        },
+        {
+          "question": "How will shifting frost dates affect planting schedules at our orchard here?",
+          "lon": 4.3517,
+          "lat": 50.8503
+        },
+        {
+          "question": "What is the risk of pest infestations affecting our crops at this site?",
+          "lon": 8.5417,
+          "lat": 47.3769
+        },
+        {
+          "question": "Can we sustain tomato production at our greenhouse located at these coordinates with rising temperatures?",
+          "lon": 10.7522,
+          "lat": 59.9139
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "How will climate change affect renewable energy potential at this location?",
+          "lon": 16.3738,
+          "lat": 48.2082
+        },
+        {
+          "question": "Is the area suitable for installing wind turbines?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "What are the long-term risks to solar energy systems at these coordinates?",
+          "lon": 13.405,
+          "lat": 52.52
+        },
+        {
+          "question": "How will extreme weather events impact energy infrastructure here?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "What is the feasibility of geothermal energy at this site?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        }
+      ],
+      "specific": [
+        {
+          "question": "Are wind speeds near our planned wind farm at this location expected to change?",
+          "lon": -6.2603,
+          "lat": 53.3498
+        },
+        {
+          "question": "What is the projected efficiency of solar panels at our facility here under rising temperatures?",
+          "lon": 4.9041,
+          "lat": 52.3676
+        },
+        {
+          "question": "How can we protect offshore wind turbines planned at these coordinates from intensifying storms?",
+          "lon": 14.4378,
+          "lat": 50.0755
+        },
+        {
+          "question": "Is our rooftop solar installation at this site at risk due to more frequent hailstorms?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "What is the geothermal energy potential beneath our property at this location?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        }
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "How should urban design at this location adapt to rising temperatures?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        },
+        {
+          "question": "What is the risk of flooding in urban areas at these coordinates due to increased rainfall?",
+          "lon": 16.3738,
+          "lat": 48.2082
+        },
+        {
+          "question": "How can green infrastructure mitigate climate change impacts in this city?",
+          "lon": -6.2603,
+          "lat": 53.3498
+        },
+        {
+          "question": "Will urban heat islands become more severe at this location with climate change?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "What are the best strategies for building climate-resilient communities here?",
+          "lon": 24.9384,
+          "lat": 60.1699
+        }
+      ],
+      "specific": [
+        {
+          "question": "Should we install green roofs on our building located at these coordinates to combat urban heat?",
+          "lon": -9.1393,
+          "lat": 38.7223
+        },
+        {
+          "question": "How can we upgrade the stormwater drainage system at our facility here?",
+          "lon": 4.3517,
+          "lat": 50.8503
+        },
+        {
+          "question": "Will rising temperatures increase cooling costs for our complex at this location?",
+          "lon": 4.9041,
+          "lat": 52.3676
+        },
+        {
+          "question": "How should we design public spaces at these coordinates to remain usable during hotter summers?",
+          "lon": 19.0402,
+          "lat": 47.4979
+        },
+        {
+          "question": "Is our housing development at this site prepared for heatwaves and water shortages?",
+          "lon": 10.7522,
+          "lat": 59.9139
+        }
+      ]
+    },
+    "Coastal and Water-Related Risks": {
+      "general": [
+        {
+          "question": "What is the impact of sea-level rise at this coastal location?",
+          "lon": 13.405,
+          "lat": 52.52
+        },
+        {
+          "question": "Is there a risk of saltwater intrusion into freshwater sources at these coordinates?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        },
+        {
+          "question": "How will changing river flows affect this area?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "Are natural barriers effective against flooding at this site?",
+          "lon": 12.5683,
+          "lat": 55.6761
+        },
+        {
+          "question": "How will ocean acidification impact marine ecosystems near this location?",
+          "lon": 8.5417,
+          "lat": 47.3769
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the flooding risk for our coastal property at these coordinates under sea-level rise scenarios?",
+          "lon": 12.4964,
+          "lat": 41.9028
+        },
+        {
+          "question": "Will our operations near this estuary be affected by saltwater intrusion?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How will altered river flow rates impact hydroelectric generation at our facility here?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "Are the seawalls at this location adequate to handle future storm surges?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "What is the erosion risk to our beachfront property at these coordinates over the next decades?",
+          "lon": 14.4378,
+          "lat": 50.0755
+        }
+      ]
+    },
+    "Community and Ecosystem Impacts": {
+      "general": [
+        {
+          "question": "How will changing weather patterns impact biodiversity at this location?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "Can new invasive species become a problem at these coordinates due to climate change?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "How will local ecosystems respond to projected temperature changes here?",
+          "lon": 16.3738,
+          "lat": 48.2082
+        },
+        {
+          "question": "Are there opportunities for reforestation or carbon offset projects at this site?",
+          "lon": 4.9041,
+          "lat": 52.3676
+        },
+        {
+          "question": "What role can nature-based solutions play in protecting this area?",
+          "lon": 8.5417,
+          "lat": 47.3769
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will biodiversity loss near our facility at this location impact eco-tourism?",
+          "lon": 12.5683,
+          "lat": 55.6761
+        },
+        {
+          "question": "Should we anticipate invasive species affecting landscaping at our property here?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        },
+        {
+          "question": "How can our campus design at these coordinates incorporate cooling effects to counteract rising heat?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        },
+        {
+          "question": "Will climate change increase the risk of pests affecting our plantation at this location?",
+          "lon": 14.4378,
+          "lat": 50.0755
+        },
+        {
+          "question": "Are there benefits to restoring wetlands near our facility at these coordinates?",
+          "lon": 24.9384,
+          "lat": 60.1699
+        }
+      ]
+    },
+    "Energy and Supply Chain Resilience": {
+      "general": [
+        {
+          "question": "How will higher temperatures affect energy demands at this location?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "Will climate change impact the reliability of energy supply at these coordinates?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How can supply chains connected to this site be made more resilient to climate disruptions?",
+          "lon": 12.4964,
+          "lat": 41.9028
+        },
+        {
+          "question": "Will operational downtime increase at this location due to climate change?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "How should logistics at this site be redesigned for greater climate resilience?",
+          "lon": 13.405,
+          "lat": 52.52
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will increased cooling needs affect our facility located here during heatwaves?",
+          "lon": 19.0402,
+          "lat": 47.4979
+        },
+        {
+          "question": "Is our on-site solar energy system at this location sufficient under future climate conditions?",
+          "lon": -6.2603,
+          "lat": 53.3498
+        },
+        {
+          "question": "What is the risk of supply chain disruptions to our facility at these coordinates due to extreme weather?",
+          "lon": 4.3517,
+          "lat": 50.8503
+        },
+        {
+          "question": "Can transportation routes to our site here remain reliable during climate-related events?",
+          "lon": 10.7522,
+          "lat": 59.9139
+        },
+        {
+          "question": "How will higher temperatures affect worker safety at our outdoor operations at this location?",
+          "lon": -9.1393,
+          "lat": 38.7223
+        }
+      ]
+    },
+    "Industry-Specific Impacts": {
+      "general": [
+        {
+          "question": "How will climate change impact our industry operations at this location?",
+          "lon": 4.9041,
+          "lat": 52.3676
+        },
+        {
+          "question": "Are there regulatory changes expected at these coordinates due to climate policies?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "What climate adaptation measures are recommended for businesses here?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        },
+        {
+          "question": "How will local climate projections affect future investments at this site?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "What are the best practices for climate resilience in our industry at this location?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will warming temperatures and water scarcity affect production at our brewery here?",
+          "lon": -6.2603,
+          "lat": 53.3498
+        },
+        {
+          "question": "Will extreme weather events impact our mining operations at these coordinates?",
+          "lon": 13.405,
+          "lat": 52.52
+        },
+        {
+          "question": "What adaptations are needed for our resort at this location to handle projected climate changes?",
+          "lon": 8.5417,
+          "lat": 47.3769
+        },
+        {
+          "question": "How can our distribution fleet operating from this site handle climate-induced road damage?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "Is the long-term viability of our aquaculture operation at this location at risk due to warming waters?",
+          "lon": 24.9384,
+          "lat": 60.1699
+        }
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "What strategies can we implement at this location to improve climate resilience?",
+          "lon": -9.1393,
+          "lat": 38.7223
+        },
+        {
+          "question": "How will climate change affect our carbon footprint at this site?",
+          "lon": 12.4964,
+          "lat": 41.9028
+        },
+        {
+          "question": "Are there emerging technologies suitable for monitoring climate risks here?",
+          "lon": 19.0402,
+          "lat": 47.4979
+        },
+        {
+          "question": "How can we align our operations at these coordinates with regional climate policies?",
+          "lon": 10.7522,
+          "lat": 59.9139
+        },
+        {
+          "question": "What are the opportunities for sustainable development at this location?",
+          "lon": 4.3517,
+          "lat": 50.8503
+        }
+      ],
+      "specific": [
+        {
+          "question": "What are the financial implications of retrofitting our facility at this location for climate adaptation?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How can our offshore operations here adapt to intensifying storms?",
+          "lon": 12.5683,
+          "lat": 55.6761
+        },
+        {
+          "question": "What technologies should we adopt at this site to enhance sustainability?",
+          "lon": 16.3738,
+          "lat": 48.2082
+        },
+        {
+          "question": "How will stricter water usage policies at this location affect our production processes?",
+          "lon": 14.4378,
+          "lat": 50.0755
+        },
+        {
+          "question": "Can we develop a carbon offset project on land we own at these coordinates?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        }
+      ]
+    }
+  }
+}

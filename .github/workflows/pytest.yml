@@ -40,4 +40,4 @@ jobs:
       run: |
         cd test
         # we run pytest without request with api, only local data
-        pytest -m "not request"
+        pytest -m "not request and not climate"
