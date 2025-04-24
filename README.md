@@ -5,7 +5,7 @@ ClimSight is an advanced tool that integrates Large Language Models (LLMs) with 
 The target audience includes researchers, providers of climate services, policymakers, agricultural planners, urban developers, and other stakeholders who require detailed climate information to support decision-making. ClimSight is designed to democratize access to climate 
 data, empowering users with insights relevant to their specific contexts.
 
-![screencast](https://github.com/koldunovn/climsight/assets/3407313/bf7cd327-c8a9-4a09-bfb5-778269fcd15c)
+![Image](https://github.com/user-attachments/assets/f9f89735-ef08-4c91-bc03-112c8e4c0896)
 
 ClimSight distinguishes itself through several key advancements:
 - **Integration of LLMs**: ClimSight leverages state-of-the-art LLMs to interpret complex climate-related queries, synthesizing information from diverse data sources.
