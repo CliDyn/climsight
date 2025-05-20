@@ -501,7 +501,7 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     
     return content_message, input_params, df_data, figs, data
 
-def llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=None):
+def llm_request(content_message, input_params, config, api_key, api_key_local, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references=None):
     """
     Handles LLM requests based on the mode specified in the configuration.
 
@@ -527,7 +527,7 @@ def llm_request(content_message, input_params, config, api_key, stream_handler, 
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
+        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, api_key_local,stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
@@ -613,7 +613,7 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
 
     return output
 
-def agent_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references):
+def agent_llm_request(content_message, input_params, config, api_key, api_key_local, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references):
     # function similar to llm_request but with agent structure
     # agent is consist of supervisor and nod that is responsible to call RAG
     # supervisor need to decide if call RAG or not
@@ -629,12 +629,12 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         llm_intro = ChatOpenAI(
             openai_api_base="http://localhost:8000/v1",
             model_name=config['model_name_agents'],  # Match the exact model name you used
-            openai_api_key=api_key,
+            openai_api_key=api_key_local,
         )           
         llm_combine_agent = ChatOpenAI(
             openai_api_base="http://localhost:8000/v1",
             model_name=config['model_name_combine_agent'],  # Match the exact model name you used
-            openai_api_key=api_key,
+            openai_api_key=api_key_local,
             max_tokens=16000,
         )   
     elif config['model_type'] == "openai":
@@ -1118,7 +1118,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     workflow.add_node("general_rag_agent", general_rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
     workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
-    workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key, stream_handler))
+    workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key, api_key_local, stream_handler))
     workflow.add_node("combine_agent", combine_agent)   
 
     path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}

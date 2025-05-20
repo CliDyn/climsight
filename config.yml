@@ -1,9 +1,9 @@
 #model_names: gpt-4o, o1-preview, o1-mini
 model_type: "openai" #"openai / local
-model_name: "gpt-4o" # used only for  direct_llm_request
+model_name: "gpt-4.1-nano" # used only for  direct_llm_request
 model_name_rag: "gpt-4.1-nano" # used only for  rag_request
 model_name_tools: "gpt-4.1-nano"
-model_name_combine_agent: "gpt-4.1" 
+model_name_combine_agent: "gpt-4.1-nano" 
 model_name_agents: "gpt-4.1-nano" #should be gpt-4o
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"

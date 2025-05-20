@@ -31,7 +31,7 @@ from langchain_openai import ChatOpenAI
 from climsight_classes import AgentState
 import calendar
 import pandas as pd
-def smart_agent(state: AgentState, config, api_key, stream_handler):
+def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handler):
 #def smart_agent(state: AgentState, config, api_key):
     stream_handler.update_progress("Running advanced analysis with smart agent...")
     lat = float(state.input_params['lat'])
@@ -50,7 +50,19 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
-    <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+    """
+    if config['model_type'] == "local":
+        prompt += f"""
+
+        <Important> Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        """
+    else:
+        prompt += f"""
+
+        <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        """        
+    prompt += f"""
+
     Use these tools to get the data you need to answer the user's question.
     After retrieving the data, provide a concise summary of the parameters you retrieved, explaining briefly why they are important. Keep your response short and to the point.
     Do not include any additional explanations or reasoning beyond the concise summary.
@@ -63,7 +75,8 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
     'Repeat for each parameter.'
     </Important>
     """
-
+    
+    
     #[1] Tool description for netCDF extraction
     class get_data_components_args(BaseModel):
         environmental_data: Optional[Union[str, Literal["Temperature", "Precipitation", "u_wind", "v_wind"]]] = Field(
@@ -273,7 +286,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
             llm = ChatOpenAI(
                 openai_api_base="http://localhost:8000/v1",
                 model_name=config['model_name_agents'],  # Match the exact model name you used
-                openai_api_key="",
+                openai_api_key=api_key_local,
                 temperature  = temperature,
             )                          
         elif config['model_type'] == "openai":
@@ -307,13 +320,13 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         Example Format:
 
             • Temperature:
-                • Quantitative: Requires warm days above 10 °C (50 °F) for flowering.
+                • Quantitative: Requires warm days above 10°C (50°F) for flowering.
                 • Qualitative: Maize is cold-intolerant and must be planted in the spring in temperate zones.
             • Wind:
-                • Quantitative: Can be uprooted by winds exceeding 60 km/h due to shallow roots.
+                • Quantitative: Can be uprooted by winds exceeding 60km/h due to shallow roots.
                 • Qualitative: Maize pollen is dispersed by wind.
             • Soil Type:
-                • Quantitative: Prefers soils with a pH between 6.0–7.5.
+                • Quantitative: Prefers soils with a pH between 6.0-7.5.
                 • Qualitative: Maize is intolerant of nutrient-deficient soils and depends on adequate soil moisture.
 
         Note: Replace the placeholders with the actual qualitative and quantitative information extracted from the article, ensuring that each piece of information is placed in the appropriate section.
@@ -480,7 +493,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
             llm = ChatOpenAI(
                 openai_api_base="http://localhost:8000/v1",
                 model_name=config['model_name_tools'],  # Match the exact model name you used
-                openai_api_key="",
+                openai_api_key=api_key_local,
                 temperature  = temperature,
             )                          
         elif config['model_type'] == "openai":
@@ -540,7 +553,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
             llm = ChatOpenAI(
                 openai_api_base="http://localhost:8000/v1",
                 model_name=config['model_name_tools'],  # Match the exact model name you used
-                openai_api_key="",
+                openai_api_key=api_key_local,
                 temperature  = 0,
             )                  
         elif config['model_type'] == "openai":        
@@ -599,7 +612,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         llm = ChatOpenAI(
             openai_api_base="http://localhost:8000/v1",
             model_name=config['model_name_agents'],  # Match the exact model name you used
-            openai_api_key="",
+            openai_api_key=api_key_local,
             temperature  = 0,
         )                  
     elif config['model_type'] == "openai":        
