@@ -625,27 +625,40 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     lon = float(input_params['lon']) # should be already present in input_params
     
     logger.info(f"start agent_request")
-    llm_intro = ChatOpenAI(
-        openai_api_key=api_key,
-        model_name=config['model_name_agents'],
-    )    
-    if ("o1" in config['model_name_combine_agent']) or ("o3" in config['model_name_combine_agent']):
-        llm_combine_agent = ChatOpenAI(
+    if config['model_type'] == "local":
+        llm_intro = ChatOpenAI(
+            openai_api_base="http://localhost:8000/v1",
+            model_name=config['model_name_agents'],  # Match the exact model name you used
             openai_api_key=api_key,
-            model_name=config['model_name_combine_agent'],
-            max_tokens=100000,
-        )    
-    elif ("3.5" in config['model_name_combine_agent']):
+        )           
         llm_combine_agent = ChatOpenAI(
+            openai_api_base="http://localhost:8000/v1",
+            model_name=config['model_name_combine_agent'],  # Match the exact model name you used
             openai_api_key=api_key,
-            model_name=config['model_name_combine_agent'],
-        )   
-    else:
-        llm_combine_agent = ChatOpenAI(
-            openai_api_key=api_key,
-            model_name=config['model_name_combine_agent'],
             max_tokens=16000,
         )   
+    elif config['model_type'] == "openai":
+        llm_intro = ChatOpenAI(
+            openai_api_key=api_key,
+            model_name=config['model_name_agents'],
+        )    
+        if ("o1" in config['model_name_combine_agent']) or ("o3" in config['model_name_combine_agent']):
+            llm_combine_agent = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name=config['model_name_combine_agent'],
+                max_tokens=100000,
+            )    
+        elif ("3.5" in config['model_name_combine_agent']):
+            llm_combine_agent = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name=config['model_name_combine_agent'],
+            )   
+        else:
+            llm_combine_agent = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name=config['model_name_combine_agent'],
+                max_tokens=16000,
+            )   
         # streaming=True,
         # callbacks=[stream_handler],    
     '''
@@ -657,7 +670,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         general_rag_agent_response: str = ""
         data_agent_response: dict = {}
         zero_agent_response: dict = {}
-        final_answser: str = ""
+        final_answer: str = ""
         content_message: str = ""
         input_params: dict = {}
         smart_agent_response: dict = {}
@@ -942,12 +955,31 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         which will prompt other agents to address the user's question. Note that the specific location may not be mentioned in the user's initial question, 
         but it will be clarified by subsequent agents.
 
-        Based on the conversation, decide on one of the following responses:
-        - **FINISH**: Provide a final answer to end the conversation.
-        - **CONTINUE**: Indicate that the process should proceed without a final answer at this stage.
 
-        Given this guidance, respond with either "FINISH" and the final answer, or "CONTINUE."
-        """        
+        Based on the conversation, decide on one of the following responses:
+        - "next": either "FINISH" or "CONTINUE"
+        - "final_answer": a string (only required if "next" is "FINISH")
+        
+        /Important: Do not include any other text or explanations in your response.
+        The response should be a ONLY JSON object with two fields:
+        - "next": either "FINISH" or "CONTINUE"
+        - "final_answer": a string (only required if "next" is "FINISH")    
+        Only output this JSON object and nothing else:
+        {{ "next": "FINISH", "final_answer": "Your message here" }}
+         or 
+        {{ "next": "CONTINUE", "final_answer": "" }} 
+        Examples:
+        {{ "next": "CONTINUE", "final_answer": "" }}
+        {{ "next": "FINISH", "final_answer": "Thank you for your question. ClimSight cannot assist with poetry." }}
+
+        Based on the above, respond accordingly.
+        """
+        # - **FINISH**: Provide a final answer to end the conversation.
+        # - **CONTINUE**: Indicate that the process should proceed without a final answer at this stage.
+        # You must output your decision as a JSON object with two fields:
+
+        # Given this guidance, respond with either "FINISH" and the final answer, or "CONTINUE."
+        # """        
         intro_options = ["FINISH", "CONTINUE"]
         intro_prompt = ChatPromptTemplate.from_messages(
         [
@@ -957,18 +989,33 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         class routeResponse(BaseModel):
             next: Literal["FINISH", "CONTINUE"]  # Accepts single value only
             final_answer: str = ""  
-              
-        chain = (
-             intro_prompt
-             | llm_intro.with_structured_output(routeResponse, method="function_calling")
-         )
-        # Pass the dictionary to invoke
-        input = {"user_text": state.user}
-        response = chain.invoke(input)
-        
+        if config['model_type'] == "openai":
+            structured_llm = llm_intro.with_structured_output(routeResponse, method="function_calling")
+            chain = (
+                intro_prompt
+                | structured_llm
+            )
+            # Pass the dictionary to invoke
+            input = {"user_text": state.user}
+            response = chain.invoke(input)
+        elif config['model_type'] == "local":        
+            prompt_text = intro_prompt.format(user_text=state.user)
+            response_raw = llm_intro.invoke(prompt_text)
+            import re, json
+            match = re.search(r'\{.*?\}', response_raw.content if hasattr(response_raw, 'content') else str(response_raw), re.DOTALL)
+            if match:
+                try:
+                    parsed = json.loads(match.group())
+                    response = routeResponse(**parsed)
+                except Exception as e:
+                    logging.error(f"Failed to parse JSON from model output: {e}")
+                    raise RuntimeError("Invalid model output format")
+            else:
+                raise RuntimeError("No valid JSON found in model output")
+      
         stream_handler.update_progress("Retrieve climate model data and search reports for relevant information ...")
 
-        state.final_answser = response.final_answer
+        state.final_answer = response.final_answer
         state.next = response.next
         return state
     
@@ -1016,11 +1063,14 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
             logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
-                   
-        if "o1" in config['model_name_combine_agent']:
-            system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
-        else:
+        if config['model_type'] == "local":
             system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        elif config['model_type'] == "openai":         
+            if "o1" in config['model_name_combine_agent']:
+                system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
+            else:
+                system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+  
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(
             [system_message_prompt, human_message_prompt]
@@ -1030,8 +1080,12 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
             | llm_combine_agent
         )
         output = chain.invoke(state.input_params)
-        logger.info(f"Final_answer: {output.content}")
-        return {'final_answser': output.content, 'input_params': state.input_params, 'content_message': state.content_message}
+        if hasattr(output, "content"):
+            output_content = output.content
+        else:
+            output_content = output        
+        logger.info(f"Final_answer: {output_content}")
+        return {'final_answer': output_content, 'input_params': state.input_params, 'content_message': state.content_message}
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
         output = []
@@ -1105,7 +1159,7 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
     
     stream_handler.update_progress("Analysis complete!")
     
-    stream_handler.send_text(output['final_answser'])
+    stream_handler.send_text(output['final_answer'])
 
     for ref in references['used']:
         stream_handler.send_reference_text('- '+ref+'  \n')     
@@ -1114,4 +1168,4 @@ def agent_llm_request(content_message, input_params, config, api_key, stream_han
         stream_handler.send_reference_text('- '+ref+'  \n')     
                 
     
-    return output['final_answser'], input_params, content_message
+    return output['final_answer'], input_params, content_message
