@@ -13,7 +13,7 @@ class AgentState(BaseModel):
     rag_agent_response: str = ""
     data_agent_response: dict = {}
     zero_agent_response: dict = {}
-    final_answser: str = ""
+    final_answer: str = ""
     content_message: str = ""
     input_params: dict = {}
     smart_agent_response: dict = {}
