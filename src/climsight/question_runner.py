@@ -33,10 +33,13 @@ parser = argparse.ArgumentParser(description="Process the arguments")
 parser.add_argument('--questions_file', type=str, default='sequential/questions.json', help='Path to the QA file')
 parser.add_argument('--config_path', type=str, default='config.yml', help='Path to the config file file')
 parser.add_argument('--api_key', type=str, default='', help='API key for the OpenAI API')
+#parser.add_argument('--api_key_local', type=str, default='', help='API key for the local API LLM')
 parser.add_argument('--llm_model', type=str, default='gpt-4o', help='model used for the Climsight answer generation (default: gpt-4o)')
 parser.add_argument('--file_answers', type=str, default='sequential/answers.yml', help='Path to the file with answers from Climsight')
 parser.add_argument('--output_file', type=str, default='sequential/answers_output.json', help='Path to the file with answers from Climsight')
 parser.add_argument('--temporal_file', type=str, default='sequential/temporal_output.jsonl', help='Path to the temporal file with answers from Climsight')
+
+
 # Parse the arguments
 args = parser.parse_args()
 
@@ -51,6 +54,7 @@ args = parser.parse_args()
 questions_file = args.questions_file
 config_path = args.config_path
 api_key = args.api_key
+#api_key_local = args.api_key_local
 llm_model = args.llm_model
 file_answers = args.file_answers
 output_file = args.output_file
@@ -62,6 +66,11 @@ if not api_key:
     if not api_key:
         raise ValueError("API key is not provided in the arguments or in the environment variable")
 
+#if not api_key_local:
+#    api_key_local = os.environ.get("OPENAI_API_KEY_LOCAL")
+#    if not api_key_local:
+#        api_key_local = ""
+    
 print(f"reading config from: {config_path}")
 try:
     with open(config_path, 'r') as file:

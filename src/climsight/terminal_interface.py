@@ -97,6 +97,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     if not isinstance(api_key, str):
         logging.error(f"api_key must be a string ")
         raise TypeError("api_key must be a string")
+
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
     if (not api_key) and (not skip_llm_call):
@@ -105,6 +106,10 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     else:
         print_verbose(verbose, "openAI API key accepted.")
         print_verbose(verbose, f"\n")
+
+    api_key_local = os.environ.get("OPENAI_API_KEY_LOCAL")
+    if not api_key_local:
+        api_key_local = ""
 
     if rag_activated is None:
         rag_activated = input_with_default(f"Do you want to run ClimSight with (y) or without (n) additional text source RAG? (Default depends on your config settings): ", rag_default)
@@ -213,7 +218,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             output, input_params, content_message = llm_request(content_message, 
                                                                 input_params, 
                                                                 config, 
-                                                                api_key, 
+                                                                api_key, api_key_local, 
                                                                 stream_handler, 
                                                                 ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, 
                                                                 data_pocket,
