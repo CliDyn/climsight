@@ -5,6 +5,8 @@ from typing import Optional, Literal, List
 import netCDF4 as nc
 import numpy as np
 import os
+import ast
+from typing import Union
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent, Tool
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -29,7 +31,7 @@ from langchain_openai import ChatOpenAI
 from climsight_classes import AgentState
 import calendar
 import pandas as pd
-def smart_agent(state: AgentState, config, api_key, stream_handler):
+def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handler):
 #def smart_agent(state: AgentState, config, api_key):
     stream_handler.update_progress("Running advanced analysis with smart agent...")
     lat = float(state.input_params['lat'])
@@ -48,7 +50,19 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
-    <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+    """
+    if config['model_type'] == "local":
+        prompt += f"""
+
+        <Important> Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        """
+    else:
+        prompt += f"""
+
+        <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        """        
+    prompt += f"""
+
     Use these tools to get the data you need to answer the user's question.
     After retrieving the data, provide a concise summary of the parameters you retrieved, explaining briefly why they are important. Keep your response short and to the point.
     Do not include any additional explanations or reasoning beyond the concise summary.
@@ -61,10 +75,11 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
     'Repeat for each parameter.'
     </Important>
     """
-
+    
+    
     #[1] Tool description for netCDF extraction
     class get_data_components_args(BaseModel):
-        environmental_data: Optional[Literal["Temperature", "Precipitation", "u_wind", "v_wind"]] = Field(
+        environmental_data: Optional[Union[str, Literal["Temperature", "Precipitation", "u_wind", "v_wind"]]] = Field(
             default=None,
             description="The type of environmental data to retrieve. Choose from Temperature, Precipitation, u_wind, or v_wind.",
             enum_description={
@@ -74,20 +89,29 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
                 "v_wind": "The mean monthly v wind component data."
             }
         )
-        months: Optional[List[Literal["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]]] = Field(
+        months: Optional[Union[str, List[Literal["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]]]] = Field(
             default=None,
-            description="List of months to retrieve data for. Each month should be one of 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'. If not specified, data for all months will be retrieved."
+            description="List of months or a stringified list of month names to retrieve data for. Each month should be one of 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'. If not specified, data for all months will be retrieved."
         )
 
     def get_data_components(**kwargs):
         stream_handler.update_progress("Retrieving data for advanced analysis with a smart agent...")
+
+        if isinstance(kwargs.get("months"), str):
+            try:
+                kwargs["months"] = ast.literal_eval(kwargs["months"])
+            except (ValueError, SyntaxError):
+                # Optional: handle invalid input
+                kwargs["months"] = None  # or raise an exception  
         args = get_data_components_args(**kwargs)
         # Parse the arguments using the args_schema
         environmental_data = args.environmental_data
         months = args.months  # List of month names
         if environmental_data is None:
             return {"error": "No environmental data type specified."}
+        if environmental_data not in ["Temperature", "Precipitation", "u_wind", "v_wind"]:
+            return {"error": f"Invalid environmental data type: {environmental_data}"}
        
         if config['use_high_resolution_climate_model']:
             df_list = state.df_list
@@ -258,12 +282,19 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         stream_handler.update_progress("Searching Wikipedia for related information with a smart agent...")
    
         # Initialize the LLM
-        llm = ChatOpenAI(
-            openai_api_key=api_key,
-            model_name=config['model_name_tools'],
-            temperature=temperature
-        )
-
+        if config['model_type'] == "local":
+            llm = ChatOpenAI(
+                openai_api_base="http://localhost:8000/v1",
+                model_name=config['model_name_agents'],  # Match the exact model name you used
+                openai_api_key=api_key_local,
+                temperature  = temperature,
+            )                          
+        elif config['model_type'] == "openai":
+            llm = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name=config['model_name_tools'],
+                temperature=temperature
+            )
         # Define your custom prompt template
         template = """
         Read the provided  {wikipage} carefully. Extract and present information related to the following keywords relative to {question}:
@@ -289,13 +320,13 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         Example Format:
 
             • Temperature:
-                • Quantitative: Requires warm days above 10 °C (50 °F) for flowering.
+                • Quantitative: Requires warm days above 10°C (50°F) for flowering.
                 • Qualitative: Maize is cold-intolerant and must be planted in the spring in temperate zones.
             • Wind:
-                • Quantitative: Can be uprooted by winds exceeding 60 km/h due to shallow roots.
+                • Quantitative: Can be uprooted by winds exceeding 60km/h due to shallow roots.
                 • Qualitative: Maize pollen is dispersed by wind.
             • Soil Type:
-                • Quantitative: Prefers soils with a pH between 6.0–7.5.
+                • Quantitative: Prefers soils with a pH between 6.0-7.5.
                 • Qualitative: Maize is intolerant of nutrient-deficient soils and depends on adequate soil moisture.
 
         Note: Replace the placeholders with the actual qualitative and quantitative information extracted from the article, ensuring that each piece of information is placed in the appropriate section.
@@ -458,11 +489,19 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         prompt = ChatPromptTemplate.from_template(template)
 
         # Initialize the LLM
-        llm = ChatOpenAI(
-            openai_api_key=api_key,
-            model_name=config['model_name_tools'],
-            temperature=temperature
-        )
+        if config['model_type'] == "local":
+            llm = ChatOpenAI(
+                openai_api_base="http://localhost:8000/v1",
+                model_name=config['model_name_tools'],  # Match the exact model name you used
+                openai_api_key=api_key_local,
+                temperature  = temperature,
+            )                          
+        elif config['model_type'] == "openai":
+            llm = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name=config['model_name_tools'],
+                temperature=temperature
+            )        
         
         # Create the chain with the prompt and LLM
         chain = prompt | llm
@@ -509,12 +548,20 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
             persist_directory=rag_ecocrop
         )
 
-        # Initialize the GPT-4 model
-        llm = ChatOpenAI(
-            openai_api_key=api_key,
-            model_name=config['model_name_tools'],
-            temperature = temperature
-        )
+        # Initialize the LLM
+        if config['model_type'] == "local":
+            llm = ChatOpenAI(
+                openai_api_base="http://localhost:8000/v1",
+                model_name=config['model_name_tools'],  # Match the exact model name you used
+                openai_api_key=api_key_local,
+                temperature  = 0,
+            )                  
+        elif config['model_type'] == "openai":        
+            llm = ChatOpenAI(
+                openai_api_key=api_key,
+                model_name=config['model_name_tools'],
+                temperature=0.0
+            )        
 
         # Create the prompt template
         prompt = ChatPromptTemplate.from_template("""
@@ -561,11 +608,19 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         args_schema=EcoCropSearchArgs
     )
     # Initialize the LLM
-    llm = ChatOpenAI(
-        openai_api_key=api_key,
-        model_name=config['model_name_agents'],
-        temperature=0.0
-    )
+    if config['model_type'] == "local":
+        llm = ChatOpenAI(
+            openai_api_base="http://localhost:8000/v1",
+            model_name=config['model_name_agents'],  # Match the exact model name you used
+            openai_api_key=api_key_local,
+            temperature  = 0,
+        )                  
+    elif config['model_type'] == "openai":        
+        llm = ChatOpenAI(
+            openai_api_key=api_key,
+            model_name=config['model_name_agents'],
+            temperature=0.0
+        )
     # List of tools
     tools = [data_extraction_tool, rag_tool,wikipedia_tool, ecocrop_tool]
 
@@ -600,7 +655,7 @@ def smart_agent(state: AgentState, config, api_key, stream_handler):
         "chat_history": state.messages,
         "lat": lat,
         "lon": lon,
-        "location_str": state.input_params['location_str']        
+        "location_str": state.input_params['location_str']
     }
 
 

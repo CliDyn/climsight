@@ -59,6 +59,10 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY") # check if OPENAI_API_KEY is set in the environment
 
+    api_key_local = os.environ.get("OPENAI_API_KEY_LOCAL")
+    if not api_key_local:
+        api_key_local = ""
+        
     #read data while loading here 
     ##### like hist, future = load_data(config)
 
@@ -99,7 +103,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
 
         # Predefined options
-        options = ["gpt-3.5-turbo", "gpt-4o", "o1", "o1-pro", "o3-mini", "gpt-4.5-preview"]
+        options = ["gpt-4.1-nano", "gpt-4o","o3-mini","gpt-4.1", "o1", "o3"]
         # Determine the default value and modify the options list if needed
         default_model = config.get('model_name_combine_agent')
         if default_model:
@@ -124,7 +128,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
             # Include the API key input within the form only if it's not found in the environment
-        if not api_key:
+        if (not api_key) and config['model_type'] == "openai":
             api_key_input = st.text_input(
                 "OpenAI API key",
                 placeholder="Enter your OpenAI API key here",
@@ -141,7 +145,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         if submit_button and user_message:
             if not api_key:
                 api_key = api_key_input
-            if (not api_key) and (not skip_llm_call):
+            if (not api_key) and (not skip_llm_call) and (config['model_type'] == "openai"):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
             # Update config with the selected LLM mode
@@ -250,7 +254,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
                         # Now call llm_request with this enhanced stream_handler
                         if not skip_llm_call:
                             output, input_params, content_message = llm_request(
-                                content_message, input_params, config, api_key, 
+                                content_message, input_params, config, api_key, api_key_local, 
                                 stream_handler, ipcc_rag_ready, ipcc_rag_db, 
                                 general_rag_ready, general_rag_db, data_pocket,
                                 references=references
