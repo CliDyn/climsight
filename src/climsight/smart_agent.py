@@ -57,7 +57,13 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     <Important> call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
     - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. 
-        <Important> Use this to create plots, analyze climate data, perform statistical analysis, or any other computational tasks. 
+        <Important> Use this tool when:
+        - Creating visualizations (plots, charts, graphs) of climate data
+        - Performing statistical analysis (means, trends, correlations, standard deviations)
+        - Comparing data between different time periods (e.g., historical vs future projections)
+        - Calculating climate indicators or derived metrics
+        - Any analysis that requires more than simple data retrieval
+        
         The tool has access to pandas, numpy, matplotlib, and xarray.
         
         **IMPORTANT: Climate data is pre-loaded in the Python environment. To see what's available, run:**
@@ -67,7 +73,13 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         ```
         The climate data includes historical reference periods and future projections with monthly temperature, 
         precipitation, and wind data for your specific location.
-         **Working directory available at `work_dir` variable for saving any outputs.**
+        **Working directory available at `work_dir` variable for saving any outputs.**
+        
+        Example uses:
+        - Plot temperature trends across different time periods
+        - Calculate average temperature change between decades
+        - Create precipitation distribution charts
+        - Analyze seasonal patterns in wind data
         </Important>
     """
     if config['model_type'] == "local":
@@ -88,6 +100,13 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     Do not include any chain-of-thought reasoning or action steps in your final answer.
     Do not ask the user for any additional information, but you can include into the final answer what kind of information user should provide in the future.
     
+    Additional workflow guidance:
+    - If the user asks for analysis, trends, comparisons, or visualizations, use python_repl after retrieving data to:
+       * Create plots and charts
+       * Calculate statistics (averages, changes, trends)
+       * Compare different time periods
+       * Save any outputs to work_dir
+
     <Important> 
     For the final response try to follow the following format:
     'The [retrieved values of the parameter] for the [object of interest] at [location] is [value for current and future are ...], [according to the Wikipedia article] the required [parameter] for [object of interest] is [value]. [Two sentence of clarification, with criitcal montly-based assessment of the potential changes]'
