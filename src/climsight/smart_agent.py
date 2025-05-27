@@ -19,6 +19,7 @@ from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
+from tools.python_repl import create_python_repl_tool
 #import requests
 #from bs4 import BeautifulSoup
 #from urllib.parse import quote_plus
@@ -43,13 +44,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     # System prompt
     prompt = f"""
     You are the smart agent of ClimSight. Your task is to retrieve necessary components of the climatic datasets based on the user's request.
-    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search" and "ECOCROP_search" which you can use to retrieve the necessary environmental data components.
+    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search" and "ECOCROP_search" and "python_repl" which you can use to retrieve the necessary environmental data components.
     - "get_data_components" will retrieve the necessary data from the climatic datasets at the location of interest (latitude: {lat}, longitude: {lon}). It accepts an 'environmental_data' parameter to specify the type of data, and a 'months' parameter to specify which months to retrieve data for. The 'months' parameter is a list of month names (e.g., ['Jan', 'Feb', 'Mar']). If 'months' is not specified, data for all months will be retrieved.
     <Important> Call "get_data_components" tool multiple times if necessary, but only within one iteration, [chat_completion -> n * "get_data_components" -> chat_completion] after you recieve the necessary data from wikipedia_search and RAG_search. </Important>
     - "wikipedia_search" will help you determine the necessary data to retrieve with the get_data_components tool.
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
+    - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. Use this to create plots, analyze climate data, perform statistical analysis, or any other computational tasks. The tool has access to pandas, numpy, matplotlib, and xarray.
     """
     if config['model_type'] == "local":
         prompt += f"""
@@ -607,6 +609,37 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         ),
         args_schema=EcoCropSearchArgs
     )
+
+    python_repl_tool = create_python_repl_tool()
+
+    def inject_climate_context():
+        context = {
+            'lat': lat,
+            'lon': lon,
+            'location_str': state.input_params.get('location_str', ''),
+        }
+        
+        # Add climate data if available
+        if state.df_list:
+            # Add all dataframes from df_list
+            for i, entry in enumerate(state.df_list):
+                df = entry.get('dataframe')
+                if df is not None:
+                    context[f'climate_df_{i}'] = df
+                    context[f'climate_info_{i}'] = {
+                        'years': entry.get('years_of_averaging', ''),
+                        'description': entry.get('description', ''),
+                        'variables': entry.get('extracted_vars', {})
+                    }
+        
+        # Add any other relevant data
+        if 'df_data' in data_pocket.df:
+            context['climate_data'] = data_pocket.df['df_data']
+            
+        return context
+
+
+
     # Initialize the LLM
     if config['model_type'] == "local":
         llm = ChatOpenAI(
@@ -622,7 +655,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             temperature=0.0
         )
     # List of tools
-    tools = [data_extraction_tool, rag_tool,wikipedia_tool, ecocrop_tool]
+    tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n
@@ -688,6 +721,11 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 tool_outputs['ECOCROP_search'] = observation
             if any("FAO, IIASA" not in element for element in state.references):    
                 state.references.append("FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en")    
+        elif action.tool == 'python_repl':
+            if isinstance(observation, AIMessage):
+                tool_outputs['python_repl'] = observation.content
+            else:
+                tool_outputs['python_repl'] = observation
         if action.tool == 'RAG_search':
             if isinstance(observation, AIMessage):
                 tool_outputs['RAG_search'] = observation.content
