@@ -76,6 +76,7 @@ _repl_instance = PersistentPythonREPL()
 
 
 def create_python_repl_tool():
+
     """
     Create a Python REPL tool for LangChain agents with persistent state.
     
@@ -89,16 +90,26 @@ def create_python_repl_tool():
         code: str = Field(
             description="Python code to execute. Has access to pandas (pd), numpy (np), matplotlib.pyplot (plt), and xarray (xr). Variables persist between executions."
         )
+    # Get available variables info
+    available_vars = []
+    if hasattr(_repl_instance, 'locals'):
+        for key, value in _repl_instance.locals.items():
+            if not key.startswith('__'):
+                available_vars.append(f"{key} ({type(value).__name__})")
+    
+    vars_description = ""
+    if available_vars:
+        vars_description = f"\nPre-loaded variables: {', '.join(available_vars[:10])}..."
     
     tool = StructuredTool.from_function(
-        func=_repl_instance.execute,  # Use the instance method
+        func=_repl_instance.execute,
         name="python_repl",
         description=(
             "Execute Python code for data analysis and calculations. "
             "Available: pandas as pd, numpy as np, matplotlib.pyplot as plt, xarray as xr. "
             "Variables and imports persist between executions like a Jupyter notebook."
+            + vars_description
         ),
         args_schema=PythonREPLInput
     )
-    
     return tool

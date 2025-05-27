@@ -50,8 +50,19 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     - "wikipedia_search" will help you determine the necessary data to retrieve with the get_data_components tool.
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
-    call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
-    - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. Use this to create plots, analyze climate data, perform statistical analysis, or any other computational tasks. The tool has access to pandas, numpy, matplotlib, and xarray.
+    <Important> call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
+    - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. 
+        <Important> Use this to create plots, analyze climate data, perform statistical analysis, or any other computational tasks. 
+        The tool has access to pandas, numpy, matplotlib, and xarray.
+        
+        **IMPORTANT: Climate data is pre-loaded in the Python environment. To see what's available, run:**
+        ```python
+        print(DATA_CATALOG)  # Shows all available climate datasets and their descriptions
+        print(list(locals().keys()))  # Shows all available variables
+        ```
+        
+        The climate data includes historical reference periods and future projections with monthly temperature, 
+        precipitation, and wind data for your specific location. </Important>
     """
     if config['model_type'] == "local":
         prompt += f"""
@@ -631,12 +642,29 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                         'description': entry.get('description', ''),
                         'variables': entry.get('extracted_vars', {})
                     }
-        
-        # Add any other relevant data
-        if 'df_data' in data_pocket.df:
-            context['climate_data'] = data_pocket.df['df_data']
             
+            # ADD THIS - Build DATA_CATALOG dynamically
+            catalog = "Available climate datasets:\n"
+            for i, entry in enumerate(state.df_list):
+                years = entry.get('years_of_averaging', '')
+                desc = entry.get('description', '')
+                is_main = " (historical reference)" if entry.get('main', False) else ""
+                catalog += f"- climate_df_{i}: {years}{is_main} - {desc}\n"
+            
+            catalog += "\nEach dataset contains monthly values for:\n"
+            if state.df_list and state.df_list[0].get('extracted_vars'):
+                for var_name, var_info in state.df_list[0]['extracted_vars'].items():
+                    catalog += f"- {var_info['full_name']} ({var_info['units']})\n"
+            
+            context['DATA_CATALOG'] = catalog
+                        
         return context
+
+    # Inject climate context into Python REPL BEFORE agent runs
+    if hasattr(python_repl_tool.func, '__self__'):
+        repl_instance = python_repl_tool.func.__self__
+        context = inject_climate_context()
+        repl_instance.locals.update(context)
 
 
 
@@ -721,7 +749,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 tool_outputs['ECOCROP_search'] = observation
             if any("FAO, IIASA" not in element for element in state.references):    
                 state.references.append("FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en")    
-        elif action.tool == 'python_repl':
+        elif action.tool == 'python_repl':            
             if isinstance(observation, AIMessage):
                 tool_outputs['python_repl'] = observation.content
             else:
