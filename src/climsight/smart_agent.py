@@ -28,6 +28,11 @@ from langchain.document_loaders import WikipediaLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+#Import for working Path
+import uuid
+import streamlit as st
+from pathlib import Path
+
 # Import AgentState from climsight_classes
 from climsight_classes import AgentState
 import calendar
@@ -60,19 +65,20 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         print(DATA_CATALOG)  # Shows all available climate datasets and their descriptions
         print(list(locals().keys()))  # Shows all available variables
         ```
-        
         The climate data includes historical reference periods and future projections with monthly temperature, 
-        precipitation, and wind data for your specific location. </Important>
+        precipitation, and wind data for your specific location.
+         **Working directory available at `work_dir` variable for saving any outputs.**
+        </Important>
     """
     if config['model_type'] == "local":
         prompt += f"""
 
-        <Important> Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        <Important> - Tool use order. Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
         """
     else:
         prompt += f"""
 
-        <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        <Important> - Tool use order. ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
         """        
     prompt += f"""
 
@@ -623,11 +629,20 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
     python_repl_tool = create_python_repl_tool()
 
+    if 'session_uuid' not in st.session_state:
+        st.session_state.session_uuid = str(uuid.uuid4())
+
+    # Create working directory
+    work_dir = Path("tmp/sandbox") / st.session_state.session_uuid
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+
     def inject_climate_context():
         context = {
             'lat': lat,
             'lon': lon,
             'location_str': state.input_params.get('location_str', ''),
+            'work_dir': str(work_dir),
         }
         
         # Add climate data if available

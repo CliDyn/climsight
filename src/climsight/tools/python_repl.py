@@ -28,6 +28,8 @@ class PersistentPythonREPL:
             'np': __import__('numpy'),
             'plt': __import__('matplotlib.pyplot', fromlist=['pyplot']),
             'xr': __import__('xarray'),
+            'os': __import__('os'),
+            'Path': __import__('pathlib').Path,
         })
         
     def execute(self, code: str) -> str:
