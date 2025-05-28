@@ -19,7 +19,11 @@ from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
+
+#Import tools
 from tools.python_repl import create_python_repl_tool
+from tools.image_viewer import create_image_viewer_tool
+
 #import requests
 #from bs4 import BeautifulSoup
 #from urllib.parse import quote_plus
@@ -45,6 +49,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     temperature = 0
     if "o1" in config['model_name_tools']:
         temperature = 1
+
+
+    if 'session_uuid' not in st.session_state:
+        st.session_state.session_uuid = str(uuid.uuid4())
+
+    # Create working directory
+    work_dir = Path("tmp/sandbox") / st.session_state.session_uuid
+    work_dir.mkdir(parents=True, exist_ok=True)
 
     # System prompt
     prompt = f"""
@@ -73,13 +85,54 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         ```
         The climate data includes historical reference periods and future projections with monthly temperature, 
         precipitation, and wind data for your specific location.
-        **Working directory available at `work_dir` variable for saving any outputs.**
         
-        Example uses:
-        - Plot temperature trends across different time periods
-        - Calculate average temperature change between decades
-        - Create precipitation distribution charts
-        - Analyze seasonal patterns in wind data
+        **CRITICAL: Your working directory is available at `work_dir` = '{str(work_dir)}'**
+        **When saving plots, ALWAYS store the full path in a variable for later use!**
+        
+        **CORRECT way to save and reference images:**
+        ```python
+        # Save the plot and store the full path
+        plot_path = f'{{{{work_dir}}}}/my_plot.png'  # Or use Path(work_dir) / 'my_plot.png'
+        plt.savefig(plot_path)
+        print(f"Plot saved to: {{{{plot_path}}}}")  # Verify the path
+        # Now plot_path contains the full path for image_viewer
+        ```
+        
+        **WRONG way (DO NOT do this):**
+        ```python
+        plt.savefig('work_dir/my_plot.png')  # This is just a string, not the actual path!
+        ```
+        </Important>
+
+    - "image_viewer" allows you to analyze saved climate visualizations to extract scientific insights.
+        <Important> Use this tool when:
+        - You have created and saved a visualization using python_repl
+        - You need to describe the patterns shown in a climate plot
+        - You want to extract specific values or trends from a generated figure
+        
+        The tool will provide scientific analysis of the image including:
+        - Data description and quantitative observations
+        - Temporal patterns and climate insights
+        - Key findings and implications
+        
+        **CRITICAL: How to use image_viewer correctly:**
+        1. First save your plot in python_repl and store the path:
+           ```python
+           plot_path = f'{{{{work_dir}}}}/temperature_plot.png'
+           plt.savefig(plot_path)
+           ```
+        2. Then use image_viewer with the VARIABLE containing the path:
+           ```
+           image_viewer(plot_path)  # Use the variable, not a string!
+           ```
+        
+        **NEVER do this:**
+        ```
+        image_viewer('work_dir/plot.png')  # WRONG - this is just a string!
+        ```
+        
+        **Your actual work_dir path is: {str(work_dir)}**
+        **Always use the full path stored in a variable when calling image_viewer!**
         </Important>
     """
     if config['model_type'] == "local":
@@ -91,6 +144,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         prompt += f"""
 
         <Important> - Tool use order. ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        
         """        
     prompt += f"""
 
@@ -648,14 +702,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
     python_repl_tool = create_python_repl_tool()
 
-    if 'session_uuid' not in st.session_state:
-        st.session_state.session_uuid = str(uuid.uuid4())
-
-    # Create working directory
-    work_dir = Path("tmp/sandbox") / st.session_state.session_uuid
-    work_dir.mkdir(parents=True, exist_ok=True)
-
-
     def inject_climate_context():
         context = {
             'lat': lat,
@@ -716,8 +762,24 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             model_name=config['model_name_agents'],
             temperature=0.0
         )
+
+
+
+    
     # List of tools
-    tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
+    #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
+    tools = [data_extraction_tool, rag_tool, ecocrop_tool, python_repl_tool]
+
+    #Append image viewer for openai models
+    if config['model_type'] == "openai":
+        try:
+            image_viewer_tool = create_image_viewer_tool(
+                api_key, 
+                config['model_name_agents']  # Use model from config
+            )
+            tools.append(image_viewer_tool)
+        except Exception as e:
+            pass
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n

@@ -3,8 +3,8 @@ model_type: "openai" #"openai / local
 model_name: "gpt-4.1-nano" # used only for  direct_llm_request
 model_name_rag: "gpt-4.1-nano" # used only for  rag_request
 model_name_tools: "gpt-4.1-nano"
-model_name_combine_agent: "gpt-4.1-nano" 
-model_name_agents: "gpt-4.1-nano" #should be gpt-4o
+model_name_combine_agent: "gpt-4.1-nano"
+model_name_agents: "gpt-4.1" #should be gpt-4o
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_high_resolution_climate_model: true
@@ -119,6 +119,9 @@ system_role: |
     When using headings do not add numbers like level 1 or 2. Use md format for the response.
     Use as much token as needed to provide a detailed analysis.
     Highlight in the output the key points of the analysis.
+
+    Do not include any Python code, code snippets, or technical implementation details in your response. 
+    Focus exclusively on delivering a clear climate impact assessment report with analysis, findings, and recommendations without any programming or code execution references.
 system_role_new: |
   ### ROLE
   You are an expert climate-risk analyst who writes formal, self-contained reports for a single, exact location.
