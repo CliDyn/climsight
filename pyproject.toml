@@ -39,7 +39,8 @@ dependencies = [
     "bs4",
     "wikipedia",
     "scipy",
-    "pyproj"
+    "pyproj",
+    "aitta-client"
 ]
 
 
