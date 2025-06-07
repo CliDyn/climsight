@@ -1,0 +1,1064 @@
+{
+  "themes": {
+    "Crop Yield and Productivity": {
+      "general": [
+        {
+          "question": "How might changes in climate conditions affect crop productivity in Southwestern Russia over the next two decades?",
+          "lon": 40.6479,
+          "lat": 47.5042
+        },
+        {
+          "question": "What are the projected changes in agriculture output in Northern Kazakhstan due to climate variations in the coming decade?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "How will future weather patterns impact the growth cycles of crops in Central Ukraine through 2030?",
+          "lon": 36.2304,
+          "lat": 49.9935
+        },
+        {
+          "question": "What are the anticipated climate effects on farming efficiency in Southeastern Belarus between 2040 and 2050?",
+          "lon": 31.014,
+          "lat": 52.4242
+        },
+        {
+          "question": "How are shifts in temperature expected to affect crop growth patterns in Northern Uzbekistan over the next 30 years?",
+          "lon": 64.5853,
+          "lat": 41.3775
+        },
+        {
+          "question": "What impact will altering precipitation rates have on crop productivity in Southern Kyrgyzstan by 2040?",
+          "lon": 72.803,
+          "lat": 40.5193
+        },
+        {
+          "question": "How might climate evolution affect the yield of staple crops in Northern Turkmenistan in the coming decades?",
+          "lon": 58.7988,
+          "lat": 39.3762
+        },
+        {
+          "question": "How will projected climate changes influence the productivity of agricultural lands in Western Tajikistan over the next two decades?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "What is the expected influence of climate variability on crop yield in eastern Russia through the mid-century?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How could the changing climate conditions impact crop yields in Eastern Kazakhstan by 2050?",
+          "lon": 73.0868,
+          "lat": 49.7951
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected impact of rising temperatures on wheat yield in Eastern Ukraine by 2030?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "How might decreasing precipitation affect rice production in Southern Kazakhstan over the next decade?",
+          "lon": 74.5984,
+          "lat": 42.8775
+        },
+        {
+          "question": "What are the expected temperature impacts on maize yields in Western Tajikistan by 2040?",
+          "lon": 68.5074,
+          "lat": 37.8366
+        },
+        {
+          "question": "How will changes in wind patterns affect the productivity of sunflower seeds in Central Russia over the next 30 years?",
+          "lon": 37.616,
+          "lat": 54.2048
+        },
+        {
+          "question": "What impact will climate changes have on potato harvests in Southwestern Belarus by mid-century?",
+          "lon": 23.6858,
+          "lat": 52.0929
+        },
+        {
+          "question": "How are temperature increases likely to influence barley yields in Northern Ukraine over the next three decades?",
+          "lon": 30.5234,
+          "lat": 50.4501
+        },
+        {
+          "question": "What will be the impact of changing climate on vineyards in Southern Uzbekistan by 2040?",
+          "lon": 66.9741,
+          "lat": 39.6522
+        },
+        {
+          "question": "How might climate changes affect the cotton industry in Eastern Turkmenistan over the next two decades?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "What is the expected impact of reduced precipitation on corn production in Northeastern Kazakhstan over the next 20 years?",
+          "lon": 71.4491,
+          "lat": 51.1693
+        },
+        {
+          "question": "How might warming temperatures influence sugar beet yields in Northern Kyrgyzstan by 2050?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        }
+      ]
+    },
+    "Food Production": {
+      "general": [
+        {
+          "question": "How will projected climate changes alter food production rates in Western Russia over the next decade?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "What is the anticipated impact of climate variability on food security in Central Kazakhstan through 2030?",
+          "lon": 66.9237,
+          "lat": 48.0196
+        },
+        {
+          "question": "How might shifts in climate affect food production systems in Eastern Ukraine by 2040?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "What changes in food output are expected in Northern Belarus due to climate fluctuations over the next 30 years?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "How could changes in climate affect agricultural food production in Northern Uzbekistan in the future decades?",
+          "lon": 60.5853,
+          "lat": 41.3775
+        },
+        {
+          "question": "What is the projected impact of changing precipitation patterns on food productivity in Tajikistan over the next two decades?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "How will increasing temperatures influence food production in Southern Kyrgyzstan over the next decade?",
+          "lon": 74.7661,
+          "lat": 41.2044
+        },
+        {
+          "question": "What are the anticipated effects of climatic shifts on food production systems in Southeast Turkmenistan through 2050?",
+          "lon": 58.3893,
+          "lat": 37.8352
+        },
+        {
+          "question": "What climate-driven changes are expected in food supply chains in Western Kazakhstan through 2040?",
+          "lon": 58.3028,
+          "lat": 50.5587
+        },
+        {
+          "question": "How might climate variability affect food availability in Southern Russia over the next 20 years?",
+          "lon": 44.6668,
+          "lat": 51.6638
+        }
+      ],
+      "specific": [
+        {
+          "question": "What impact will altered rainfall patterns have on dairy production in Eastern Ukraine by 2030?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "How is warmer temperature expected to affect poultry yield in Northern Kazakhstan over the next decade?",
+          "lon": 71.4304,
+          "lat": 51.1283
+        },
+        {
+          "question": "What changes in climate will influence egg production in Western Tajikistan by 2050?",
+          "lon": 68.609,
+          "lat": 37.7613
+        },
+        {
+          "question": "How might shifts in precipitation affect grain storage capability in Southwestern Russia through 2040?",
+          "lon": 41.1322,
+          "lat": 45.4242
+        },
+        {
+          "question": "What is the expected impact of increased temperature on fish farming in Northern Belarus by mid-century?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "How will climate-induced changes in water availability impact fruit orchards in Southern Uzbekistan over the next two decades?",
+          "lon": 70.087,
+          "lat": 40.3755
+        },
+        {
+          "question": "What are the potential effects of altering wind speeds on honey production in Northern Turkmenistan by 2040?",
+          "lon": 59.8245,
+          "lat": 41.2103
+        },
+        {
+          "question": "How is the livestock sector expected to be affected by rising temperatures in Central Kyrgyzstan through the next 20 years?",
+          "lon": 74.4307,
+          "lat": 42.5578
+        },
+        {
+          "question": "What impact will changing climates have on vegetable sourcing in Eastern Russia over the coming decades?",
+          "lon": 44.0059,
+          "lat": 56.3269
+        },
+        {
+          "question": "How might increased precipitation levels affect rice cultivation in Southeastern Kazakhstan by 2030?",
+          "lon": 69.3789,
+          "lat": 42.2719
+        }
+      ]
+    },
+    "Agriculture": {
+      "general": [
+        {
+          "question": "How might climate variations influence agricultural practices in Western Belarus over the next decade?",
+          "lon": 31.014,
+          "lat": 52.4242
+        },
+        {
+          "question": "What changes in agriculture systems are expected in Northern Kazakhstan due to climate fluctuations?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "How will anticipated weather changes impact farming methods in Southeastern Russia through 2040?",
+          "lon": 39.7204,
+          "lat": 43.5855
+        },
+        {
+          "question": "What are the expected implications of climate change on agricultural development in Southern Ukraine over the next 30 years?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "How could evolving climate conditions affect agricultural productivity in Central Turkmenistan by mid-century?",
+          "lon": 58.7988,
+          "lat": 39.3762
+        },
+        {
+          "question": "What is the projected impact of rising temperatures on farming output in Eastern Tajikistan by 2050?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "How might increased precipitation affect planting strategies in Southwestern Kyrgyzstan over the next two decades?",
+          "lon": 72.803,
+          "lat": 40.5193
+        },
+        {
+          "question": "What impacts could future climate change have on crop rotation systems in Southern Belarus through 2030?",
+          "lon": 23.6858,
+          "lat": 52.0929
+        },
+        {
+          "question": "How will changing wind patterns influence agricultural activities in Northern Uzbekistan in upcoming decades?",
+          "lon": 60.6438,
+          "lat": 41.5385
+        },
+        {
+          "question": "What are the effects of altered seasonal climate conditions on farming sustainability in Eastern Kazakhstan by 2040?",
+          "lon": 73.0868,
+          "lat": 49.7951
+        }
+      ],
+      "specific": [
+        {
+          "question": "What impact will shifting temperature trends have on grain harvest timings in Central Russia by 2040?",
+          "lon": 37.616,
+          "lat": 54.2048
+        },
+        {
+          "question": "How might decreased rainfall affect dairy farming operations in Western Ukraine over the next decade?",
+          "lon": 24.0297,
+          "lat": 49.8397
+        },
+        {
+          "question": "What is the expected impact of higher temperatures on poultry farm productivity in Western Kyrgyzstan by 2030?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How will increasing temperatures influence the expansion of vegetable farming in Southern Tajikistan through mid-century?",
+          "lon": 68.5074,
+          "lat": 37.8366
+        },
+        {
+          "question": "What impact could altered climate conditions have on water availability for vineyards in Eastern Turkmenistan by 2050?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "How is soil moisture expected to influence tea plantations in Western Kazakhstan over the next two decades?",
+          "lon": 58.2973,
+          "lat": 50.5802
+        },
+        {
+          "question": "What is the projected effect of changing climate on sugar beet production in Southeastern Russia by 2040?",
+          "lon": 41.9692,
+          "lat": 45.0448
+        },
+        {
+          "question": "How might wind direction changes affect orchard growth in Northern Belarus over the coming decades?",
+          "lon": 27.5615,
+          "lat": 53.9025
+        },
+        {
+          "question": "What is the expected influence of temperature increases on soybean cultivation in Southern Uzbekistan by 2030?",
+          "lon": 66.9741,
+          "lat": 39.6522
+        },
+        {
+          "question": "How might increased precipitation levels impact rice yield potential in Western Kazakhstan over the next 20 years?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "How might climate seasonality impact renewable energy production capabilities in Northern Russia by 2040?",
+          "lon": 95.3018,
+          "lat": 60.626
+        },
+        {
+          "question": "What are the anticipated challenges for energy infrastructure in Western Kazakhstan due to climate variability through 2030?",
+          "lon": 66.9237,
+          "lat": 48.0196
+        },
+        {
+          "question": "How will changes in wind speed influence wind energy potential in Southern Ukraine over the next three decades?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What impact could temperature increases have on the efficiency of hydroelectric plants in Western Russia by mid-century?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How is precipitation change projected to affect solar power viability in Central Turkmenistan by 2050?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "What could be the effects of altered climates on renewable energy systems in Southeastern Belarus over the next two decades?",
+          "lon": 23.6858,
+          "lat": 52.0929
+        },
+        {
+          "question": "How will climate change impact renewable energy deployment in Eastern Kyrgyzstan through 2040?",
+          "lon": 73.1032,
+          "lat": 41.4285
+        },
+        {
+          "question": "What is the potential impact of climate-driven hazards on energy infrastructure security in Northern Kazakhstan by 2030?",
+          "lon": 71.4491,
+          "lat": 51.1693
+        },
+        {
+          "question": "How could future weather conditions impact the feasibility of infrastructure projects in Central Tajikistan through mid-century?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "What impacts might climate variability have on the performance of renewable energy facilities in Northern Uzbekistan by 2050?",
+          "lon": 64.5853,
+          "lat": 41.3783
+        }
+      ],
+      "specific": [
+        {
+          "question": "How is wind speed variation expected to affect the output of wind turbines in Northern Kazakhstan over the next decade?",
+          "lon": 30.5234,
+          "lat": 50.4501
+        },
+        {
+          "question": "What are the projected impacts of increased precipitation on dam infrastructure in Central Ukraine by 2040?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "How will warmer temperatures influence the cooling needs of solar farms in Southern Russia over the next 30 years?",
+          "lon": 37.9029,
+          "lat": 44.7163
+        },
+        {
+          "question": "What impacts might shifting wind directions have on wind farm efficiency in Western Kyrgyzstan by mid-century?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How could temperature increases impact geothermal power viability in Eastern Tajikistan through 2030?",
+          "lon": 68.5074,
+          "lat": 37.8366
+        },
+        {
+          "question": "What is the expected impact of precipitation shifts on urban water supply sourcing in Central Turkmenistan by 2050?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "How could future climate conditions affect wind turbine installations in Southeastern Uzbekistan over the next two decades?",
+          "lon": 66.9741,
+          "lat": 39.6522
+        },
+        {
+          "question": "What is the projected influence of increased heatwaves on solar PV panel performance in Northern Belarus by 2030?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "How will changes in water flow patterns affect hydropower production in Northeastern Kazakhstan through the mid-century?",
+          "lon": 71.4491,
+          "lat": 51.1693
+        },
+        {
+          "question": "What could be the impact of altered climates on energy grid resilience in Western Russia by 2040?",
+          "lon": 55.9578,
+          "lat": 54.7371
+        }
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "How might evolving climate conditions influence urban planning strategies in Northwest Russia over the next two decades?",
+          "lon": 30.3351,
+          "lat": 59.9343
+        },
+        {
+          "question": "What is the impact of anticipated climate shifts on infrastructure development in Western Kazakhstan by 2030?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "How could temperature increases affect community planning in Southern Ukraine through mid-century?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What are the expected outcomes of climate variability on public space management in Northern Russia over the next 30 years?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How will changing precipitation patterns influence drainage system planning in Central Belarus by 2050?",
+          "lon": 27.5515,
+          "lat": 53.9036
+        },
+        {
+          "question": "What are the projected effects of climate change on housing infrastructure designs in Eastern Kyrgyzstan through 2040?",
+          "lon": 74.7661,
+          "lat": 41.2044
+        },
+        {
+          "question": "How might climate-induced hazards affect urban development plans in Northern Uzbekistan over the next decade?",
+          "lon": 69.2797,
+          "lat": 41.3111
+        },
+        {
+          "question": "What is the anticipated impact of warmer climates on city planning strategies in Western Tajikistan by 2040?",
+          "lon": 69.7802,
+          "lat": 37.837
+        },
+        {
+          "question": "What influence will future climate conditions have on sustainable community planning in Southern Turkmenistan by mid-century?",
+          "lon": 58.3904,
+          "lat": 37.9353
+        },
+        {
+          "question": "How could climate changes impact public transportation planning in Eastern Ukraine through the next 20 years?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the anticipated impact of increasing precipitation on flood management systems in southern Russia by 2030?",
+          "lon": 76.9092,
+          "lat": 43.235
+        },
+        {
+          "question": "How will warmer temperatures affect residential building standards in Northern Belarus over the next three decades?",
+          "lon": 27.5667,
+          "lat": 53.9
+        },
+        {
+          "question": "What are the projected effects of changes in climate on green space development in Central Ukraine by 2040?",
+          "lon": 30.5234,
+          "lat": 50.4501
+        },
+        {
+          "question": "How will rising temperatures influence public health infrastructure planning in Western Kazakhstan through 2050?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "What is the impact of expected climate change on sustainable construction practices in Eastern Tajikistan over the next 20 years?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "How might increased rainfall impact stormwater management strategies in Southern Uzbekistan by 2030?",
+          "lon": 71.6001,
+          "lat": 40.4189
+        },
+        {
+          "question": "What are the potential impacts of increased wind speeds on urban tree planting initiatives in Northern Kyrgyzstan by mid-century?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How will changing climate conditions affect energy-efficient urban design in Western Turkmenistan by 2050?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "What is the projected influence of climate variability on transportation infrastructure in Southeastern Russia over the next two decades?",
+          "lon": 33.6,
+          "lat": 44.6167
+        },
+        {
+          "question": "How could shifts in climate affect waste management systems in Western Belarus by 2040?",
+          "lon": 31.014,
+          "lat": 52.4242
+        }
+      ]
+    },
+    "Climate Adaptation in Cropping Systems": {
+      "general": [
+        {
+          "question": "How might cropping systems adapt to anticipated climate changes in Eastern Kazakhstan by 2030?",
+          "lon": 82.6282,
+          "lat": 49.9482
+        },
+        {
+          "question": "What are the potential strategies for adapting cropping systems to climate variability in Southern Russia over the next 20 years?",
+          "lon": 39.7203,
+          "lat": 43.5855
+        },
+        {
+          "question": "How will evolving climate conditions affect crop diversity adaptation in Western Belarus by 2050?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "What adaptation techniques are essential for maintaining crop production in Northern Ukraine through 2040?",
+          "lon": 30.5234,
+          "lat": 50.4501
+        },
+        {
+          "question": "How could changing climate conditions influence adaptive agricultural methods in Central Tajikistan over the next 30 years?",
+          "lon": 68.787,
+          "lat": 38.5524
+        },
+        {
+          "question": "What role will adaptive technologies play in future cropping patterns in Northern Kazakhstan over the next decade?",
+          "lon": 71.4491,
+          "lat": 51.1693
+        },
+        {
+          "question": "How might adaptive agricultural practices offset climate-driven risks in Northern Kyrgyzstan by 2030?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "What is the anticipated impact of climate adaptation interventions on agriculture in Western Uzbekistan through mid-century?",
+          "lon": 64.5853,
+          "lat": 41.3775
+        },
+        {
+          "question": "How will adaptive crop management strategies evolve in response to climate changes in Southern Turkmenistan by 2040?",
+          "lon": 58.3904,
+          "lat": 37.9353
+        },
+        {
+          "question": "What is the expected efficacy of climate-resilient cropping systems in Eastern Russia over the next two decades?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        }
+      ],
+      "specific": [
+        {
+          "question": "How can wheat cropping systems in Central Russia be adapted to handle warmer temperatures by 2030?",
+          "lon": 38.1173,
+          "lat": 56.2894
+        },
+        {
+          "question": "What measures could help rice farms in Eastern Uzbekistan cope with reduced rainfall over the next three decades?",
+          "lon": 71.182,
+          "lat": 40.3782
+        },
+        {
+          "question": "How might maize producers in Southern Ukraine adjust their practices to changing climate conditions by 2050?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What adaptation strategies are needed to sustain potato farms in Northern Kazakhstan through 2040?",
+          "lon": 71.4304,
+          "lat": 51.1283
+        },
+        {
+          "question": "How will vineyard operators in Western Tajikistan need to adapt to anticipated temperature rises by mid-century?",
+          "lon": 68.6356,
+          "lat": 37.8376
+        },
+        {
+          "question": "What are the expected benefits of climate-resilient seed varieties for soybean producers in Northern Turkmenistan by 2030?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "How might barley farming in Southern Kyrgyzstan need to change to accommodate future climate conditions over the next decade?",
+          "lon": 74.4307,
+          "lat": 42.5578
+        },
+        {
+          "question": "What are the key adaptation actions for sustaining corn productivity in Southeastern Russia by 2040?",
+          "lon": 33.6,
+          "lat": 44.6167
+        },
+        {
+          "question": "How can sunflower farms in Central Belarus enhance resilience to increased precipitation through next 20 years?",
+          "lon": 27.5615,
+          "lat": 53.9025
+        },
+        {
+          "question": "What systemic changes in sugar beet farming would be necessary for Northern Uzbekistan given expected climate changes by 2050?",
+          "lon": 62.8746,
+          "lat": 42.2988
+        }
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "How might climate changes affect sustainability practices in agriculture across Western Russia over the next two decades?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "What challenges will climate-induced environmental changes bring to sustainable farming in Central Kazakhstan by 2050?",
+          "lon": 66.9237,
+          "lat": 48.0196
+        },
+        {
+          "question": "How will future climate trends impact sustainable water use in agriculture in Northern Ukraine over the next 30 years?",
+          "lon": 30.5234,
+          "lat": 50.4501
+        },
+        {
+          "question": "What are the projected impacts of climate variability on sustainability measures in Eastern Belarus by mid-century?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "How could climate change influence sustainability efforts in food production for Southeastern Turkmenistan over the next decade?",
+          "lon": 58.3904,
+          "lat": 37.9353
+        },
+        {
+          "question": "What role will climate adaptation play in promoting sustainable agriculture in Southern Uzbekistan by 2040?",
+          "lon": 66.9741,
+          "lat": 39.6522
+        },
+        {
+          "question": "How is climate change expected to impact long-term environmental sustainability in Western Tajikistan through 2040?",
+          "lon": 68.787,
+          "lat": 38.5524
+        },
+        {
+          "question": "What strategies could enhance the resilience of sustainable practices to climate shifts in Northeastern Kyrgyzstan by 2030?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How might sustainability in resource management evolve with changing climates in Eastern Uzbekistan over the next 20 years?",
+          "lon": 71.182,
+          "lat": 40.3782
+        },
+        {
+          "question": "What are the expected impacts of climatic changes on sustainability efforts in agriculture in Southern Russia by 2050?",
+          "lon": 39.7203,
+          "lat": 43.5855
+        }
+      ],
+      "specific": [
+        {
+          "question": "How can sustainable wheat farming practices in central Russia be maintained under future climate projections over the next decade?",
+          "lon": 37.616,
+          "lat": 54.2048
+        },
+        {
+          "question": "What sustainability measures are crucial for maintaining rice production in Northern Kazakhstan by 2040?",
+          "lon": 71.4304,
+          "lat": 51.1283
+        },
+        {
+          "question": "How might organic agriculture practices in Southern Ukraine need to adapt to climate changes through mid-century?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What are the potential sustainability challenges for dairy farming in Western Belarus given future climate changes by 2050?",
+          "lon": 31.014,
+          "lat": 52.4242
+        },
+        {
+          "question": "How might climate variability affect the sustainability of barley cultivation in Northern Kyrgyzstan by 2030?",
+          "lon": 74.4307,
+          "lat": 42.5578
+        },
+        {
+          "question": "What adaptation strategies are essential for maintaining the sustainability of vineyards in Western Uzbekistan over the next three decades?",
+          "lon": 64.5853,
+          "lat": 41.3775
+        },
+        {
+          "question": "How could shifting rain patterns impact sustainable corn farming practices in Eastern Tajikistan by mid-century?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "What are the crucial sustainability practices for reducing climate impact on potato farming in Northern Turkmenistan through 2040?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "How will climate-induced heat stress affect sustainability in cotton farming in Northern Belarus by 2040?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "What methods could enhance the sustainability of sugar beet production in Eastern Kazakhstan under changing climate conditions over the next two decades?",
+          "lon": 73.0868,
+          "lat": 49.7951
+        }
+      ]
+    },
+    "Public Health and Climate": {
+      "general": [
+        {
+          "question": "How might changing climates affect public health initiatives in Southwest Russia over the next two decades?",
+          "lon": 41.9692,
+          "lat": 45.0448
+        },
+        {
+          "question": "What are the projected impacts of temperature changes on health systems in Northern Kazakhstan by 2030?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "How could climate-induced weather changes influence disease prevention strategies in Southern Ukraine through mid-century?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What is the anticipated impact of climate variability on public health services in Eastern Belarus over the next 30 years?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "How might precipitation changes affect the health and safety of communities in Northern Tajikistan by 2050?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "What climate-driven health risks could emerge in urban areas of Northern Kyrgyzstan over the next decade?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How will future climate conditions impact healthcare planning and response strategies in Eastern Turkmenistan by 2040?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "What adaptation strategies will be essential for minimizing climate impacts on public health in Southeastern Uzbekistan through 2040?",
+          "lon": 66.9741,
+          "lat": 39.6522
+        },
+        {
+          "question": "How might climate-induced heat stress influence public health efforts in Northwest Kazakhstan in the coming decades?",
+          "lon": 58.5892,
+          "lat": 50.5821
+        },
+        {
+          "question": "What strategies can be used to address climate impacts on hygiene and sanitation in Southern Russia over the next 20 years?",
+          "lon": 33.6,
+          "lat": 44.6167
+        }
+      ],
+      "specific": [
+        {
+          "question": "How can public health policies in Central Russia better address the risks posed by increasing heatwaves over the next decade?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "What health services are necessary to mitigate the impact of rising temperatures on vulnerable populations in Eastern Ukraine by 2030?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "How might climate shifts specifically influence waterborne diseases in Northern Uzbekistan over the next two decades?",
+          "lon": 69.2797,
+          "lat": 41.3111
+        },
+        {
+          "question": "What are the projected effects on heat-related illness rates in Southwestern Belarus due to climate change by 2050?",
+          "lon": 27.5667,
+          "lat": 53.9
+        },
+        {
+          "question": "How could warmer climate conditions affect pollen allergen levels in Southern Tajikistan by mid-century?",
+          "lon": 68.609,
+          "lat": 37.7613
+        },
+        {
+          "question": "What are the implications of increased rainfall on health infrastructure preparedness in Western Kyrgyzstan through 2040?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How will increased temperatures affect mental health and well-being initiatives in Northern Kazakhstan by 2030?",
+          "lon": 71.4304,
+          "lat": 51.1283
+        },
+        {
+          "question": "What steps can be taken to reduce the impact of expected climate changes on vector-borne diseases in Northern Turkmenistan by 2040?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "How might changing climate conditions affect nutrition and food security for public health in Southern Ukraine by 2050?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What health adaptation plans will be required to address climate impacts on communities in Eastern Belarus over the next 30 years?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        }
+      ]
+    },
+    "Tourism and Recreation": {
+      "general": [
+        {
+          "question": "How might anticipated climate changes impact tourism dynamics in Western Russia in the coming decades?",
+          "lon": 65.5272,
+          "lat": 57.1522
+        },
+        {
+          "question": "What are the projected effects of climate variability on recreational activities in Northern Kazakhstan by 2030?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "How could rising temperatures influence tourism infrastructure in Southern Ukraine over the next three decades?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What impact will anticipated climate changes have on public recreation spaces in Eastern Belarus by 2050?",
+          "lon": 27.9532,
+          "lat": 53.7111
+        },
+        {
+          "question": "How might evolving climate affect tourist experiences in Northern Uzbekistan through mid-century?",
+          "lon": 69.2803,
+          "lat": 41.3116
+        },
+        {
+          "question": "What challenges could climate change pose to eco-tourism opportunities in Eastern Kyrgyzstan over the next decade?",
+          "lon": 74.7661,
+          "lat": 41.2044
+        },
+        {
+          "question": "How will climate conditions affect seasonal recreational patterns in Central Tajikistan by 2040?",
+          "lon": 71.2761,
+          "lat": 38.861
+        },
+        {
+          "question": "What is the anticipated impact of climate shifts on cultural tourism in Southern Turkmenistan by 2050?",
+          "lon": 58.3904,
+          "lat": 37.9353
+        },
+        {
+          "question": "How might climate-induced changes affect the development of recreational facilities in Southwestern Russia by 2040?",
+          "lon": 37.927,
+          "lat": 44.6868
+        },
+        {
+          "question": "What effects will future weather conditions have on the viability of winter sports tourism in Northern Kazakhstan over the next two decades?",
+          "lon": 71.4304,
+          "lat": 51.1283
+        }
+      ],
+      "specific": [
+        {
+          "question": "How is warmer weather expected to impact ski resort operations in Northern Tajikistan by 2030?",
+          "lon": 69.966,
+          "lat": 39.627
+        },
+        {
+          "question": "What potential climate changes might affect spa tourism in Western Belarus over the next three decades?",
+          "lon": 27.5667,
+          "lat": 53.9
+        },
+        {
+          "question": "How will increased temperatures influence beach tourism in Southern Ukraine by mid-century?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What climate factors are projected to affect hiking tourism in Western Kazakhstan through 2040?",
+          "lon": 58.2952,
+          "lat": 50.5823
+        },
+        {
+          "question": "How might alterations in precipitation patterns influence birdwatching spots in Eastern Turkmenistan by 2050?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "What impact will changing climate conditions have on cycling tours in Northern Uzbekistan over the next two decades?",
+          "lon": 64.5853,
+          "lat": 41.3775
+        },
+        {
+          "question": "How could climate-driven heatwaves affect historical site tourism in Western Russia by 2040?",
+          "lon": 37.616,
+          "lat": 54.2048
+        },
+        {
+          "question": "What are the projected climate impacts on vineyard tours in Northern Kyrgyzstan by mid-century?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How might warmer temperatures influence the future of camping tourism in Southern Turkmenistan by 2030?",
+          "lon": 58.3904,
+          "lat": 37.9353
+        },
+        {
+          "question": "What are the expected impacts of climate variability on fishing tourism in Western Tajikistan through 2050?",
+          "lon": 71.2761,
+          "lat": 38.861
+        }
+      ]
+    },
+    "Financial and Insurance Risk": {
+      "general": [
+        {
+          "question": "How might climate changes increase financial risks for agricultural operations in Eastern Russia by mid-century?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "What are the anticipated impacts of climate variability on insurance models in Western Kazakhstan over the next 30 years?",
+          "lon": 58.2952,
+          "lat": 50.5823
+        },
+        {
+          "question": "How could climate change influence financial stability for farming businesses in Southern Ukraine through 2040?",
+          "lon": 30.7356,
+          "lat": 46.4825
+        },
+        {
+          "question": "What are the projected effects of climate shifts on fiscal responsibility for public infrastructure in Central Belarus by 2050?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "How will climate-driven natural disasters impact insurance costs in Northern Uzbekistan over the next two decades?",
+          "lon": 69.2797,
+          "lat": 41.3111
+        },
+        {
+          "question": "What is the expected economic impact of future climate conditions on the risk profile of businesses in Western Kyrgyzstan by 2040?",
+          "lon": 74.5698,
+          "lat": 42.8746
+        },
+        {
+          "question": "How might increasing climate variation influence investment strategies in Eastern Turkmenistan through 2030?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "What financial precautions are essential for managing climate risks in Southern Russia over the next decade?",
+          "lon": 41.9692,
+          "lat": 45.0448
+        },
+        {
+          "question": "How could climate change alter the insurance needs of agricultural sectors in Northern Kazakhstan by mid-century?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "What is the projected financial burden of climate-related disasters on public services in Eastern Tajikistan over the next 20 years?",
+          "lon": 71.2761,
+          "lat": 38.861
+        }
+      ],
+      "specific": [
+        {
+          "question": "How might climate-induced flooding affect property insurance premiums in Central Ukraine by mid-century?",
+          "lon": 36.2304,
+          "lat": 49.9935
+        },
+        {
+          "question": "What are the expected impacts of drought conditions on crop insurance in Central Russia by 2050?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "How could increased temperature variability influence energy sector insurance costs in Northern Kazakhstan through 2040?",
+          "lon": 71.4491,
+          "lat": 51.1694
+        },
+        {
+          "question": "What financial risks are associated with anticipated weather changes for transport infrastructure in Southern Tajikistan through 2030?",
+          "lon": 68.609,
+          "lat": 37.7613
+        },
+        {
+          "question": "How might warmer climates affect the market volatility of grain commodities in Northern Belarus over the next three decades?",
+          "lon": 27.9534,
+          "lat": 53.7098
+        },
+        {
+          "question": "What are the financial implications of increased wind speeds on offshore energy insurance policies in Eastern Turkmenistan through 2040?",
+          "lon": 63.7568,
+          "lat": 38.9697
+        },
+        {
+          "question": "How is climate variability expected to affect the calculation of premiums for agricultural insurance in Northern Uzbekistan over the next decade?",
+          "lon": 64.5853,
+          "lat": 41.3783
+        },
+        {
+          "question": "What fiscal strategies are necessary to mitigate climate-related insurer risks in Western Russia by 2030?",
+          "lon": 37.616,
+          "lat": 54.2048
+        },
+        {
+          "question": "How might climate unpredictability affect the financial planning of governmental bodies in Eastern Ukraine over the next 20 years?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "What is the anticipated effect of changing climate patterns on life insurance underwriting criteria in Western Rabiliton by 2040?",
+          "lon": 56.421,
+          "lat": 50.55
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1064 @@
+{
+  "themes": {
+    "Crop Yield and Productivity": {
+      "general": [
+        {
+          "question": "How might climate conditions affect crop productivity in the Great Plains region over the next two decades?",
+          "lon": -99.9018,
+          "lat": 37.6979
+        },
+        {
+          "question": "What are the expected changes in agricultural climate conditions across southern Brazil by 2050?",
+          "lon": -51.9253,
+          "lat": -14.235
+        },
+        {
+          "question": "How will the seasonal temperature variation impact crop yield in Southeast Asia in the coming decade?",
+          "lon": 102.4955,
+          "lat": 14.0583
+        },
+        {
+          "question": "What are the projected impacts of climate trends on agriculture in central California by the mid-2040s?",
+          "lon": -119.4179,
+          "lat": 36.7783
+        },
+        {
+          "question": "How are climate variables expected to alter crop yields in Eastern Europe from 2020 to 2030?",
+          "lon": 24.3966,
+          "lat": 56.2639
+        },
+        {
+          "question": "What are the predictions for changes in agriculture due to climate conditions in the Nile Delta over the next three decades?",
+          "lon": 31.2001,
+          "lat": 30.0444
+        },
+        {
+          "question": "How will climate patterns affect crop productivity in the Midwestern United States up to 2040?",
+          "lon": -89.6501,
+          "lat": 40.6331
+        },
+        {
+          "question": "What climate-related factors are likely to influence farming productivity in Western Kenya by 2030?",
+          "lon": 34.7617,
+          "lat": 0.5177
+        },
+        {
+          "question": "How might future climate states alter agricultural yields in Queensland, Australia?",
+          "lon": 143.2104,
+          "lat": -23.5371
+        },
+        {
+          "question": "What are the implications of climate trends on agrarian output in Punjab, India across 2030 to 2050?",
+          "lon": 75.3412,
+          "lat": 30.7333
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the expected impact of changing precipitation patterns on rice yields in the Mekong Delta, Vietnam by 2040?",
+          "lon": 105.2647,
+          "lat": 10.0333
+        },
+        {
+          "question": "How will the shift in temperature averages affect wheat productivity in the Punjab region of Pakistan from 2020-2030?",
+          "lon": 74.3587,
+          "lat": 31.5204
+        },
+        {
+          "question": "What is the projected change in corn yield potential in Iowa, USA (41.8780N, 93.0977W) by the end of 2040?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "How could temperature shifts affect olive production in Andalusia, Spain over the next three decades?",
+          "lon": -4.459,
+          "lat": 37.3833
+        },
+        {
+          "question": "What impact will anticipated precipitation changes have on coffee yields in Colombia's Antioquia region by 2035?",
+          "lon": -75.567,
+          "lat": 6.2518
+        },
+        {
+          "question": "How might warming temperatures influence barley harvests in Scotland up to 2050?",
+          "lon": -3.1883,
+          "lat": 56.4907
+        },
+        {
+          "question": "What are the predicted effects of climate change on maize yields in the Limpopo region of South Africa by 2040?",
+          "lon": 29.8268,
+          "lat": -23.4013
+        },
+        {
+          "question": "Will the temperature increase impact tea production in Assam, India during 2030-2040?",
+          "lon": 91.7539,
+          "lat": 26.2006
+        },
+        {
+          "question": "How might changing temperatures affect cocoa production in C\u00f4te d'Ivoire by mid-century?",
+          "lon": -5.5471,
+          "lat": 7.5399
+        },
+        {
+          "question": "What is the forecasted impact of climate shifts on grape yields in Marlborough, New Zealand from 2020-2030?",
+          "lon": 173.7227,
+          "lat": -41.5134
+        }
+      ]
+    },
+    "Food Production": {
+      "general": [
+        {
+          "question": "What is the impact of climate conditions on food production in the northern Mediterranean region by 2030?",
+          "lon": 15.2551,
+          "lat": 41.9028
+        },
+        {
+          "question": "How will changes in temperature and precipitation affect food output in the Great Lakes region over the next three decades?",
+          "lon": -85.6024,
+          "lat": 44.3148
+        },
+        {
+          "question": "What trends in climate variables will influence food production in north-central India by mid-century?",
+          "lon": 77.1025,
+          "lat": 28.7041
+        },
+        {
+          "question": "How might evolving climate trends affect food resources in the Amazon basin up to 2040?",
+          "lon": -70.0,
+          "lat": -3.4653
+        },
+        {
+          "question": "What will be the implications of changing climate patterns on food production in Southeast Asia over the next 20 years?",
+          "lon": 101.9758,
+          "lat": 4.2105
+        },
+        {
+          "question": "How is food production expected to respond to climatic changes in the Scandinavian region by 2030?",
+          "lon": 13.405,
+          "lat": 59.3348
+        },
+        {
+          "question": "What potential changes in climate during the next two decades could impact the food supply in Central America?",
+          "lon": -88.8965,
+          "lat": 13.7942
+        },
+        {
+          "question": "How will food production systems adapt to climate variations in North Africa up to 2050?",
+          "lon": 10.1658,
+          "lat": 36.8188
+        },
+        {
+          "question": "What role will climate change play in shaping food security in the Middle East between 2030-2050?",
+          "lon": 35.2433,
+          "lat": 31.7683
+        },
+        {
+          "question": "How might climate fluctuations alter food sourcing in the Caribbean region by mid-century?",
+          "lon": -61.371,
+          "lat": 10.6918
+        }
+      ],
+      "specific": [
+        {
+          "question": "How could anticipated rainfall changes impact rice production in Java, Indonesia during the 2020-2030 timeframe?",
+          "lon": 110.0057,
+          "lat": -7.6145
+        },
+        {
+          "question": "What will be the effect of temperature increase on avocado production in Michoac\u00e1n, Mexico by 2040?",
+          "lon": -101.195,
+          "lat": 19.5665
+        },
+        {
+          "question": "How are adjustments in precipitation patterns expected to impact wheat production in Ukraine's breadbasket region by 2030?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        },
+        {
+          "question": "What is the projected influence of climate changes on millet yields in the Sahel region by 2040?",
+          "lon": 0.295,
+          "lat": 12.0
+        },
+        {
+          "question": "How might shifting temperatures affect soybean production in Paran\u00e1, Brazil over the next two decades?",
+          "lon": -51.9253,
+          "lat": -24.145
+        },
+        {
+          "question": "What changes in climate variables will impact salmon aquaculture in Chile by 2035?",
+          "lon": -73.0513,
+          "lat": -40.5731
+        },
+        {
+          "question": "How is climate expected to affect the production of dairy products in the Netherlands by mid-century?",
+          "lon": 5.2913,
+          "lat": 52.1326
+        },
+        {
+          "question": "Will the anticipated temperature increase affect quinoa production in the Andean region of Peru by 2040?",
+          "lon": -75.0152,
+          "lat": -13.1631
+        },
+        {
+          "question": "What impact will climate shifts have on banana cultivation in the Ivory Coast by 2030?",
+          "lon": -4.428,
+          "lat": 7.5399
+        },
+        {
+          "question": "How might future climatic conditions affect barley yields in the Canterbury region, New Zealand from 2030 to 2050?",
+          "lon": 172.7443,
+          "lat": -43.5387
+        }
+      ]
+    },
+    "Agriculture": {
+      "general": [
+        {
+          "question": "How will agricultural activities adapt to climate changes in the Midwest United States over the next 20 years?",
+          "lon": -89.4012,
+          "lat": 43.0731
+        },
+        {
+          "question": "What are the potential impacts of climate variability on agriculture in southern China by 2035?",
+          "lon": 113.2644,
+          "lat": 23.1291
+        },
+        {
+          "question": "How are changes in climate expected to influence agricultural practices in northern Italy by mid-century?",
+          "lon": 9.19,
+          "lat": 45.4642
+        },
+        {
+          "question": "What role will climate conditions play in shaping agriculture in the Murray-Darling Basin over the next three decades?",
+          "lon": 145.9594,
+          "lat": -34.0151
+        },
+        {
+          "question": "How will agriculture in the Iberian Peninsula respond to climatic shifts by 2030?",
+          "lon": -8.2245,
+          "lat": 39.3999
+        },
+        {
+          "question": "What are the expected climatic impacts on farming systems in the central African region through 2040?",
+          "lon": 18.1248,
+          "lat": 9.2458
+        },
+        {
+          "question": "How might agricultural production respond to climate trends in northern India by 2025?",
+          "lon": 78.9629,
+          "lat": 20.5937
+        },
+        {
+          "question": "What climatic challenges could agriculture in Japan face from 2020 to 2030?",
+          "lon": 138.2529,
+          "lat": 36.2048
+        },
+        {
+          "question": "How is agriculture projected to adapt to climate variables in the Balkans up to 2040?",
+          "lon": 20.4637,
+          "lat": 44.7872
+        },
+        {
+          "question": "What potential effects will climate change have on farming practices in the Mississippi River Valley by 2050?",
+          "lon": -90.1848,
+          "lat": 32.2988
+        }
+      ],
+      "specific": [
+        {
+          "question": "What impact will future summer temperatures have on the coffee farms of Ethiopia between 2020-2030?",
+          "lon": 39.6012,
+          "lat": 8.9806
+        },
+        {
+          "question": "How could precipitation changes affect sugarcane production in Queensland, Australia over the next two decades?",
+          "lon": 146.7783,
+          "lat": -19.2564
+        },
+        {
+          "question": "What is the projected effect of climate change on cotton yields in Uzbekistan by 2040?",
+          "lon": 64.5853,
+          "lat": 41.3775
+        },
+        {
+          "question": "How might increased temperatures impact tomato farming in Andhra Pradesh, India during 2030-2040?",
+          "lon": 77.058,
+          "lat": 15.9129
+        },
+        {
+          "question": "What are the anticipated climate-induced changes on hazelnut production in Turkey's Black Sea region by 2040?",
+          "lon": 38.38432156577912,
+          "lat": 40.8813425813143
+        },
+        {
+          "question": "How could evolving climate conditions affect vineyards in Stellenbosch, South Africa by mid-century?",
+          "lon": 18.8444,
+          "lat": -33.9324
+        },
+        {
+          "question": "What will be the impact of precipitation variability on rice cultivation in the Mekong Delta during 2020-2030?",
+          "lon": 105.91314876222282,
+          "lat": 9.322175815294887
+        },
+        {
+          "question": "How might future temperature increases affect apple production in the Annapolis Valley, Canada from 2030 to 2040?",
+          "lon": -64.8348,
+          "lat": 45.0308
+        },
+        {
+          "question": "What could the expected climate changes mean for soybean farming in Mato Grosso, Brazil by 2035?",
+          "lon": -55.0,
+          "lat": -12.6819
+        },
+        {
+          "question": "What effects could future temperature and precipitation trends have on pepper cultivation in the Zacatecas region of Mexico by 2040?",
+          "lon": -102.5833,
+          "lat": 22.7709
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "What are the potential impacts of climate changes on renewable energy development in Scandinavia by mid-century?",
+          "lon": 11.0745,
+          "lat": 60.472
+        },
+        {
+          "question": "How might climate change influence the viability of wind energy projects in northern Texas by 2040?",
+          "lon": -99.9018,
+          "lat": 31.9686
+        },
+        {
+          "question": "What challenges will climate conditions pose for solar power expansion in North Africa over the next two decades?",
+          "lon": 10.8021,
+          "lat": 34.8021
+        },
+        {
+          "question": "How are temperature trends expected to affect energy infrastructure in the Iberian Peninsula up to 2040?",
+          "lon": -8.611,
+          "lat": 42.5964
+        },
+        {
+          "question": "What role will climate patterns play in shaping renewable energy investments in southern Australia by 2030?",
+          "lon": 134.491,
+          "lat": -25.2744
+        },
+        {
+          "question": "How could climate change impact the development of hydropower resources in the Andean region by 2035?",
+          "lon": -68.1193,
+          "lat": -16.2902
+        },
+        {
+          "question": "What are the expected effects of future climate variability on tidal energy potential in the UK by 2050?",
+          "lon": -1.2578,
+          "lat": 51.752
+        },
+        {
+          "question": "How will climatological shifts influence geothermal energy projects in Iceland over the next 30 years?",
+          "lon": -19.0208,
+          "lat": 64.9631
+        },
+        {
+          "question": "What potential impacts could climate conditions have on wind farm operations in northern Germany up to 2025?",
+          "lon": 9.5018,
+          "lat": 51.1657
+        },
+        {
+          "question": "How is future climate change expected to influence energy infrastructure across Southeast Asia by 2040?",
+          "lon": 104.991,
+          "lat": 11.5564
+        }
+      ],
+      "specific": [
+        {
+          "question": "What impact will temperature changes have on solar panel efficiency in California's Mojave Desert by 2030?",
+          "lon": -115.4696,
+          "lat": 35.1936
+        },
+        {
+          "question": "How are wind patterns predicted to change for onshore wind farms in Inner Mongolia, China from 2020 to 2030?",
+          "lon": 110.1694,
+          "lat": 44.0933
+        },
+        {
+          "question": "What is the impact of changing weather conditions on the geothermal energy capacity in Kyoto, Japan by 2040?",
+          "lon": 135.768,
+          "lat": 35.0116
+        },
+        {
+          "question": "How might increasing temperatures affect hydropower generation potential in Norway by mid-century?",
+          "lon": 8.4689,
+          "lat": 60.472
+        },
+        {
+          "question": "What effects will future precipitation changes have on the viability of wind farms in Patagonia, Argentina by 2040?",
+          "lon": -71.1377,
+          "lat": -40.7321
+        },
+        {
+          "question": "What impact will projected climate patterns have on solar energy systems in Rajasthan, India from 2020-2030?",
+          "lon": 73.8567,
+          "lat": 26.9124
+        },
+        {
+          "question": "How could climate change affect the prospects for tidal energy development in the Bay of Fundy, Canada by 2035?",
+          "lon": -64.06,
+          "lat": 45.1264
+        },
+        {
+          "question": "What role will climate variables play in shaping the sustainability of wind power in the Great Plains region of the USA by 2040?",
+          "lon": -101.9183,
+          "lat": 39.2884
+        },
+        {
+          "question": "How might climate-induced variability in winds affect solar and wind hybrid farms in Andalusia, Spain by 2040?",
+          "lon": -5.992,
+          "lat": 37.3891
+        },
+        {
+          "question": "How is climate expected to influence coastal wind energy infrastructure near the Dutch North Sea coast (e.g., Den Helder, Netherlands) by 2040-2050?",
+          "lon": 4.75,
+          "lat": 52.95
+        }        
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "What is the projected impact of climate variability on urban planning in Tokyo, Japan over the next two decades?",
+          "lon": 139.6917,
+          "lat": 35.6895
+        },
+        {
+          "question": "How might climate-induced changes shape community planning in the coastal areas of Bangladesh by 2040?",
+          "lon": 90.4125,
+          "lat": 23.8103
+        },
+        {
+          "question": "What are the potential challenges for city planning in Lagos, Nigeria due to climate change by mid-century?",
+          "lon": 3.3792,
+          "lat": 6.5244
+        },
+        {
+          "question": "How will urban planning need to adapt to climate trends in the Greater Toronto Area over the next 30 years?",
+          "lon": -79.3832,
+          "lat": 43.6532
+        },
+        {
+          "question": "What impact will climate variables have on community infrastructure in Amsterdam by 2035?",
+          "lon": 4.9041,
+          "lat": 52.3676
+        },
+        {
+          "question": "How are urban development strategies in the San Francisco Bay Area likely to change with future climate scenarios by 2040?",
+          "lon": -122.4194,
+          "lat": 37.7749
+        },
+        {
+          "question": "What role might climate trends play in shaping smart city initiatives in Shanghai, China by 2030?",
+          "lon": 121.4737,
+          "lat": 31.2304
+        },
+        {
+          "question": "How could climate change influence zoning regulations in Cairo, Egypt by 2050?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "How are public transportation systems in Berlin, Germany expected to evolve under future climate changes by 2040?",
+          "lon": 13.405,
+          "lat": 52.52
+        },
+        {
+          "question": "What climate change impacts on urban planning are anticipated for Rio de Janeiro, Brazil by 2035?",
+          "lon": -43.1729,
+          "lat": -22.9068
+        }
+      ],
+      "specific": [
+        {
+          "question": "How might increased temperatures affect public housing strategies in Phoenix, USA during 2020-2030?",
+          "lon": -112.074,
+          "lat": 33.4484
+        },
+        {
+          "question": "What are the implications of climate-related precipitation changes for flood management in Bangkok, Thailand by 2040?",
+          "lon": 100.5018,
+          "lat": 13.7563
+        },
+        {
+          "question": "How is urban infrastructure in Sydney, Australia expected to respond to future climate scenarios by mid-century?",
+          "lon": 151.2093,
+          "lat": -33.8688
+        },
+        {
+          "question": "What impact could climate trends have on stormwater management systems in Mumbai, India by 2035?",
+          "lon": 72.8777,
+          "lat": 19.076
+        },
+        {
+          "question": "How will climate-induced temperature changes influence residential energy planning in Madrid, Spain by 2040?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "What effects are expected from climate volatility on emergency response planning in Houston, USA by 2050?",
+          "lon": -95.3698,
+          "lat": 29.7604
+        },
+        {
+          "question": "How could temperature increases affect urban tree planting programs in Johannesburg, South Africa by 2030?",
+          "lon": 28.0473,
+          "lat": -26.2041
+        },
+        {
+          "question": "What potential impacts will climate change have on sewage systems in Venice, Italy by 2040?",
+          "lon": 12.293371641926626,
+          "lat": 45.510491948710644
+        },
+        {
+          "question": "How are anticipated climate patterns likely to affect urban mobility solutions in Seoul, South Korea by 2030?",
+          "lon": 126.978,
+          "lat": 37.5665
+        },
+        {
+          "question": "What is the expected impact of changing precipitation on green space planning in Paris, France by mid-century?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        }
+      ]
+    },
+    "Climate Adaptation in Cropping Systems": {
+      "general": [
+        {
+          "question": "How will climate adaptation strategies be implemented in cropping systems across the Iberian Peninsula by mid-century?",
+          "lon": -3.7492,
+          "lat": 40.4637
+        },
+        {
+          "question": "What are the possible ways to enhance agricultural resilience in the US Midwest to handle climate variability by 2035?",
+          "lon": -93.8828,
+          "lat": 41.878
+        },
+        {
+          "question": "What climate adaptation measures might be required in cropping systems in northern Italy through 2040?",
+          "lon": 9.19,
+          "lat": 45.4642
+        },
+        {
+          "question": "How is the agricultural sector in the Andean region of South America adapting to climate changes by 2030?",
+          "lon": -70.6483,
+          "lat": -33.4569
+        },
+        {
+          "question": "What factors are leading to new adaptation strategies in Asian cropping systems due to climate change by 2050?",
+          "lon": 101.6869,
+          "lat": 3.139
+        },
+        {
+          "question": "How might cropping systems in Central Africa change to adapt to future climate conditions through 2040?",
+          "lon": 15.8298,
+          "lat": -0.228
+        },
+        {
+          "question": "What are the anticipated impacts of climate adaptation in agricultural practices in the Russian steppe by 2030?",
+          "lon": 37.6173,
+          "lat": 55.7558
+        },
+        {
+          "question": "What adaptation strategies are being considered for viticulture in southeastern France due to climate changes by 2035?",
+          "lon": 5.3698,
+          "lat": 43.2965
+        },
+        {
+          "question": "How might future climate conditions necessitate changes in rice farming techniques in Southeast Asia through 2050?",
+          "lon": 102.4955,
+          "lat": 14.0583
+        },
+        {
+          "question": "How is coconut farming along the coastal region of Espiritu Santo, Vanuatu adapting to projected climate changes up to 2040?",
+          "lon": 167.2167,
+          "lat": -15.5167
+        }
+      ],
+      "specific": [
+        {
+          "question": "What climate adaptation strategies are required to sustain wheat production in Kansas, USA under future scenarios by 2030?",
+          "lon": -98.4842,
+          "lat": 39.0119
+        },
+        {
+          "question": "How will olive farming in southern Spain need to adapt to rising temperatures by 2040?",
+          "lon": -4.4214,
+          "lat": 36.7213
+        },
+        {
+          "question": "What changes could be implemented in rice adaptation strategies in the Mekong Delta, Vietnam by mid-century?",
+          "lon": 106.3444,
+          "lat": 10.2828
+        },
+        {
+          "question": "How are vineyards in Napa Valley, USA planning to adapt to projected climate conditions by 2035?",
+          "lon": -122.2869,
+          "lat": 38.2988
+        },
+        {
+          "question": "What adaptation methods might be necessary for banana cultivation in Costa Rica with future climate scenarios by 2040?",
+          "lon": -83.7534,
+          "lat": 9.7489
+        },
+        {
+          "question": "How will sugarcane farms in Maharashtra, India respond to anticipated climate changes by 2030?",
+          "lon": 75.7139,
+          "lat": 19.7515
+        },
+        {
+          "question": "What adaptive crop management techniques are projected for cocoa production in Ghana amid climate changes by mid-century?",
+          "lon": -1.0232,
+          "lat": 7.9465
+        },
+        {
+          "question": "How might saffron farming in Kashmir, India adapt to climate variability by 2040?",
+          "lon": 74.7973,
+          "lat": 34.0837
+        },
+        {
+          "question": "What are the future adaptation requirements for coffee plantations in Ethiopia due to climate change by 2030?",
+          "lon": 39.6012,
+          "lat": 9.145
+        },
+        {
+          "question": "How can cassava production in southeastern Nigeria (e.g., around Enugu) adjust to future climate scenarios by 2040?",
+          "lon": 7.5,
+          "lat": 6.5
+        }        
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "What are the projected impacts of climate change on long-term sustainability in agriculture in Central America by 2040?",
+          "lon": -88.8965,
+          "lat": 13.7942
+        },
+        {
+          "question": "How might food production systems enhance sustainability in sub-Saharan Africa under future climate change scenarios by 2035?",
+          "lon": 20.9394,
+          "lat": 6.6111
+        },
+        {
+          "question": "What role will climate change play in shaping sustainable agriculture practices in Eastern Europe by 2050?",
+          "lon": 21.0059,
+          "lat": 52.2297
+        },
+        {
+          "question": "How can sustainability in agriculture be improved in Southeast Asia considering climate trends through 2040?",
+          "lon": 101.9758,
+          "lat": 4.2105
+        },
+        {
+          "question": "What are the challenges and opportunities for sustainable food systems in the Mediterranean region due to climate conditions by 2030?",
+          "lon": 12.4964,
+          "lat": 41.9028
+        },
+        {
+          "question": "How is sustainability in agriculture expected to evolve in northeastern USA in response to warming temperatures by mid-century?",
+          "lon": -74.006,
+          "lat": 40.7128
+        },
+        {
+          "question": "What potential changes in climate could enhance sustainability efforts across agricultural sectors in the Andes region through 2040?",
+          "lon": -77.0428,
+          "lat": -12.0464
+        },
+        {
+          "question": "How could climate trends reshape sustainable resource use in North Africa by 2035?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "What are the anticipated impacts of temperature changes on the long-term sustainability of agriculture in Western Australia by 2050?",
+          "lon": 122.2583,
+          "lat": -31.9505
+        },
+        {
+          "question": "What measures can be taken in southern Asia to ensure agricultural sustainability amidst impending climate changes by 2040?",
+          "lon": 78.9629,
+          "lat": 20.5937
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected precipitation changes impact the sustainability of tea production in the Assam region of India by 2040?",
+          "lon": 92.9376,
+          "lat": 26.2006
+        },
+        {
+          "question": "What sustainable practices are necessary for cocoa farming in C\u00f4te d'Ivoire amidst climate changes projected by 2030?",
+          "lon": -5.5471,
+          "lat": 7.5399
+        },
+        {
+          "question": "How might climate change affect the long-term sustainability of maize farming in the Midwest USA by mid-century?",
+          "lon": -89.6501,
+          "lat": 40.6331
+        },
+        {
+          "question": "What sustainable adaptation strategies are vital for coffee plantations in Brazil in the face of future climate conditions by 2035?",
+          "lon": -45.03884840470201,
+          "lat": -23.32074585780759
+        },
+        {
+          "question": "How could temperature changes affect the sustainable growth of apple orchards in the Okanagan Valley, Canada by 2040?",
+          "lon": -119.596,
+          "lat": 49.486
+        },
+        {
+          "question": "What are the essential sustainable practices for rice production in the Mekong Delta, Vietnam facing future climate change by 2030?",
+          "lon": 105.7469,
+          "lat": 10.391
+        },
+        {
+          "question": "How will grape vineyards in the Bordeaux region of France need to adapt for sustainability with projected climate conditions by 2040?",
+          "lon": -0.5792,
+          "lat": 44.8378
+        },
+        {
+          "question": "What sustainable approaches are necessary to ensure the viability of wheat production in the Canadian Prairies by mid-century?",
+          "lon": -106.3468,
+          "lat": 56.1304
+        },
+        {
+          "question": "How could future temperature increases affect the sustainability of barley farming in the Scottish Highlands by 2035?",
+          "lon": -4.2026,
+          "lat": 57.4907
+        },
+        {
+          "question": "What implications do future precipitation patterns hold for the sustainable development of banana crops in the Caribbean by 2040?",
+          "lon": -61.371,
+          "lat": 10.6918
+        }
+      ]
+    },
+    "Public Health and Climate": {
+      "general": [
+        {
+          "question": "How might climatic changes impact public health objectives in Southeast Asia over the next two decades?",
+          "lon": 102.4955,
+          "lat": 14.0583
+        },
+        {
+          "question": "What are the projected health risks associated with climate variability in Central Africa by 2040?",
+          "lon": 21.7587,
+          "lat": -5.0379
+        },
+        {
+          "question": "How will temperature and precipitation shifts affect public health systems in the Gulf region by 2035?",
+          "lon": 54.337,
+          "lat": 23.4241
+        },
+        {
+          "question": "What role does climate play in influencing public health outcomes in northern Europe through 2050?",
+          "lon": 14.4118,
+          "lat": 35.9375
+        },
+        {
+          "question": "How could future climate conditions impact health infrastructure in the Caribbean by 2040?",
+          "lon": -61.371,
+          "lat": 10.6918
+        },
+        {
+          "question": "What are the expected impacts of climate change on vector-borne diseases in the Amazon basin over the next 30 years?",
+          "lon": -60.0242,
+          "lat": -3.4168
+        },
+        {
+          "question": "How might climate trends influence respiratory diseases in Eastern Asia by 2030?",
+          "lon": 126.978,
+          "lat": 37.5665
+        },
+        {
+          "question": "What are the implications of elevated temperatures for public health in the Mediterranean region by mid-century?",
+          "lon": 14.35617351270784,
+          "lat": 35.91997294853035
+        },
+        {
+          "question": "How can Northern Africa prepare for climate-induced health challenges by 2040?",
+          "lon": 30.8025,
+          "lat": 26.8206
+        },
+        {
+          "question": "What are the potential health impacts of increased heatwaves in southern Africa by 2035?",
+          "lon": 23.91,
+          "lat": -30.5595
+        }
+      ],
+      "specific": [
+        {
+          "question": "How might rising temperatures affect the spread of malaria in Kenya over the decade starting 2020?",
+          "lon": 36.8219,
+          "lat": -1.2921
+        },
+        {
+          "question": "What impact will increased temperatures have on heat-related illnesses in Arizona, USA by 2040?",
+          "lon": -111.0937,
+          "lat": 34.0489
+        },
+        {
+          "question": "How can the public health system in Mumbai, India adjust to climate-induced flooding events by 2030?",
+          "lon": 72.8777,
+          "lat": 19.076
+        },
+        {
+          "question": "What adaptations are needed to address climate-related increases in dengue fever in Bangkok, Thailand by mid-century?",
+          "lon": 100.5018,
+          "lat": 13.7563
+        },
+        {
+          "question": "How will climate change likely affect air quality and respiratory health in Los Angeles, USA by 2040?",
+          "lon": -118.2437,
+          "lat": 34.0522
+        },
+        {
+          "question": "What measures can be implemented in Dhaka, Bangladesh to mitigate health impacts due to projected temperature increases by 2035?",
+          "lon": 90.4125,
+          "lat": 23.8103
+        },
+        {
+          "question": "How is climate change projected to impact heat stress-related health issues in Cairo, Egypt by 2030?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "What public health strategies are essential to cope with projected increases in vector-borne diseases in Rio de Janeiro, Brazil by mid-century?",
+          "lon": -43.1729,
+          "lat": -22.9068
+        },
+        {
+          "question": "How might future climate variability affect incidences of asthma in children in Melbourne, Australia by 2040?",
+          "lon": 144.9631,
+          "lat": -37.8136
+        },
+        {
+          "question": "What are the effects of projected climate changes on public health infrastructure requirements in New Delhi, India by 2035?",
+          "lon": 77.1025,
+          "lat": 28.7041
+        }
+      ]
+    },
+    "Tourism and Recreation": {
+      "general": [
+        {
+          "question": "How could climate changes impact the tourism sector in the French Riviera by mid-century?",
+          "lon": 7.2656,
+          "lat": 43.7102
+        },
+        {
+          "question": "What effect will projected climate changes have on winter sports tourism in the Alps by 2040?",
+          "lon": 6.8694,
+          "lat": 45.8399
+        },
+        {
+          "question": "What are the potential impacts of climate scenarios on coastal tourism in the Caribbean through 2040?",
+          "lon": -61.213,
+          "lat": 10.6918
+        },
+        {
+          "question": "What effect will future temperature and precipitation changes have on ecotourism in Costa Rica by 2050?",
+          "lon": -83.7534,
+          "lat": 9.7489
+        },
+        {
+          "question": "How might future climate conditions affect outdoor recreational activities in the Rocky Mountains over the next two decades?",
+          "lon": -105.5302,
+          "lat": 39.5501
+        },
+        {
+          "question": "What role does climate change play in shaping tourism patterns in East Africa by 2040?",
+          "lon": 39.4637,
+          "lat": -6.369
+        },
+        {
+          "question": "What are the anticipated effects of climate change on cultural heritage tourism in Southeast Asia by 2035?",
+          "lon": 100.5018,
+          "lat": 13.7563
+        },
+        {
+          "question": "How will projected climate trends influence tourism in the Maldives by 2040?",
+          "lon": 73.54149,
+          "lat": 4.217117
+        },
+        {
+          "question": "How is tourism in the Great Barrier Reef region expected to adapt to climate changes by 2035?",
+          "lon": 145.4330,
+          "lat": -16.0875
+        },
+        {
+          "question": "How might shifting climate conditions affect beach tourism in the Canary Islands by 2030?",
+          "lon": -15.5,
+          "lat": 28.1
+        }        
+      ],
+      "specific": [
+        {
+          "question": "What impact might future temperature increases have on wine tourism in the Napa Valley, USA by 2030?",
+          "lon": -122.2869,
+          "lat": 38.2988
+        },
+        {
+          "question": "How are skiing resorts in Aspendos, France expected to adjust to projected changes in snowfall by 2040?",
+          "lon": 6.6768,
+          "lat": 45.1819
+        },
+        {
+          "question": "What adaptations are necessary for scuba diving tourism in the Red Sea in response to climate change by mid-century?",
+          "lon": 34.8675,
+          "lat": 24.0627
+        },
+        {
+          "question": "How might coastal tourism in Sydney, Australia adapt to future climate conditions by 2040?",
+          "lon": 151.2093,
+          "lat": -33.8688
+        },
+        {
+          "question": "What impacts will projected climate conditions have on wildlife tourism in Nairobi National Park, Kenya by 2035?",
+          "lon": 36.8529,
+          "lat": -1.2864
+        },
+        {
+          "question": "How could future climate conditions affect desert tourism in the Arabian Peninsula by 2040?",
+          "lon": 55.1412,
+          "lat": 25.2048
+        },
+        {
+          "question": "What measures can be taken to adapt cultural tourism in Kyoto, Japan to climate change by 2040?",
+          "lon": 135.7681,
+          "lat": 35.0116
+        },
+        {
+          "question": "What are the expected effects of climate variability on surfing tourism in Hawaii, USA by 2035?",
+          "lon": -155.6659,
+          "lat": 20.1218
+        },
+        {
+          "question": "How might changing climate conditions impact national park tourism in Yellowstone, USA by 2040?",
+          "lon": -110.7056,
+          "lat": 44.4279
+        },
+        {
+          "question": "What are the implications of climax temperatures on river tourism in Belem, Brazil by 2030?",
+          "lon": -48.4806,
+          "lat": -1.4558
+        }
+      ]
+    },
+    "Financial and Insurance Risk": {
+      "general": [
+        {
+          "question": "How might climate change affect financial risk in agriculture insurance products in the USA by 2040?",
+          "lon": -81.5158,
+          "lat": 27.6648
+        },
+        {
+          "question": "What projected climate conditions could impact investment risk in the renewable energy sector in Northern Europe by mid-century?",
+          "lon": 10.4515,
+          "lat": 51.1657
+        },
+        {
+          "question": "How will future climate scenarios influence flood insurance premiums in southeast Asia over the next two decades?",
+          "lon": 101.6869,
+          "lat": 3.139
+        },
+        {
+          "question": "What role does climate change play in shaping financial risk management strategies in the Mediterranean region by 2035?",
+          "lon": 14.2681,
+          "lat": 40.8518
+        },
+        {
+          "question": "How could future climate-induced hazards affect the stability of insurance markets in the Pacific Islands by 2030?",
+          "lon": 179.3151429284943,
+          "lat": -18.0241453045048
+        },
+        {
+          "question": "What are the potential impacts of climate variability on financial resilience in Eastern Europe through 2040?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "How is climate change expected to influence loan risk assessments in sub-Saharan Africa by 2050?",
+          "lon": 23.4138,
+          "lat": -3.3731
+        },
+        {
+          "question": "What are the implications of climate change for investment risks in the tourism industry in the Caribbean by 2035?",
+          "lon": -61.2131,
+          "lat": 13.1939
+        },
+        {
+          "question": "How might climate projections impact insurance coverage strategies in the Gulf region by mid-century?",
+          "lon": 47.9789,
+          "lat": 24.7743
+        },
+        {
+          "question": "What are the expectations for climate-induced financial risks in the Australian agricultural sector by 2040?",
+          "lon": 144.9631,
+          "lat": -37.8136
+        }
+      ],
+      "specific": [
+        {
+          "question": "How might future climate trends affect crop insurance claims for grapefruit farmers in Florida, USA by 2030?",
+          "lon": -81.5158,
+          "lat": 27.6648
+        },
+        {
+          "question": "What are the expected financial risks in the reinsurance sector in anticipation of climate change in Florida, USA by 2040?",
+          "lon": -81.5158,
+          "lat": 27.6648
+        },
+        {
+          "question": "How might changing precipitation affect flood insurance risk models in Bangkok, Thailand by 2040?",
+          "lon": 100.5018,
+          "lat": 13.7563
+        },
+        {
+          "question": "What is the impact of climate scenarios on insurance premiums in the wine industry of Bordeaux, France by 2030?",
+          "lon": -0.5792,
+          "lat": 44.8378
+        },
+        {
+          "question": "What potential climatic factors could alter property insurance costs in Tokyo, Japan by mid-century?",
+          "lon": 139.6917,
+          "lat": 35.6895
+        },
+        {
+          "question": "How could increasing temperatures influence insurance risks for cattle farming in the Pampas region of Argentina by 2040?",
+          "lon": -63.6167,
+          "lat": -38.4161
+        },
+        {
+          "question": "What are the insurance implications of climate-induced hazards for olive oil production in Crete, Greece by 2035?",
+          "lon": 24.8093,
+          "lat": 35.2401
+        },
+        {
+          "question": "How might future climate conditions impact the flood insurance market in the Netherlands by 2050?",
+          "lon": 5.2913,
+          "lat": 52.1326
+        },
+        {
+          "question": "What are the expected impacts of projected climate variability on agricultural insurance in Punjab, India by 2040?",
+          "lon": 75.3412,
+          "lat": 30.7333
+        },
+        {
+          "question": "How will climate-induced risk factor into insurance policies for ski resorts in the Grison Alps, Switzerland by 2040?",
+          "lon": 9.5043,
+          "lat": 46.6565
+        }
+      ]
+    }
+  }
+}

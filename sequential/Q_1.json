@@ -1,0 +1,20 @@
+{
+    "themes": {
+      "General Climate Risks": {
+        "general": [
+          {
+            "question": "How are monthly climate conditions projected to change in central Argentina between 2020-2030 and 2030-2040?",
+            "lon": -63.6167,
+            "lat": -38.4161
+          }
+        ],
+        "specific": [
+          {
+            "question": "What is the expected change in monthly mean precipitation between 2020-2030 and 2030-2040 in Rosario, Argentina, and how might this affect flood risk?",
+            "lon": -60.6393,
+            "lat": -32.9468
+          }
+        ]
+      }
+    }
+  }
