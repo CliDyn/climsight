@@ -1181,19 +1181,3 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 
     
     return output['final_answer'], input_params, content_message, combine_agent_prompt_text
-
-def sagent_llm_request(content_message, input_params, config, api_key, api_key_local, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references):
-    """_summary_
-    # engine with superviser agent 
-    """
-    response = create_and_invoke_supervisor_agent(
-    user_query,
-    datasets_info,
-    st.session_state["memory"],
-    st.session_state,
-    st_callback=st_callback
-    )
-    
-
-    output = ""
-    return output
