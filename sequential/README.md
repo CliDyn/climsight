@@ -32,7 +32,9 @@ Interactive visualization tool for exploring climate questions on a map.
 - Color-codes questions by theme and type
 - Supports filtering by theme and source file
 - Shows summary statistics
+
 ![Image](https://github.com/user-attachments/assets/96f5b946-0432-4320-92be-10c9cc9358a7)
+
 **Usage:**
 ```bash
 # Run the Streamlit app
