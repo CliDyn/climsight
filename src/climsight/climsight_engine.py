@@ -523,15 +523,15 @@ def llm_request(content_message, input_params, config, api_key, api_key_local, s
     """
     if not references:
         references = {'references': {}, 'used': []}
-
+    combine_agent_prompt_text = ""
     if config['llmModeKey'] == "direct_llm":
         output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
     elif config['llmModeKey'] == "agent_llm":
-        output, input_params, content_message = agent_llm_request(content_message, input_params, config, api_key, api_key_local,stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
+        output, input_params, content_message, combine_agent_prompt_text = agent_llm_request(content_message, input_params, config, api_key, api_key_local,stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
     else:
         logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
         raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
-    return output, input_params, content_message
+    return output, input_params, content_message, combine_agent_prompt_text
 
 def direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db):
     """
@@ -922,7 +922,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         logger.info(f"general_rag_agent_response: {general_rag_response}")
         return {'general_rag_agent_response': general_rag_response}
     
-################# start of intro_agent #############################
+    ################# start of intro_agent #############################
     def intro_agent(state: AgentState):
         stream_handler.update_progress("Starting analysis...")
         intro_message = """ 
@@ -1020,7 +1020,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         return state
     
     
-################# end of intro_agent #############################
+    ################# end of intro_agent #############################
     def combine_agent(state: AgentState): 
         logger.info('combine_agent in work')
         stream_handler.update_progress("Compiling final analysis and recommendations...")
@@ -1085,7 +1085,18 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         else:
             output_content = output        
         logger.info(f"Final_answer: {output_content}")
-        return {'final_answer': output_content, 'input_params': state.input_params, 'content_message': state.content_message}
+        # ---- GET PROMPT TEXT ----
+        prompt_messages = chat_prompt.format_messages(**state.input_params)
+        chat_prompt_text = ""
+        for msg in prompt_messages:
+            role = getattr(msg, "type", getattr(msg, "role", ""))
+            chat_prompt_text += f"{role.capitalize()}: {msg.content}\n"
+            
+        return {
+            'final_answer': output_content, 
+            'input_params': state.input_params, 
+            'content_message': state.content_message,
+            'combine_agent_prompt_text': chat_prompt_text}
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
         output = []
@@ -1156,6 +1167,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
     input_params = output['input_params']
     content_message = output['content_message']
+    combine_agent_prompt_text = output['combine_agent_prompt_text']
     
     stream_handler.update_progress("Analysis complete!")
     
@@ -1168,4 +1180,20 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         stream_handler.send_reference_text('- '+ref+'  \n')     
                 
     
-    return output['final_answer'], input_params, content_message
+    return output['final_answer'], input_params, content_message, combine_agent_prompt_text
+
+def sagent_llm_request(content_message, input_params, config, api_key, api_key_local, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references):
+    """_summary_
+    # engine with superviser agent 
+    """
+    response = create_and_invoke_supervisor_agent(
+    user_query,
+    datasets_info,
+    st.session_state["memory"],
+    st.session_state,
+    st_callback=st_callback
+    )
+    
+
+    output = ""
+    return output

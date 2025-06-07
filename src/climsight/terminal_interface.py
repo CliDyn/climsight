@@ -215,7 +215,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler.update_progress = print_progress
                
         if not skip_llm_call:
-            output, input_params, content_message = llm_request(content_message, 
+            output, input_params, content_message, combine_agent_prompt_text = llm_request(content_message, 
                                                                 input_params, 
                                                                 config, 
                                                                 api_key, api_key_local, 
@@ -335,4 +335,4 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         #print(f"Time for forming request: {forming_request_time}")
         #print(f"Time for LLM request: {llm_request_time}")
         
-    return output
+    return output, input_params, content_message, combine_agent_prompt_text
