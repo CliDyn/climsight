@@ -1,0 +1,1064 @@
+{
+  "themes": {
+    "Crop Yield and Productivity": {
+      "general": [
+        {
+          "question": "How are monthly climate conditions projected to affect overall crop yields in the Punjab region, India during 2030-2040?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "What changes in mean temperature and precipitation could influence crop productivity in central Kansas, USA between 2020-2030 and 2040-2050?",
+          "lon": -98.4842,
+          "lat": 38.5005
+        },
+        {
+          "question": "How might shifts in wind patterns impact agricultural output in the Pampas region of Argentina for 2040-2050?",
+          "lon": -60.0,
+          "lat": -35.0
+        },
+        {
+          "question": "What is the expected change in monthly climatological means for weather variables affecting crop yields in the Nile Delta, Egypt from 2020-2030 to 2040-2050?",
+          "lon": 31.2001,
+          "lat": 30.5833
+        },
+        {
+          "question": "How could projected changes in temperature and rainfall impact total harvest in western France during 2030-2040?",
+          "lon": -1.5536,
+          "lat": 47.2184
+        },
+        {
+          "question": "How will seasonal climate patterns affect crop productivity in Saskatchewan, Canada during 2030-2040?",
+          "lon": -106.3468,
+          "lat": 52.9399
+        },
+        {
+          "question": "What are the projected monthly mean temperature and precipitation changes relevant to crop yields in Hebei, China between 2020-2030 and 2040-2050?",
+          "lon": 115.4846,
+          "lat": 38.0358
+        },
+        {
+          "question": "How will mean precipitation trends affect agricultural yields in the North West province, South Africa for 2040-2050?",
+          "lon": 25.7906,
+          "lat": -26.6639
+        },
+        {
+          "question": "How might future wind speed changes affect pollination and yields in the Canterbury Plains, New Zealand by 2030-2040?",
+          "lon": 172.4836,
+          "lat": -43.5309
+        },
+        {
+          "question": "What are the projected impacts of average temperature and rainfall changes on crop productivity in the Po Valley, Italy for 2030-2040?",
+          "lon": 9.19,
+          "lat": 45.4642
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean temperature during the wheat growing season in Punjab, India (31.1471N, 75.3412E) from 2020-2030 to 2040-2050?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "How are monthly mean precipitation patterns expected to impact maize yields in central Kansas, USA (38.5005N, 98.4842W) during 2030-2040?",
+          "lon": -98.4842,
+          "lat": 38.5005
+        },
+        {
+          "question": "What is the expected change in wind speed during the soybean flowering period in the Pampas, Argentina (35.0000S, 60.0000W) between 2020-2030 and 2040-2050?",
+          "lon": -60.0,
+          "lat": -35.0
+        },
+        {
+          "question": "How will monthly mean temperature increases affect rice yield potential in the Nile Delta, Egypt (30.5833N, 31.2001E) during 2040-2050?",
+          "lon": 31.2001,
+          "lat": 30.5833
+        },
+        {
+          "question": "What impact will projected precipitation changes have on grape yields in Bordeaux, France (44.8378N, 0.5792W) between 2020-2030 and 2030-2040?",
+          "lon": -0.5792,
+          "lat": 44.8378
+        },
+        {
+          "question": "How are changes in monthly mean wind direction expected to affect canola pollination in Saskatchewan, Canada (52.9399N, 106.3468W) during 2030-2040?",
+          "lon": -106.3468,
+          "lat": 52.9399
+        },
+        {
+          "question": "How might future temperature trends influence winter wheat yields in Hebei, China (38.0358N, 115.4846E) for 2040-2050?",
+          "lon": 115.4846,
+          "lat": 38.0358
+        },
+        {
+          "question": "What are the projected impacts of monthly mean rainfall on sunflower yields in North West province, South Africa (26.6639S, 25.7906E) between 2030-2040 and 2040-2050?",
+          "lon": 25.7906,
+          "lat": -26.6639
+        },
+        {
+          "question": "What is the expected change in wind speed during barley pollination in the Canterbury Plains, New Zealand (43.5309S, 172.4836E) from 2020-2030 to 2040-2050?",
+          "lon": 172.4836,
+          "lat": -43.5309
+        },
+        {
+          "question": "How will changes in monthly mean temperature affect rice yields in the Po Valley, Italy (45.4642N, 9.1900E) during 2030-2040?",
+          "lon": 9.19,
+          "lat": 45.4642
+        }
+      ]
+    },
+    "Food Production": {
+      "general": [
+        {
+          "question": "How will projected changes in temperature and rainfall affect food production in the Central Valley, California during 2030-2040?",
+          "lon": -120.6625,
+          "lat": 37.6391
+        },
+        {
+          "question": "What are the anticipated impacts of climate trends on staple crop output in the Volta Region, Ghana for 2040-2050?",
+          "lon": 0.4776,
+          "lat": 6.5786
+        },
+        {
+          "question": "How will monthly mean climate variables influence food production capacity in Lower Saxony, Germany during 2020-2030?",
+          "lon": 9.8451,
+          "lat": 52.6367
+        },
+        {
+          "question": "What is the projected change in climate conditions relevant to food output in the Canterbury region, New Zealand between 2020-2030 and 2040-2050?",
+          "lon": 172.6362,
+          "lat": -43.7415
+        },
+        {
+          "question": "How might changes in precipitation patterns impact overall food production in the Paran\u00e1 State, Brazil during 2030-2040?",
+          "lon": -51.9253,
+          "lat": -24.8943
+        },
+        {
+          "question": "How could variations in temperature and wind influence food production in the Yucat\u00e1n Peninsula, Mexico by 2040-2050?",
+          "lon": -89.0701,
+          "lat": 20.7099
+        },
+        {
+          "question": "What is the expected impact of monthly mean rainfall changes on total food output in the Mekong Delta, Vietnam for 2030-2040?",
+          "lon": 105.9739,
+          "lat": 10.0338
+        },
+        {
+          "question": "How are projected temperature and precipitation changes likely to affect food production in the Fergana Valley, Uzbekistan during 2020-2030?",
+          "lon": 71.7802,
+          "lat": 40.3736
+        },
+        {
+          "question": "How might climate trends affect food supply reliability in the Midwest, USA between 2030-2040 and 2040-2050?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What are the projected impacts of wind speed changes on food production in the Rhone Valley, France for 2040-2050?",
+          "lon": 4.8317,
+          "lat": 45.764
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean temperature changes during the tomato growing season affect tomato production in Central Valley, California (37.6391N, 120.6625W) for 2030-2040?",
+          "lon": -120.6625,
+          "lat": 37.6391
+        },
+        {
+          "question": "What is the expected change in precipitation during the maize growing season and its impact on maize output in Volta Region, Ghana (6.5786N, 0.4776E) between 2020-2030 and 2040-2050?",
+          "lon": 0.4776,
+          "lat": 6.5786
+        },
+        {
+          "question": "How are changes in monthly mean wind speed projected to affect wheat harvests in Lower Saxony, Germany (52.6367N, 9.8451E) during 2020-2030?",
+          "lon": 9.8451,
+          "lat": 52.6367
+        },
+        {
+          "question": "What is the impact of projected rainfall changes on soybean production in Canterbury, New Zealand (43.7415S, 172.6362E) for 2040-2050?",
+          "lon": 172.6362,
+          "lat": -43.7415
+        },
+        {
+          "question": "How will monthly mean precipitation trends influence sugarcane output in Paran\u00e1, Brazil (24.8943S, 51.9253W) during 2030-2040?",
+          "lon": -51.9253,
+          "lat": -24.8943
+        },
+        {
+          "question": "How might changes in wind direction affect citrus fruit production in Yucat\u00e1n, Mexico (20.7099N, 89.0701W) for 2040-2050?",
+          "lon": -89.0701,
+          "lat": 20.7099
+        },
+        {
+          "question": "What is the projected impact of temperature changes on rice yields in Mekong Delta, Vietnam (10.0338N, 105.9739E) during 2030-2040?",
+          "lon": 105.9739,
+          "lat": 10.0338
+        },
+        {
+          "question": "How will monthly mean rainfall changes affect cotton yields in Fergana Valley, Uzbekistan (40.3736N, 71.7802E) for 2020-2030?",
+          "lon": 71.7802,
+          "lat": 40.3736
+        },
+        {
+          "question": "What is the expected effect of increased mean temperature on corn production in the Midwest, USA (41.8780N, 93.0977W) between 2030-2040 and 2040-2050?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "How might changes in mean wind speed affect grape production in the Rhone Valley, France (45.7640N, 4.8317E) during 2040-2050?",
+          "lon": 4.8317,
+          "lat": 45.764
+        }
+      ]
+    },
+    "Agriculture": {
+      "general": [
+        {
+          "question": "How will projected changes in climate variables affect agricultural practices in the Murray-Darling Basin, Australia during 2030-2040?",
+          "lon": 143.0012,
+          "lat": -34.0
+        },
+        {
+          "question": "What are the expected impacts of temperature and precipitation trends on farming systems in the Tigray region, Ethiopia for 2040-2050?",
+          "lon": 39.5501,
+          "lat": 13.4967
+        },
+        {
+          "question": "How will monthly mean weather patterns influence agricultural land use in the Great Plains, USA during 2020-2030?",
+          "lon": -99.9018,
+          "lat": 35.4676
+        },
+        {
+          "question": "What is the projected change in climate conditions affecting agriculture in the Loire Valley, France between 2020-2030 and 2040-2050?",
+          "lon": 0.328,
+          "lat": 47.3916
+        },
+        {
+          "question": "How might changes in mean rainfall affect irrigation requirements for farms in Gujarat, India during 2030-2040?",
+          "lon": 72.94579099862906,
+          "lat": 22.257636354906733
+        },
+        {
+          "question": "How could wind speed changes impact greenhouse agriculture in the Almer\u00eda region, Spain for 2040-2050?",
+          "lon": -2.4637,
+          "lat": 36.834
+        },
+        {
+          "question": "What is the expected monthly mean temperature change in the Central Anatolia region, Turkey for agricultural planning during 2030-2040?",
+          "lon": 34.9249,
+          "lat": 39.9208
+        },
+        {
+          "question": "How are shifts in precipitation projected to affect agricultural productivity in the Free State, South Africa during 2020-2030?",
+          "lon": 26.675,
+          "lat": -28.4541
+        },
+        {
+          "question": "How might wind direction changes affect pollinator effectiveness in the Canterbury Plains, New Zealand between 2020-2030 and 2040-2050?",
+          "lon": 172.4836,
+          "lat": -43.5309
+        },
+        {
+          "question": "What are the projected impacts of temperature and precipitation on crop rotations in the Pannonian Plain, Hungary for 2040-2050?",
+          "lon": 19.0402,
+          "lat": 46.253
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean precipitation changes affect rice irrigation needs in the Murray-Darling Basin, Australia (34.0000S, 143.0012E) for 2030-2040?",
+          "lon": 143.0012,
+          "lat": -34.0
+        },
+        {
+          "question": "What is the impact of projected temperature increases on teff yields in Tigray, Ethiopia (13.4967N, 39.5501E) during 2040-2050?",
+          "lon": 39.5501,
+          "lat": 13.4967
+        },
+        {
+          "question": "How are changes in monthly mean wind speed expected to influence wheat pollination in the Great Plains, USA (35.4676N, 99.9018W) during 2020-2030?",
+          "lon": -99.9018,
+          "lat": 35.4676
+        },
+        {
+          "question": "What is the expected impact of temperature trends on grapevine development in the Loire Valley, France (47.3916N, 0.3280E) between 2020-2030 and 2040-2050?",
+          "lon": 0.328,
+          "lat": 47.3916
+        },
+        {
+          "question": "How might reduced precipitation affect groundnut cultivation in Gujarat, India (22.2587N, 72.5714E) during 2030-2040?",
+          "lon": 72.76524491463474,
+          "lat": 21.819765626878223
+        },
+        {
+          "question": "How will higher wind speeds impact greenhouse vegetable production in Almer\u00eda, Spain (36.8340N, 2.4637W) for 2040-2050?",
+          "lon": -2.4637,
+          "lat": 36.834
+        },
+        {
+          "question": "What is the projected change in mean temperature during the barley growing season in Central Anatolia, Turkey (39.9208N, 34.9249E) for 2030-2040?",
+          "lon": 34.9249,
+          "lat": 39.9208
+        },
+        {
+          "question": "How will monthly mean precipitation changes affect maize yields in Free State, South Africa (28.4541S, 26.6750E) during 2020-2030?",
+          "lon": 26.675,
+          "lat": -28.4541
+        },
+        {
+          "question": "What is the impact of wind direction changes on apple pollination in Canterbury Plains, New Zealand (43.5309S, 172.4836E) for 2040-2050?",
+          "lon": 172.4836,
+          "lat": -43.5309
+        },
+        {
+          "question": "How might mean temperature and rainfall changes affect sunflower rotation in the Pannonian Plain, Hungary (46.2530N, 19.0402E) for 2040-2050?",
+          "lon": 19.0402,
+          "lat": 46.253
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "How will projected changes in wind speed affect wind energy potential in Schleswig-Holstein, Germany during 2030-2040?",
+          "lon": 9.7556,
+          "lat": 54.2194
+        },
+        {
+          "question": "How might projected climate trends affect renewable energy generation potential in Andalusia, Spain (37.3891N, 5.9845W) during 2030-2040?",
+          "lon": -5.9845,
+          "lat": 37.3891
+        },        
+        {
+          "question": "What is the expected impact of mean temperature increases on solar panel efficiency in Gujarat, India for 2040-2050?",
+          "lon": 72.79189701619163,
+          "lat": 22.445295455858435
+        },
+        {
+          "question": "How could monthly mean precipitation changes influence hydropower generation in Quebec, Canada during 2020-2030?",
+          "lon": -71.41309328105633,
+          "lat": 46.521765087396425
+        },
+        {
+          "question": "What are the projected changes in climate variables affecting wind farm performance in La Rioja, Spain between 2020-2030 and 2040-2050?",
+          "lon": -2.4447,
+          "lat": 42.2871
+        },
+        {
+          "question": "How might future temperature and precipitation trends impact solar farm planning in Andalusia, Spain for 2030-2040?",
+          "lon": -4.7278,
+          "lat": 37.5443
+        },
+        {
+          "question": "How will changes in wind direction potentially affect wind turbine orientation in Tehachapi Pass, California during 2040-2050?",
+          "lon": -118.4291,
+          "lat": 35.1424
+        },
+        {
+          "question": "What is the expected impact of monthly mean rainfall on hydropower reliability in Itaipu, Brazil for 2030-2040?",
+          "lon": -54.5857,
+          "lat": -25.4069
+        },
+        {
+          "question": "How are temperature changes projected to influence solar panel output in Alice Springs, Australia during 2020-2030?",
+          "lon": 133.8807,
+          "lat": -23.698
+        },
+        {
+          "question": "How might precipitation changes affect dam safety and hydropower in the Blue Nile region, Ethiopia for 2040-2050?",
+          "lon": 37.4669,
+          "lat": 11.6097
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean wind speed for wind energy generation in Schleswig-Holstein, Germany (54.2194N, 9.7556E) from 2020-2030 to 2040-2050?",
+          "lon": 9.7556,
+          "lat": 54.2194
+        },
+        {
+          "question": "How will increases in mean temperature affect solar panel efficiency for photovoltaic farms in Gujarat, India (22.2587N, 72.5714E) during 2040-2050?",
+          "lon": 72.98367566154693,
+          "lat": 22.357164349166936
+        },
+        {
+          "question": "How are monthly mean precipitation trends projected to impact hydropower output at the Beauharnois Dam, Quebec, Canada (46.8139N, 71.2082W) during 2020-2030?",
+          "lon": -71.05292696661631,
+          "lat": 46.99193672144095
+        },
+        {
+          "question": "What is the expected change in wind speed during peak wind energy months at La Rioja, Spain (42.2871N, 2.4447W) between 2020-2030 and 2040-2050?",
+          "lon": -2.4447,
+          "lat": 42.2871
+        },
+        {
+          "question": "How might increased temperature and reduced rainfall affect solar energy generation in Andalusia, Spain (37.5443N, 4.7278W) during 2030-2040?",
+          "lon": -4.7278,
+          "lat": 37.5443
+        },
+        {
+          "question": "What are the projected impacts of wind direction changes on wind turbine performance in Tehachapi Pass, California (35.1424N, 118.4291W) for 2040-2050?",
+          "lon": -118.4291,
+          "lat": 35.1424
+        },
+        {
+          "question": "How will monthly mean precipitation changes impact hydropower generation at Itaipu Dam, Brazil (25.4069S, 54.5857W) during 2030-2040?",
+          "lon": -54.5857,
+          "lat": -25.4069
+        },
+        {
+          "question": "How are temperature increases expected to influence solar panel output in Alice Springs, Australia (23.6980S, 133.8807E) for 2020-2030?",
+          "lon": 133.8807,
+          "lat": -23.698
+        },
+        {
+          "question": "How might monthly precipitation changes affect dam safety and hydropower output in the Blue Nile, Ethiopia (11.6097N, 37.4669E) for 2040-2050?",
+          "lon": 37.4669,
+          "lat": 11.6097
+        },
+        {
+          "question": "How will changes in monthly mean wind speed and direction impact wind farm energy output in Inner Mongolia, China during 2030-2040?",
+          "lon": 113.0,
+          "lat": 41.0
+        }        
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "How will projected increases in temperature affect urban heat island effects in Tokyo, Japan during 2030-2040?",
+          "lon": 139.6917,
+          "lat": 35.6895
+        },
+        {
+          "question": "What are the expected impacts of changing precipitation patterns on stormwater management in Houston, Texas for 2040-2050?",
+          "lon": -95.3698,
+          "lat": 29.7604
+        },
+        {
+          "question": "How might monthly mean wind speed changes influence building design in Wellington, New Zealand during 2020-2030?",
+          "lon": 174.7762,
+          "lat": -41.2865
+        },
+        {
+          "question": "What is the projected change in urban climate conditions affecting community planning in Paris, France between 2020-2030 and 2040-2050?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        },
+        {
+          "question": "How will future temperature and precipitation trends impact green infrastructure in Cape Town, South Africa for 2030-2040?",
+          "lon": 18.4241,
+          "lat": -33.9249
+        },
+        {
+          "question": "How might changes in wind speed affect air quality management in Los Angeles, California during 2040-2050?",
+          "lon": -118.2437,
+          "lat": 34.0522
+        },
+        {
+          "question": "What are the projected effects of precipitation changes on flood risk in Rotterdam, Netherlands for 2030-2040?",
+          "lon": 4.4792,
+          "lat": 51.9225
+        },
+        {
+          "question": "How are temperature increases expected to influence public space design in Dubai, UAE during 2020-2030?",
+          "lon": 55.2708,
+          "lat": 25.2048
+        },
+        {
+          "question": "What is the expected impact of wind direction changes on urban ventilation in Chicago, Illinois between 2030-2040 and 2040-2050?",
+          "lon": -87.6298,
+          "lat": 41.8781
+        },
+        {
+          "question": "How might monthly mean temperature and rainfall trends affect community gardens in Vancouver, Canada for 2040-2050?",
+          "lon": -123.1216,
+          "lat": 49.2827
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean temperature increases affect summer energy demand for cooling in Tokyo, Japan (35.6895N, 139.6917E) during 2030-2040?",
+          "lon": 139.6917,
+          "lat": 35.6895
+        },
+        {
+          "question": "What impact will increased monthly mean rainfall have on stormwater system design in Houston, Texas (29.7604N, 95.3698W) for 2040-2050?",
+          "lon": -95.3698,
+          "lat": 29.7604
+        },
+        {
+          "question": "How are changes in average wind speed projected to affect high-rise building codes in Wellington, New Zealand (41.2865S, 174.7762E) during 2020-2030?",
+          "lon": 174.7762,
+          "lat": -41.2865
+        },
+        {
+          "question": "What is the expected change in mean temperature for urban planning in Paris, France (48.8566N, 2.3522E) between 2020-2030 and 2040-2050?",
+          "lon": 2.3522,
+          "lat": 48.8566
+        },
+        {
+          "question": "How will projected rainfall changes affect green roof performance in Cape Town, South Africa (33.9249S, 18.4241E) for 2030-2040?",
+          "lon": 18.4241,
+          "lat": -33.9249
+        },
+        {
+          "question": "How might increases in wind speed affect particulate dispersion and air quality in Los Angeles, California (34.0522N, 118.2437W) during 2040-2050?",
+          "lon": -118.2437,
+          "lat": 34.0522
+        },
+        {
+          "question": "What is the projected effect of higher monthly mean precipitation on flood prevention infrastructure in Rotterdam, Netherlands (51.9225N, 4.4792E) for 2030-2040?",
+          "lon": 4.4792,
+          "lat": 51.9225
+        },
+        {
+          "question": "How will rising temperatures impact park usage and design in Dubai, UAE (25.2048N, 55.2708E) during 2020-2030?",
+          "lon": 55.2708,
+          "lat": 25.2048
+        },
+        {
+          "question": "What is the expected effect of wind direction shifts on urban ventilation in Chicago, Illinois (41.8781N, 87.6298W) between 2030-2040 and 2040-2050?",
+          "lon": -87.6298,
+          "lat": 41.8781
+        },
+        {
+          "question": "How might monthly mean temperature and rainfall changes affect community garden productivity in Vancouver, Canada (49.2827N, 123.1216W) for 2040-2050?",
+          "lon": -123.1216,
+          "lat": 49.2827
+        }
+      ]
+    },
+    "Climate Adaptation in Cropping Systems": {
+      "general": [
+        {
+          "question": "How will projected climate changes affect adaptation strategies for cropping systems in Southern Queensland, Australia during 2030-2040?",
+          "lon": 151.7817,
+          "lat": -27.4698
+        },
+        {
+          "question": "What are the expected impacts of temperature and precipitation shifts on crop management in the Po Valley, Italy for 2040-2050?",
+          "lon": 9.19,
+          "lat": 45.4642
+        },
+        {
+          "question": "How will monthly mean climate variables influence adaptive cropping in the Midwest, USA during 2020-2030?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What is the projected change in climate conditions relevant to crop adaptation in the Ganges Delta, Bangladesh between 2020-2030 and 2040-2050?",
+          "lon": 89.5403,
+          "lat": 22.801
+        },
+        {
+          "question": "How might future precipitation trends affect adaptation of crop rotations in Burgundy, France for 2030-2040?",
+          "lon": 4.8055,
+          "lat": 47.052
+        },
+        {
+          "question": "How could changes in wind speed influence adaptation of cropping systems in the Pampas, Argentina during 2040-2050?",
+          "lon": -60.0,
+          "lat": -35.0
+        },
+        {
+          "question": "What are the projected impacts of temperature increases on adaptation measures in Hebei, China for 2030-2040?",
+          "lon": 115.4846,
+          "lat": 38.0358
+        },
+        {
+          "question": "How will shifts in precipitation affect drought adaptation strategies in the Central Rift Valley, Ethiopia during 2020-2030?",
+          "lon": 38.5,
+          "lat": 7.95
+        },
+        {
+          "question": "How might wind direction changes impact pest management adaptation in central Iowa, USA between 2020-2030 and 2040-2050?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What is the expected effect of climate trends on crop adaptation in the Canterbury Plains, New Zealand for 2040-2050?",
+          "lon": 172.4836,
+          "lat": -43.5309
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean precipitation changes affect wheat adaptation strategies in Southern Queensland, Australia (27.4698S, 151.7817E) for 2030-2040?",
+          "lon": 151.7817,
+          "lat": -27.4698
+        },
+        {
+          "question": "What is the impact of increased mean temperature on rice adaptation in the Po Valley, Italy (45.4642N, 9.1900E) for 2040-2050?",
+          "lon": 9.19,
+          "lat": 45.4642
+        },
+        {
+          "question": "How are monthly mean climate trends projected to influence soybean adaptation in the Midwest, USA (41.8780N, 93.0977W) during 2020-2030?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What is the expected change in rainfall patterns for adaptive rice cropping in the Ganges Delta, Bangladesh (22.8010N, 89.5403E) between 2020-2030 and 2040-2050?",
+          "lon": 89.5403,
+          "lat": 22.801
+        },
+        {
+          "question": "How will shifts in precipitation affect grapevine adaptation strategies in Burgundy, France (47.0520N, 4.8055E) for 2030-2040?",
+          "lon": 4.8055,
+          "lat": 47.052
+        },
+        {
+          "question": "How might wind speed changes influence maize adaptation in the Pampas, Argentina (35.0000S, 60.0000W) during 2040-2050?",
+          "lon": -60.0,
+          "lat": -35.0
+        },
+        {
+          "question": "What are the projected impacts of temperature increases on winter wheat adaptation in Hebei, China (38.0358N, 115.4846E) for 2030-2040?",
+          "lon": 115.4846,
+          "lat": 38.0358
+        },
+        {
+          "question": "How will mean precipitation changes affect drought-resistant maize adoption in the Central Rift Valley, Ethiopia (7.9500N, 38.5000E) during 2020-2030?",
+          "lon": 38.5,
+          "lat": 7.95
+        },
+        {
+          "question": "What is the expected impact of wind direction shifts on pest adaptation in corn cropping in central Iowa, USA (41.8780N, 93.0977W) between 2020-2030 and 2040-2050?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "How might temperature and rainfall trends affect barley adaptation strategies in Canterbury Plains, New Zealand (43.5309S, 172.4836E) for 2040-2050?",
+          "lon": 172.4836,
+          "lat": -43.5309
+        }
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "How will projected changes in temperature and precipitation affect long-term agricultural sustainability in the Central Valley, Chile during 2040-2050?",
+          "lon": -70.7436,
+          "lat": -33.0458
+        },
+        {
+          "question": "What are the expected impacts of wind and rainfall changes on sustainable farming in Bavaria, Germany for 2030-2040?",
+          "lon": 11.4979,
+          "lat": 48.7904
+        },
+        {
+          "question": "How will monthly mean climate trends influence sustainable crop production in Punjab, Pakistan during 2020-2030?",
+          "lon": 74.3587,
+          "lat": 31.5204
+        },
+        {
+          "question": "What is the projected change in climate variables relevant to long-term sustainability in the Loire Valley, France between 2020-2030 and 2040-2050?",
+          "lon": 0.328,
+          "lat": 47.3916
+        },
+        {
+          "question": "How might temperature and precipitation changes impact water resource sustainability for agriculture in the Murray-Darling Basin, Australia during 2030-2040?",
+          "lon": 143.0012,
+          "lat": -34.0
+        },
+        {
+          "question": "How could wind speed trends affect soil erosion and long-term farm sustainability in the Pampas, Argentina for 2040-2050?",
+          "lon": -60.0,
+          "lat": -35.0
+        },
+        {
+          "question": "What are the projected impacts of precipitation changes on sustainable farming in the Volta Region, Ghana for 2030-2040?",
+          "lon": 0.4776,
+          "lat": 6.5786
+        },
+        {
+          "question": "How will temperature trends affect the sustainability of tea plantations in Nuwara Eliya, Sri Lanka during 2020-2030?",
+          "lon": 80.7829,
+          "lat": 6.9708
+        },
+        {
+          "question": "How might precipitation and temperature changes influence long-term agricultural sustainability in Alberta, Canada between 2030-2040 and 2040-2050?",
+          "lon": -114.0719,
+          "lat": 51.0447
+        },
+        {
+          "question": "What is the expected effect of wind speed changes on sustainable agriculture in Nebraska, USA for 2040-2050?",
+          "lon": -99.9018,
+          "lat": 41.4925
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean temperature and precipitation changes affect vineyard sustainability in the Central Valley, Chile (33.0458S, 70.7436W) for 2040-2050?",
+          "lon": -70.7436,
+          "lat": -33.0458
+        },
+        {
+          "question": "What is the impact of wind speed and rainfall changes on organic wheat farming in Bavaria, Germany (48.7904N, 11.4979E) during 2030-2040?",
+          "lon": 11.4979,
+          "lat": 48.7904
+        },
+        {
+          "question": "How are changes in monthly mean climate variables projected to affect rice sustainability in Punjab, Pakistan (31.5204N, 74.3587E) during 2020-2030?",
+          "lon": 74.3587,
+          "lat": 31.5204
+        },
+        {
+          "question": "What is the expected change in precipitation for sustainable grape production in Loire Valley, France (47.3916N, 0.3280E) between 2020-2030 and 2040-2050?",
+          "lon": 0.328,
+          "lat": 47.3916
+        },
+        {
+          "question": "How might increased temperature and reduced rainfall affect water sustainability for rice farming in Murray-Darling Basin, Australia (34.0000S, 143.0012E) during 2030-2040?",
+          "lon": 143.0012,
+          "lat": -34.0
+        },
+        {
+          "question": "How will wind speed increases impact soil erosion risk for sustainable maize farming in Pampas, Argentina (35.0000S, 60.0000W) for 2040-2050?",
+          "lon": -60.0,
+          "lat": -35.0
+        },
+        {
+          "question": "What are the projected impacts of mean rainfall changes on yam farming sustainability in Volta Region, Ghana (6.5786N, 0.4776E) for 2030-2040?",
+          "lon": 0.4776,
+          "lat": 6.5786
+        },
+        {
+          "question": "How will projected temperature increases affect long-term viability of tea plantations in Nuwara Eliya, Sri Lanka (6.9708N, 80.7829E) during 2020-2030?",
+          "lon": 80.7829,
+          "lat": 6.9708
+        },
+        {
+          "question": "How are precipitation and temperature changes expected to influence canola sustainability in Alberta, Canada (51.0447N, 114.0719W) between 2030-2040 and 2040-2050?",
+          "lon": -114.0719,
+          "lat": 51.0447
+        },
+        {
+          "question": "What is the projected effect of increased wind speed on sustainable wheat farming in Nebraska, USA (41.4925N, 99.9018W) for 2040-2050?",
+          "lon": -99.9018,
+          "lat": 41.4925
+        }
+      ]
+    },
+    "Public Health and Climate": {
+      "general": [
+        {
+          "question": "How will projected increases in temperature affect heat stress risk in Cairo, Egypt during 2030-2040?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "What are the expected impacts of precipitation changes on waterborne disease risk in Manila, Philippines for 2040-2050?",
+          "lon": 120.9842,
+          "lat": 14.5995
+        },
+        {
+          "question": "How might monthly mean wind speed changes influence air pollution dispersion in Beijing, China during 2020-2030?",
+          "lon": 116.4074,
+          "lat": 39.9042
+        },
+        {
+          "question": "What is the projected change in urban climate conditions affecting public health in Mexico City, Mexico between 2020-2030 and 2040-2050?",
+          "lon": -99.1332,
+          "lat": 19.4326
+        },
+        {
+          "question": "How will future temperature and precipitation trends impact vector-borne disease risk in Lagos, Nigeria for 2030-2040?",
+          "lon": 3.3792,
+          "lat": 6.5244
+        },
+        {
+          "question": "How might changes in wind speed affect pollen distribution and allergy risk in London, UK during 2040-2050?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "What are the projected effects of increased rainfall on sanitation-related diseases in Dhaka, Bangladesh for 2030-2040?",
+          "lon": 90.4125,
+          "lat": 23.8103
+        },
+        {
+          "question": "How are temperature increases expected to influence heat-related illness in Athens, Greece during 2020-2030?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "What is the expected impact of wind direction changes on air quality in Los Angeles, California between 2030-2040 and 2040-2050?",
+          "lon": -118.2437,
+          "lat": 34.0522
+        },
+        {
+          "question": "How might monthly mean temperature and rainfall trends affect public health risks in Mumbai, India for 2040-2050?",
+          "lon": 72.8777,
+          "lat": 19.076
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean temperature increases affect heat stress for outdoor workers in Cairo, Egypt (30.0444N, 31.2357E) during 2030-2040?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "What is the expected impact of higher rainfall on cholera risk in Manila, Philippines (14.5995N, 120.9842E) for 2040-2050?",
+          "lon": 120.9842,
+          "lat": 14.5995
+        },
+        {
+          "question": "How are changes in monthly mean wind speed projected to affect PM2.5 dispersion in Beijing, China (39.9042N, 116.4074E) during 2020-2030?",
+          "lon": 116.4074,
+          "lat": 39.9042
+        },
+        {
+          "question": "What is the expected change in mean temperature for heat-related hospital admissions in Mexico City, Mexico (19.4326N, 99.1332W) between 2020-2030 and 2040-2050?",
+          "lon": -99.1332,
+          "lat": 19.4326
+        },
+        {
+          "question": "How will projected precipitation increases affect malaria risk in Lagos, Nigeria (6.5244N, 3.3792E) for 2030-2040?",
+          "lon": 3.3792,
+          "lat": 6.5244
+        },
+        {
+          "question": "How might wind speed changes influence pollen allergy episodes in London, UK (51.5074N, 0.1276W) during 2040-2050?",
+          "lon": -0.1276,
+          "lat": 51.5074
+        },
+        {
+          "question": "What are the projected impacts of increased rainfall on diarrheal disease risk in Dhaka, Bangladesh (23.8103N, 90.4125E) for 2030-2040?",
+          "lon": 90.4125,
+          "lat": 23.8103
+        },
+        {
+          "question": "How will higher temperatures affect heatstroke risk in Athens, Greece (37.9838N, 23.7275E) during 2020-2030?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "What is the expected effect of wind direction shifts on summer ozone episodes in Los Angeles, California (34.0522N, 118.2437W) between 2030-2040 and 2040-2050?",
+          "lon": -118.2437,
+          "lat": 34.0522
+        },
+        {
+          "question": "How might temperature and rainfall trends affect vector-borne disease risk in Mumbai, India (19.0760N, 72.8777E) for 2040-2050?",
+          "lon": 72.8777,
+          "lat": 19.076
+        }
+      ]
+    },
+    "Tourism and Recreation": {
+      "general": [
+        {
+          "question": "How will projected temperature increases affect ski resort viability in Tyrol, Austria during 2030-2040?",
+          "lon": 11.4041,
+          "lat": 47.2692
+        },
+        {
+          "question": "What are the expected impacts of precipitation changes on hiking tourism in the Scottish Highlands, UK for 2040-2050?",
+          "lon": -4.2026,
+          "lat": 57.4778
+        },
+        {
+          "question": "How might monthly mean wind speed changes influence beach tourism in Algarve, Portugal during 2020-2030?",
+          "lon": -8.084825198450517,
+          "lat": 37.41795059155798
+        },
+        {
+          "question": "What is the projected change in climate conditions relevant to tourism in Cape Town, South Africa between 2020-2030 and 2040-2050?",
+          "lon": 18.4241,
+          "lat": -33.9249
+        },
+        {
+          "question": "How will future temperature and precipitation trends impact outdoor recreation in Banff National Park, Canada for 2030-2040?",
+          "lon": -115.5708,
+          "lat": 51.1784
+        },
+        {
+          "question": "How might changes in wind speed affect sailing tourism in Auckland, New Zealand during 2040-2050?",
+          "lon": 174.7633,
+          "lat": -36.8485
+        },
+        {
+          "question": "What are the projected effects of temperature increases on wine tourism in Napa Valley, California for 2030-2040?",
+          "lon": -122.2869,
+          "lat": 38.2975
+        },
+        {
+          "question": "How are precipitation trends expected to influence ecotourism in the Amazon region, Brazil during 2020-2030?",
+          "lon": -60.0258,
+          "lat": -3.119
+        },
+        {
+          "question": "What is the expected impact of wind direction changes on paragliding tourism in Annecy, France between 2030-2040 and 2040-2050?",
+          "lon": 6.1296,
+          "lat": 45.8992
+        },
+        {
+          "question": "How might monthly mean temperature and rainfall trends affect wildlife tourism in Masai Mara, Kenya for 2040-2050?",
+          "lon": 34.6857,
+          "lat": -1.4061
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean temperature increases affect snow reliability for skiing in Tyrol, Austria (47.2692N, 11.4041E) during 2030-2040?",
+          "lon": 11.4041,
+          "lat": 47.2692
+        },
+        {
+          "question": "What is the expected impact of precipitation changes on hiking trail accessibility in the Scottish Highlands, UK (57.4778N, 4.2026W) for 2040-2050?",
+          "lon": -4.2026,
+          "lat": 57.4778
+        },
+        {
+          "question": "How are changes in monthly mean wind speed projected to affect beach safety for tourism in Algarve, Portugal (37.0179N, 8.2245W) during 2020-2030?",
+          "lon": -8.30439705881173,
+          "lat": 37.17113656223263
+        },
+        {
+          "question": "What is the expected change in temperature and rainfall for tourism season planning in Cape Town, South Africa (33.9249S, 18.4241E) between 2020-2030 and 2040-2050?",
+          "lon": 18.4241,
+          "lat": -33.9249
+        },
+        {
+          "question": "How will projected temperature increases affect hiking comfort in Banff National Park, Canada (51.1784N, 115.5708W) for 2030-2040?",
+          "lon": -115.5708,
+          "lat": 51.1784
+        },
+        {
+          "question": "How might wind speed changes influence optimal sailing conditions for tourism in Auckland, New Zealand (36.8485S, 174.7633E) during 2040-2050?",
+          "lon": 174.7633,
+          "lat": -36.8485
+        },
+        {
+          "question": "What are the projected impacts of increased temperature on grape harvest timing for wine tourists in Napa Valley, California (38.2975N, 122.2869W) for 2030-2040?",
+          "lon": -122.2869,
+          "lat": 38.2975
+        },
+        {
+          "question": "How will mean precipitation changes affect accessibility of ecotourism sites in the Amazon, Brazil (3.1190S, 60.0258W) during 2020-2030?",
+          "lon": -60.0258,
+          "lat": -3.119
+        },
+        {
+          "question": "What is the expected effect of wind direction shifts on paragliding flight safety in Annecy, France (45.8992N, 6.1296E) between 2030-2040 and 2040-2050?",
+          "lon": 6.1296,
+          "lat": 45.8992
+        },
+        {
+          "question": "How might temperature and rainfall trends affect wildlife migration timing for tourism in Masai Mara, Kenya (1.4061S, 34.6857E) for 2040-2050?",
+          "lon": 34.6857,
+          "lat": -1.4061
+        }
+      ]
+    },
+    "Financial and Insurance Risk": {
+      "general": [
+        {
+          "question": "How will projected changes in temperature and rainfall impact agricultural insurance risk in the Corn Belt, USA during 2030-2040?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What are the expected impacts of increases in mean wind speed on property insurance claims in Queensland, Australia for 2040-2050?",
+          "lon": 146.3265,
+          "lat": -20.9176
+        },
+        {
+          "question": "How might monthly mean climate changes influence investment risk for vineyards in the Bordeaux region, France during 2020-2030?",
+          "lon": -0.5792,
+          "lat": 44.8378
+        },
+        {
+          "question": "What is the projected change in climate variables relevant to crop insurance in Punjab, India between 2020-2030 and 2040-2050?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "How will future temperature and precipitation trends affect insurance risk for rice production in the Mekong Delta, Vietnam for 2030-2040?",
+          "lon": 105.9739,
+          "lat": 10.0338
+        },
+        {
+          "question": "How might wind speed increases impact windstorm insurance risk in the Netherlands during 2040-2050?",
+          "lon": 5.2913,
+          "lat": 52.1326
+        },
+        {
+          "question": "What are the projected effects of precipitation changes on flood insurance in Jakarta, Indonesia for 2030-2040?",
+          "lon": 106.8456,
+          "lat": -6.2088
+        },
+        {
+          "question": "How are temperature increases expected to influence reinsurance premiums for crop failures in Mato Grosso, Brazil during 2020-2030?",
+          "lon": -56.0968,
+          "lat": -12.6819
+        },
+        {
+          "question": "What is the expected impact of wind direction changes on insurance for coastal infrastructure in Cape Town, South Africa between 2030-2040 and 2040-2050?",
+          "lon": 18.4241,
+          "lat": -33.9249
+        },
+        {
+          "question": "How might monthly mean temperature and rainfall trends affect financial risk for wheat producers in Ukraine for 2040-2050?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will projected monthly mean temperature and precipitation changes impact insurance payouts for corn crops in the Corn Belt, USA (41.8780N, 93.0977W) during 2030-2040?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What is the expected effect of higher wind speed on property insurance claims for sugarcane farms in Queensland, Australia (20.9176S, 146.3265E) for 2040-2050?",
+          "lon": 146.3265,
+          "lat": -20.9176
+        },
+        {
+          "question": "How are changes in monthly mean climate variables projected to affect investment risk for Bordeaux vineyards, France (44.8378N, 0.5792W) during 2020-2030?",
+          "lon": -0.5792,
+          "lat": 44.8378
+        },
+        {
+          "question": "What is the expected change in temperature and rainfall for wheat crop insurance in Punjab, India (31.1471N, 75.3412E) between 2020-2030 and 2040-2050?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "How will projected monthly mean precipitation trends affect rice insurance risk in the Mekong Delta, Vietnam (10.0338N, 105.9739E) for 2030-2040?",
+          "lon": 105.9739,
+          "lat": 10.0338
+        },
+        {
+          "question": "How might wind speed increases influence windstorm insurance claims in the Netherlands (52.1326N, 5.2913E) during 2040-2050?",
+          "lon": 5.2913,
+          "lat": 52.1326
+        },
+        {
+          "question": "What are the projected impacts of increased rainfall on flood insurance payouts in Jakarta, Indonesia (6.2088S, 106.8456E) for 2030-2040?",
+          "lon": 106.8456,
+          "lat": -6.2088
+        },
+        {
+          "question": "How will higher mean temperatures affect reinsurance premiums for soybean crops in Mato Grosso, Brazil (12.6819S, 56.0968W) during 2020-2030?",
+          "lon": -56.0968,
+          "lat": -12.6819
+        },
+        {
+          "question": "What is the expected effect of wind direction shifts on insurance for port facilities in Cape Town, South Africa (33.9249S, 18.4241E) between 2030-2040 and 2040-2050?",
+          "lon": 18.4241,
+          "lat": -33.9249
+        },
+        {
+          "question": "How might monthly mean temperature and rainfall trends affect wheat crop insurance risk in Ukraine (48.3794N, 31.1656E) for 2040-2050?",
+          "lon": 31.1656,
+          "lat": 48.3794
+        }
+      ]
+    }
+  }
+}
