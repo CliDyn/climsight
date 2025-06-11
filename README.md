@@ -24,6 +24,10 @@ You can use ClimSight in three ways:
 
 Using ClimSight requires an OpenAI API key unless using the `skipLLMCall` mode for testing. The API key is only needed when running the application, not during installation.
 
+## Batch Processing
+
+For batch processing of climate questions, the `sequential` directory contains specialized tools for generating, validating, and processing questions in bulk. These tools are particularly useful for research and analysis requiring multiple climate queries. See the [sequential/README.md](sequential/README.md) for detailed usage instructions.
+
 ## 1. Running with Docker (Pre-built Container)
 
 The simplest way to get started is with our pre-built Docker container:

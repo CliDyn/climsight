@@ -1,0 +1,1064 @@
+{
+  "themes": {
+    "Crop Yield and Productivity": {
+      "general": [
+        {
+          "question": "How might projected climate conditions during 2020-2030 influence overall crop yields in central Iowa, USA?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What changes in climate conditions are expected to affect harvest productivity in the wheat-growing regions of Punjab, India during 2030-2040?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "How could shifts in climate conditions from 2020-2030 to 2040-2050 alter yield potential in the soybean belt of Mato Grosso, Brazil?",
+          "lon": -56.9211,
+          "lat": -12.6819
+        },
+        {
+          "question": "To what extent will projected climate conditions during 2030-2040 impact rice productivity in the Mekong Delta, Vietnam?",
+          "lon": 105.7833,
+          "lat": 10.0333
+        },
+        {
+          "question": "How will future climate conditions influence maize yields in the Free State province of South Africa during 2040-2050?",
+          "lon": 27.9456,
+          "lat": -28.4541
+        },
+        {
+          "question": "What climate-driven changes are anticipated for sugarcane productivity in Queensland, Australia between 2020-2030 and 2030-2040?",
+          "lon": 146.09484276852362,
+          "lat": -17.69503585892587
+        },
+        {
+          "question": "How are projected climate conditions expected to affect cocoa yields in C\u00f4te d\u2019Ivoire during 2030-2040?",
+          "lon": -5.292,
+          "lat": 6.865
+        },
+        {
+          "question": "What influence will climate conditions have on barley production in southern Sweden between 2020-2030 and 2040-2050?",
+          "lon": 13.0038,
+          "lat": 55.605
+        },
+        {
+          "question": "How might future climate conditions shape potato yields in the Peruvian Andes during 2040-2050?",
+          "lon": -71.9675,
+          "lat": -13.5319
+        },
+        {
+          "question": "What climate condition changes are expected to impact coffee yields in the highlands of Ethiopia from 2020-2030 to 2030-2040?",
+          "lon": 40.4897,
+          "lat": 9.145
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean growing-season temperature between 2020-2030 and 2040-2050 for maize in Story County, Iowa, USA?",
+          "lon": -93.6199,
+          "lat": 42.0347
+        },
+        {
+          "question": "How will monthly mean precipitation during the rice transplanting months (June\u2013July) evolve in the Mekong Delta, Vietnam between 2030-2040 and 2040-2050?",
+          "lon": 105.7833,
+          "lat": 10.0333
+        },
+        {
+          "question": "What are the expected monthly mean wind speed trends during flowering for wheat in Punjab, India for 2030-2040?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "By how much will the average monthly mean temperature during September (soybean pod-fill) rise in Mato Grosso, Brazil from 2020-2030 to 2040-2050?",
+          "lon": -56.9211,
+          "lat": -12.6819
+        },
+        {
+          "question": "What change in monthly mean precipitation is projected for April (planting month) for barley in Sk\u00e5ne County, Sweden between 2020-2030 and 2030-2040?",
+          "lon": 13.595,
+          "lat": 55.909
+        },
+        {
+          "question": "How is the monthly mean temperature during July expected to shift for grapevines in La Rioja, Spain during 2030-2040 compared with 2020-2030?",
+          "lon": -2.5396,
+          "lat": 42.2871
+        },
+        {
+          "question": "What increases in monthly mean precipitation during the cocoa pod-filling season (September\u2013October) are projected in Abengourou, C\u00f4te d\u2019Ivoire between 2020-2030 and 2040-2050?",
+          "lon": -3.482,
+          "lat": 6.7273
+        },
+        {
+          "question": "What is the expected monthly mean temperature for December (coffee flowering) during 2030-2040 in Jimma, Ethiopia?",
+          "lon": 36.8351,
+          "lat": 7.6736
+        },
+        {
+          "question": "How will winter (January\u2013February) monthly mean wind speeds affect wheat lodging risk in Canterbury, New Zealand between 2040-2050?",
+          "lon": 172.6379,
+          "lat": -43.5309
+        },
+        {
+          "question": "What are the projected changes in monthly mean precipitation during May for potato cultivation on Prince Edward Island, Canada from 2020-2030 to 2040-2050?",
+          "lon": -63.132,
+          "lat": 46.39
+        }
+      ]
+    },
+    "Food Production": {
+      "general": [
+        {
+          "question": "How could changing climate conditions during 2030-2040 influence overall food production capacity in California\u2019s Central Valley, USA?",
+          "lon": -119.5424,
+          "lat": 36.605
+        },
+        {
+          "question": "What climate condition trends during 2020-2030 may affect staple grain production in the Nile Delta, Egypt?",
+          "lon": 31.0,
+          "lat": 30.796
+        },
+        {
+          "question": "How might the change in climate conditions between 2020-2030 and 2040-2050 alter vegetable output in the Murcia region, Spain?",
+          "lon": -1.1307,
+          "lat": 37.9922
+        },
+        {
+          "question": "What impacts are projected for oilseed food production in Saskatchewan, Canada during 2040-2050 due to climate conditions?",
+          "lon": -104.6189,
+          "lat": 50.4452
+        },
+        {
+          "question": "How will climate conditions affect fruit production on Australia\u2019s Sunshine Coast during 2030-2040?",
+          "lon": 153.066,
+          "lat": -26.65
+        },
+        {
+          "question": "What shifts in climate conditions are expected to influence legume production in Kano State, Nigeria from 2020-2030 to 2030-2040?",
+          "lon": 8.592,
+          "lat": 12.0022
+        },
+        {
+          "question": "How are projected climate conditions during 2040-2050 likely to impact dairy feed crop production in Normandy, France?",
+          "lon": -0.3703,
+          "lat": 49.1829
+        },
+        {
+          "question": "What climate-driven changes could affect root crop production in the Highlands of Kenya between 2020-2030 and 2040-2050?",
+          "lon": 35.2698,
+          "lat": 0.5143
+        },
+        {
+          "question": "How might climate conditions alter cereal grain production in the Volga region of Russia during 2030-2040?",
+          "lon": 47.5604,
+          "lat": 55.5587
+        },
+        {
+          "question": "What role will future climate conditions play in sustaining rice production in West Bengal, India over 2020-2030?",
+          "lon": 87.855,
+          "lat": 22.9868
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected shift in monthly mean precipitation during the tomato growing season (March\u2013June) in Murcia, Spain between 2020-2030 and 2030-2040?",
+          "lon": -1.1307,
+          "lat": 37.9922
+        },
+        {
+          "question": "How will monthly mean temperature during July\u2013August impact almond production in Fresno County, California during 2030-2040?",
+          "lon": -119.7871,
+          "lat": 36.7378
+        },
+        {
+          "question": "What changes in monthly mean wind speed are expected for the wheat harvest period (July) in Saskatchewan, Canada between 2030-2040 and 2040-2050?",
+          "lon": -106.467,
+          "lat": 51.2538
+        },
+        {
+          "question": "By how much is monthly mean precipitation during October expected to increase for cassava fields in Cross River State, Nigeria from 2020-2030 to 2040-2050?",
+          "lon": 8.598,
+          "lat": 5.8704
+        },
+        {
+          "question": "What is the expected monthly mean temperature range for January during 2040-2050 for dairy forage maize in Canterbury, New Zealand?",
+          "lon": 172.6379,
+          "lat": -43.5309
+        },
+        {
+          "question": "How will monthly mean precipitation during peak rice growth (August) change in the Ayeyarwady Delta, Myanmar between 2020-2030 and 2030-2040?",
+          "lon": 95.1,
+          "lat": 16.9
+        },
+        {
+          "question": "What increase in monthly mean wind speed during threshing month (September) is projected for barley in North Rhine-Westphalia, Germany between 2020-2030 and 2040-2050?",
+          "lon": 7.6616,
+          "lat": 51.4332
+        },
+        {
+          "question": "How is the monthly mean temperature during bloom (April) expected to change for apple orchards in Almaty Region, Kazakhstan during 2030-2040?",
+          "lon": 76.8897,
+          "lat": 43.2389
+        },
+        {
+          "question": "What trend in monthly mean precipitation is projected for soybean planting in November in Paran\u00e1, Brazil from 2020-2030 to 2040-2050?",
+          "lon": -53.4185,
+          "lat": -24.181
+        },
+        {
+          "question": "How will monthly mean temperatures in February influence greenhouse cucumber production in the Netherlands during 2030-2040?",
+          "lon": 4.8952,
+          "lat": 52.3702
+        }
+      ]
+    },
+    "Agriculture": {
+      "general": [
+        {
+          "question": "How are projected climate conditions during 2030-2040 expected to alter agricultural practices in the Loess Plateau, China?",
+          "lon": 109.0,
+          "lat": 35.0
+        },
+        {
+          "question": "What climate condition changes between 2020-2030 and 2040-2050 could influence soil moisture availability for farmers in the Pampas region, Argentina?",
+          "lon": -58.3816,
+          "lat": -34.6037
+        },
+        {
+          "question": "To what extent will climate conditions during 2040-2050 affect mixed farming systems in Brittany, France?",
+          "lon": -1.7321,
+          "lat": 48.202
+        },
+        {
+          "question": "How might future climate conditions impact irrigation needs for agriculture in Rajasthan, India during 2020-2030?",
+          "lon": 75.7873,
+          "lat": 26.9124
+        },
+        {
+          "question": "What are the projected climate condition trends affecting pasture management in Otago, New Zealand from 2030-2040?",
+          "lon": 170.5028,
+          "lat": -45.8788
+        },
+        {
+          "question": "How could climate conditions influence horticultural production in the Okanagan Valley, Canada between 2020-2030 and 2030-2040?",
+          "lon": -119.496,
+          "lat": 49.888
+        },
+        {
+          "question": "What climate condition shifts are expected to affect subsistence agriculture in the Ethiopian Highlands during 2030-2040?",
+          "lon": 38.0,
+          "lat": 11.6
+        },
+        {
+          "question": "How might projected climate conditions alter irrigation scheduling for cotton in Sindh, Pakistan from 2020-2030 to 2040-2050?",
+          "lon": 68.3578,
+          "lat": 25.396
+        },
+        {
+          "question": "What impacts will climate conditions during 2040-2050 have on livestock feed crop rotations in Nebraska, USA?",
+          "lon": -99.9018,
+          "lat": 41.4925
+        },
+        {
+          "question": "How will changing climate conditions influence terraced agriculture sustainability in Banaue, Philippines between 2020-2030 and 2030-2040?",
+          "lon": 121.0715,
+          "lat": 16.912
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean precipitation during July for cotton fields in Sindh, Pakistan between 2020-2030 and 2040-2050?",
+          "lon": 68.3578,
+          "lat": 25.396
+        },
+        {
+          "question": "How will monthly mean wind speed during April affect pesticide drift management for vineyards in Marlborough, New Zealand in 2030-2040?",
+          "lon": 173.9523,
+          "lat": -41.516
+        },
+        {
+          "question": "What increase in monthly mean temperature during August is anticipated for irrigated wheat in the Nile Delta, Egypt from 2020-2030 to 2030-2040?",
+          "lon": 31.0,
+          "lat": 30.796
+        },
+        {
+          "question": "What change in monthly mean precipitation during May is expected to impact chickpea sowing in Rajasthan, India between 2030-2040 and 2040-2050?",
+          "lon": 75.7873,
+          "lat": 26.9124
+        },
+        {
+          "question": "How is monthly mean temperature in February projected to shift for early potato planting on Prince Edward Island, Canada during 2030-2040?",
+          "lon": -63.132,
+          "lat": 46.39
+        },
+        {
+          "question": "What trend in monthly mean wind direction variability during harvest (October) is forecast for maize in Paran\u00e1, Brazil from 2020-2030 to 2040-2050?",
+          "lon": -53.4185,
+          "lat": -24.181
+        },
+        {
+          "question": "By how much is monthly mean temperature during June expected to rise for wheat in the Great Hungarian Plain between 2020-2030 and 2040-2050?",
+          "lon": 19.9127,
+          "lat": 46.8719
+        },
+        {
+          "question": "How will monthly mean precipitation during January affect soybean double-cropping potential in C\u00f3rdoba, Argentina during 2030-2040?",
+          "lon": -64.1888,
+          "lat": -31.4201
+        },
+        {
+          "question": "What are the projected monthly mean wind speed changes for rice paddies in Narathiwat, Thailand during 2040-2050 compared with 2020-2030?",
+          "lon": 101.825,
+          "lat": 6.4253
+        },
+        {
+          "question": "How is the monthly mean temperature during bloom (April) expected to change for cherry orchards in Yakima Valley, Washington, USA from 2020-2030 to 2030-2040?",
+          "lon": -120.5059,
+          "lat": 46.6021
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "How will projected climate conditions during 2030-2040 influence wind energy potential in central Kansas, USA?",
+          "lon": -98.5,
+          "lat": 38.5
+        },
+        {
+          "question": "What climate condition changes are expected to affect solar farm cooling requirements in Andalusia, Spain from 2020-2030 to 2040-2050?",
+          "lon": -5.9845,
+          "lat": 37.3891
+        },
+        {
+          "question": "How might future climate conditions impact hydropower reservoir refill rates in Minas Gerais, Brazil during 2040-2050?",
+          "lon": -43.9352,
+          "lat": -19.9245
+        },
+        {
+          "question": "What are the projected climate condition trends affecting coastal wind farm operations in Schleswig-Holstein, Germany during 2030-2040?",
+          "lon": 9.6961,
+          "lat": 54.2194
+        },
+        {
+          "question": "How could climate conditions during 2020-2030 alter road infrastructure maintenance needs in Manitoba, Canada?",
+          "lon": -97.1384,
+          "lat": 49.8951
+        },
+        {
+          "question": "What changes in climate conditions between 2020-2030 and 2030-2040 might influence rooftop solar efficiency in Phoenix, Arizona, USA?",
+          "lon": -112.074,
+          "lat": 33.4484
+        },
+        {
+          "question": "How are projected climate conditions during 2040-2050 expected to impact wind turbine icing risk in Nordland, Norway?",
+          "lon": 14.242770230078918,
+          "lat": 67.14710056527501
+        },
+        {
+          "question": "What climate condition shifts could affect rail track buckling risk in Rajasthan, India during 2030-2040?",
+          "lon": 75.5469,
+          "lat": 26.8467
+        },
+        {
+          "question": "How might future climate conditions influence storm-water drainage design in Ho Chi Minh City, Vietnam from 2020-2030 to 2040-2050?",
+          "lon": 106.6297,
+          "lat": 10.8231
+        },
+        {
+          "question": "What climate conditions during 2040-2050 are expected to impact wind resource availability for onshore expansion near Jeju Island, South Korea?",
+          "lon": 126.4983,
+          "lat": 33.489
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean wind speed during January between 2020-2030 and 2040-2050 for wind turbines near Hays, Kansas, USA?",
+          "lon": -99.3268,
+          "lat": 38.8792
+        },
+        {
+          "question": "How will monthly mean temperature in July affect photovoltaic efficiency at a solar farm in Seville, Spain during 2030-2040?",
+          "lon": -5.9845,
+          "lat": 37.3891
+        },
+        {
+          "question": "What increase in monthly mean precipitation during June is forecast for road drainage planning in Winnipeg, Canada from 2020-2030 to 2040-2050?",
+          "lon": -97.1384,
+          "lat": 49.8951
+        },
+        {
+          "question": "How is monthly mean wind direction expected to shift during October at the planned wind park in Schleswig-Holstein, Germany between 2020-2030 and 2030-2040?",
+          "lon": 9.6961,
+          "lat": 54.2194
+        },
+        {
+          "question": "What are the projected monthly mean temperatures for December affecting rail steel stress in Jaipur, India during 2040-2050?",
+          "lon": 75.5469,
+          "lat": 26.8467
+        },
+        {
+          "question": "How will monthly mean wind speed during March influence blade fatigue rates in turbines at Teruel, Spain during 2030-2040 compared with 2020-2030?",
+          "lon": -1.1065,
+          "lat": 40.3455
+        },
+        {
+          "question": "What change in monthly mean temperature during August is projected for rooftop solar panels in Phoenix, Arizona, USA between 2020-2030 and 2040-2050?",
+          "lon": -112.074,
+          "lat": 33.4484
+        },
+        {
+          "question": "How is monthly mean precipitation during the monsoon peak (July) expected to change for urban drainage infrastructure in Mumbai, India between 2020-2030 and 2030-2040?",
+          "lon": 72.8777,
+          "lat": 19.076
+        },
+        {
+          "question": "By how much will monthly mean wind speed during November change for turbine de-icing planning in Bod\u00f8, Norway from 2020-2030 to 2040-2050?",
+          "lon": 14.703853136232482,
+          "lat": 67.34287725989454
+        },
+        {
+          "question": "What projected monthly mean temperature rise during May could influence asphalt softening on highways in Doha, Qatar during 2030-2040?",
+          "lon": 51.531,
+          "lat": 25.2854
+        }
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "How will projected climate conditions during 2030-2040 influence urban heat management strategies in Chicago, USA?",
+          "lon": -87.6298,
+          "lat": 41.8781
+        },
+        {
+          "question": "What climate condition changes between 2020-2030 and 2040-2050 could affect green space planning in Lagos, Nigeria?",
+          "lon": 3.3792,
+          "lat": 6.5244
+        },
+        {
+          "question": "How might climate conditions impact storm-water system capacity in Copenhagen, Denmark during 2040-2050?",
+          "lon": 12.421325739116753,
+          "lat": 55.272817587349834
+        },
+        {
+          "question": "What are the expected climate condition trends affecting building cooling demand in Dubai, UAE during 2020-2030?",
+          "lon": 55.2708,
+          "lat": 25.2048
+        },
+        {
+          "question": "How could climate conditions influence public transportation resilience in Mexico City, Mexico between 2030-2040?",
+          "lon": -99.1332,
+          "lat": 19.4326
+        },
+        {
+          "question": "What climate condition shifts are anticipated for urban agriculture viability in Detroit, USA from 2020-2030 to 2030-2040?",
+          "lon": -83.0458,
+          "lat": 42.3314
+        },
+        {
+          "question": "How are projected climate conditions during 2040-2050 expected to impact coastal flood planning in Rotterdam, Netherlands?",
+          "lon": 4.4777,
+          "lat": 51.9244
+        },
+        {
+          "question": "What climate condition trends could influence tree species selection in Melbourne, Australia during 2030-2040?",
+          "lon": 144.9631,
+          "lat": -37.8136
+        },
+        {
+          "question": "How might future climate conditions alter heat-wave preparedness strategies in Athens, Greece from 2020-2030 to 2040-2050?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "What impacts will climate conditions during 2030-2040 have on water supply planning in Lima, Peru?",
+          "lon": -77.0428,
+          "lat": -12.0464
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean temperature during July between 2020-2030 and 2040-2050 in Chicago, USA for heat-island mitigation planning?",
+          "lon": -87.6298,
+          "lat": 41.8781
+        },
+        {
+          "question": "How will monthly mean precipitation in September shift for drainage design in Lagos, Nigeria from 2020-2030 to 2030-2040?",
+          "lon": 3.3792,
+          "lat": 6.5244
+        },
+        {
+          "question": "What changes in monthly mean wind speed during December are expected to affect high-rise design in Copenhagen, Denmark during 2030-2040?",
+          "lon": 12.830275580283768,
+          "lat": 55.91816337406508
+        },
+        {
+          "question": "By how much is monthly mean temperature during August anticipated to rise in Dubai, UAE between 2020-2030 and 2040-2050?",
+          "lon": 55.2708,
+          "lat": 25.2048
+        },
+        {
+          "question": "What increase in monthly mean precipitation during June is projected for combined sewer overflow risk in Detroit, USA during 2030-2040?",
+          "lon": -83.0458,
+          "lat": 42.3314
+        },
+        {
+          "question": "How is monthly mean temperature during January expected to change in Mexico City, Mexico from 2020-2030 to 2030-2040 regarding heating demand?",
+          "lon": -99.1332,
+          "lat": 19.4326
+        },
+        {
+          "question": "What trend in monthly mean wind direction variability is forecast for Rotterdam, Netherlands during October between 2020-2030 and 2040-2050?",
+          "lon": 4.4777,
+          "lat": 51.9244
+        },
+        {
+          "question": "How will monthly mean precipitation during the wettest month (November) change in Melbourne, Australia from 2020-2030 to 2030-2040?",
+          "lon": 144.9631,
+          "lat": -37.8136
+        },
+        {
+          "question": "What is the expected monthly mean temperature during April for Athens, Greece in 2030-2040 compared with 2020-2030?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        },
+        {
+          "question": "By how much will monthly mean wind speed during August change in Lima, Peru between 2020-2030 and 2040-2050 for dust control planning?",
+          "lon": -77.0428,
+          "lat": -12.0464
+        }
+      ]
+    },
+    "Climate Adaptation in Cropping Systems": {
+      "general": [
+        {
+          "question": "How will projected climate conditions during 2020-2030 influence adaptation strategies for maize\u2013soybean rotations in Iowa, USA?",
+          "lon": -93.0977,
+          "lat": 41.878
+        },
+        {
+          "question": "What climate condition changes between 2030-2040 and 2040-2050 could drive adoption of drought-tolerant wheat in Castilla-La Mancha, Spain?",
+          "lon": -3.5491,
+          "lat": 39.8568
+        },
+        {
+          "question": "How might future climate conditions affect rice\u2013fish integrated systems in Laguna, Philippines during 2030-2040?",
+          "lon": 121.3333,
+          "lat": 14.17
+        },
+        {
+          "question": "What climate condition trends are expected to shape cover-crop planning in the Corn Belt of Illinois, USA over 2040-2050?",
+          "lon": -89.3985,
+          "lat": 40.6331
+        },
+        {
+          "question": "How could climate conditions influence agro-forestry adoption in the Sahel region of Niger from 2020-2030 to 2030-2040?",
+          "lon": 2.1254,
+          "lat": 13.5116
+        },
+        {
+          "question": "What impacts will climate conditions have on shifting sowing dates for barley in Scotland, UK during 2040-2050?",
+          "lon": -4.2026,
+          "lat": 56.4907
+        },
+        {
+          "question": "How are projected climate conditions expected to affect irrigation scheduling adaptations for almonds in South Australia during 2030-2040?",
+          "lon": 138.6007,
+          "lat": -34.9285
+        },
+        {
+          "question": "What climate condition shifts during 2020-2030 could encourage adoption of heat-resilient potato varieties in Punjab, India?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        },
+        {
+          "question": "How might climate conditions influence crop diversification strategies in the Central Highlands of Vietnam between 2030-2040 and 2040-2050?",
+          "lon": 108.0,
+          "lat": 14.3524
+        },
+        {
+          "question": "What role will future climate conditions play in changing fertilizer timing for sugarcane in R\u00e9union Island during 2030-2040?",
+          "lon": 55.5364,
+          "lat": -21.1151
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean temperature during April between 2020-2030 and 2040-2050 for early-sown wheat in Castilla-La Mancha, Spain?",
+          "lon": -3.5491,
+          "lat": 39.8568
+        },
+        {
+          "question": "How will monthly mean precipitation during August influence late-season irrigation needs for maize in Champaign County, Illinois, USA during 2030-2040?",
+          "lon": -88.2434,
+          "lat": 40.1164
+        },
+        {
+          "question": "What is the expected monthly mean wind speed during October for rice paddies in Laguna, Philippines in 2040-2050?",
+          "lon": 121.3333,
+          "lat": 14.17
+        },
+        {
+          "question": "How will monthly mean temperature in June shift for barley in Aberdeenshire, Scotland from 2020-2030 to 2030-2040?",
+          "lon": -2.3962,
+          "lat": 57.2869
+        },
+        {
+          "question": "What change in monthly mean precipitation during July is projected for agro-forestry millet systems in Maradi, Niger between 2020-2030 and 2040-2050?",
+          "lon": 7.1017,
+          "lat": 13.5
+        },
+        {
+          "question": "How is monthly mean temperature during January expected to evolve for almond orchards in Riverland, South Australia during 2030-2040 compared with 2020-2030?",
+          "lon": 140.57,
+          "lat": -34.33
+        },
+        {
+          "question": "What projected increase in monthly mean precipitation during March could affect potato blight risk in Sahiwal, Pakistan from 2020-2030 to 2040-2050?",
+          "lon": 73.106,
+          "lat": 30.67
+        },
+        {
+          "question": "How will monthly mean wind direction variability during flowering (May) change for coffee in Dak Lak, Vietnam between 2030-2040 and 2040-2050?",
+          "lon": 108.0378,
+          "lat": 12.6665
+        },
+        {
+          "question": "What is the expected monthly mean temperature during September for soybean intercropping near Addis Ababa, Ethiopia during 2040-2050?",
+          "lon": 38.7578,
+          "lat": 8.9806
+        },
+        {
+          "question": "By how much will monthly mean precipitation during December increase for sugarcane in Saint-Andr\u00e9, R\u00e9union Island between 2020-2030 and 2030-2040?",
+          "lon": 55.65,
+          "lat": -20.9633
+        }
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "How will changing climate conditions between 2020-2030 and 2040-2050 influence the long-term sustainability of wheat cultivation in Saskatchewan, Canada?",
+          "lon": -106.4509,
+          "lat": 52.9399
+        },
+        {
+          "question": "What climate condition trends during 2030-2040 could impact sustainable rice farming in the Red River Delta, Vietnam?",
+          "lon": 105.846,
+          "lat": 20.9716
+        },
+        {
+          "question": "How might future climate conditions affect sustainable olive groves in Crete, Greece during 2040-2050?",
+          "lon": 24.8093,
+          "lat": 35.2401
+        },
+        {
+          "question": "What are the projected climate condition changes that may influence long-term soybean sustainability in Mato Grosso do Sul, Brazil over 2020-2030?",
+          "lon": -54.7852,
+          "lat": -20.7722
+        },
+        {
+          "question": "How could climate conditions alter the sustainability of coffee plantations in Nyeri County, Kenya between 2030-2040 and 2040-2050?",
+          "lon": 36.95,
+          "lat": -0.4167
+        },
+        {
+          "question": "What climate condition shifts during 2040-2050 are expected to affect sustainable sugar-beet production in Lower Saxony, Germany?",
+          "lon": 9.8451,
+          "lat": 52.6367
+        },
+        {
+          "question": "How will projected climate conditions impact sustainable grape production in Mendoza, Argentina from 2020-2030 to 2030-2040?",
+          "lon": -68.8458,
+          "lat": -32.8895
+        },
+        {
+          "question": "What role will climate conditions play in the sustainability of maize production in Central Luzon, Philippines during 2030-2040?",
+          "lon": 120.8466,
+          "lat": 15.4549
+        },
+        {
+          "question": "How might climate conditions influence long-term cassava sustainability in the Cross River region, Nigeria between 2020-2030 and 2040-2050?",
+          "lon": 8.598,
+          "lat": 5.8704
+        },
+        {
+          "question": "What climate condition changes are anticipated to affect sustainable barley production in Hovd, Mongolia during 2030-2040?",
+          "lon": 91.6372,
+          "lat": 48.0056
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean precipitation during May for wheat in Saskatoon, Canada from 2020-2030 to 2040-2050?",
+          "lon": -106.67,
+          "lat": 52.1579
+        },
+        {
+          "question": "How will monthly mean temperature during July shift for rice in Hai Duong, Vietnam between 2020-2030 and 2030-2040?",
+          "lon": 106.3332,
+          "lat": 20.9353
+        },
+        {
+          "question": "What trend in monthly mean wind speed during October is expected for olive groves in Heraklion, Crete during 2040-2050 compared with 2020-2030?",
+          "lon": 25.1442,
+          "lat": 35.3387
+        },
+        {
+          "question": "How is monthly mean precipitation during January forecast to change for soybean fields in Campo Grande, Brazil between 2020-2030 and 2030-2040?",
+          "lon": -54.6201,
+          "lat": -20.4697
+        },
+        {
+          "question": "What increase in monthly mean temperature during March is projected for coffee in Karatina, Kenya from 2020-2030 to 2040-2050?",
+          "lon": 37.01,
+          "lat": -0.4835
+        },
+        {
+          "question": "How will monthly mean precipitation during August affect sugar-beet harvest timing in Celle, Germany during 2030-2040?",
+          "lon": 10.0805,
+          "lat": 52.6238
+        },
+        {
+          "question": "What projected monthly mean temperature during February could impact grapevine dormancy in Uco Valley, Argentina for 2040-2050?",
+          "lon": -69.079,
+          "lat": -33.5796
+        },
+        {
+          "question": "How is monthly mean wind direction variability during June expected to change for maize in Tarlac, Philippines between 2020-2030 and 2040-2050?",
+          "lon": 120.596,
+          "lat": 15.476
+        },
+        {
+          "question": "What change in monthly mean precipitation during November is forecast for cassava in Calabar, Nigeria between 2030-2040 and 2040-2050?",
+          "lon": 8.3269,
+          "lat": 4.9589
+        },
+        {
+          "question": "By how much will monthly mean temperature during April rise for barley in Khovd, Mongolia from 2020-2030 to 2030-2040?",
+          "lon": 91.6372,
+          "lat": 48.0056
+        }
+      ]
+    },
+    "Public Health and Climate": {
+      "general": [
+        {
+          "question": "How will projected climate conditions during 2030-2040 influence heat-related illness risk in Houston, USA?",
+          "lon": -95.3698,
+          "lat": 29.7604
+        },
+        {
+          "question": "What climate condition changes between 2020-2030 and 2040-2050 could affect malaria transmission potential in Accra, Ghana?",
+          "lon": -0.187,
+          "lat": 5.6037
+        },
+        {
+          "question": "How might future climate conditions impact dengue fever outbreaks in Singapore during 2040-2050?",
+          "lon": 103.8198,
+          "lat": 1.3521
+        },
+        {
+          "question": "What are the expected climate condition trends affecting air-quality episodes in Beijing, China during 2020-2030?",
+          "lon": 116.4074,
+          "lat": 39.9042
+        },
+        {
+          "question": "How could climate conditions influence water-borne disease risk in Dhaka, Bangladesh between 2030-2040?",
+          "lon": 90.4125,
+          "lat": 23.8103
+        },
+        {
+          "question": "What climate condition shifts are anticipated to affect elder heat-stress vulnerability in Madrid, Spain from 2020-2030 to 2040-2050?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "How are projected climate conditions during 2040-2050 expected to impact respiratory-illness days in Santiago, Chile?",
+          "lon": -70.6693,
+          "lat": -33.4489
+        },
+        {
+          "question": "What climate condition changes may influence tick-borne disease risk in Stockholm, Sweden during 2030-2040?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        },
+        {
+          "question": "How might climate conditions alter cold-related mortality in Warsaw, Poland from 2020-2030 to 2040-2050?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "What impacts will climate conditions during 2030-2040 have on heat-wave emergency planning in Osaka, Japan?",
+          "lon": 135.5023,
+          "lat": 34.6937
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected increase in monthly mean temperature during August in Houston, USA from 2020-2030 to 2040-2050 relevant to heat-related illness risk?",
+          "lon": -95.3698,
+          "lat": 29.7604
+        },
+        {
+          "question": "How will monthly mean precipitation during May shift in Accra, Ghana between 2030-2040 and 2040-2050 affecting mosquito breeding sites?",
+          "lon": -0.187,
+          "lat": 5.6037
+        },
+        {
+          "question": "What change in monthly mean temperature during April is expected in Singapore for 2040-2050 compared with 2020-2030 regarding dengue risk?",
+          "lon": 103.8198,
+          "lat": 1.3521
+        },
+        {
+          "question": "How is monthly mean wind speed during January projected to evolve in Beijing, China between 2020-2030 and 2030-2040 and what does it imply for pollutant dispersion?",
+          "lon": 116.4074,
+          "lat": 39.9042
+        },
+        {
+          "question": "What increase in monthly mean precipitation during July is forecast for Dhaka, Bangladesh from 2020-2030 to 2040-2050 influencing flooding-related diseases?",
+          "lon": 90.4125,
+          "lat": 23.8103
+        },
+        {
+          "question": "By how much will monthly mean temperature during June rise in Madrid, Spain between 2020-2030 and 2030-2040 affecting heat stress?",
+          "lon": -3.7038,
+          "lat": 40.4168
+        },
+        {
+          "question": "What are the projected monthly mean temperature changes during August in Santiago, Chile for 2040-2050 impacting respiratory illness?",
+          "lon": -70.6693,
+          "lat": -33.4489
+        },
+        {
+          "question": "How will monthly mean precipitation during September change in Stockholm, Sweden from 2020-2030 to 2030-2040 affecting tick habitat moisture?",
+          "lon": 18.0686,
+          "lat": 59.3293
+        },
+        {
+          "question": "What decrease in monthly mean temperature during January is projected in Warsaw, Poland between 2020-2030 and 2040-2050 regarding cold-related mortality?",
+          "lon": 21.0122,
+          "lat": 52.2297
+        },
+        {
+          "question": "What is the expected monthly mean temperature during July for Osaka, Japan in 2030-2040 compared with 2020-2030 to guide heat-wave planning?",
+          "lon": 135.5023,
+          "lat": 34.6937
+        }
+      ]
+    },
+    "Tourism and Recreation": {
+      "general": [
+        {
+          "question": "How will projected climate conditions during 2030-2040 influence ski-tourism viability in Aspen, Colorado, USA?",
+          "lon": -106.8175,
+          "lat": 39.1911
+        },
+        {
+          "question": "What climate condition changes between 2020-2030 and 2040-2050 could affect beach tourism in Phuket, Thailand?",
+          "lon": 98.3923,
+          "lat": 7.8804
+        },
+        {
+          "question": "How might future climate conditions impact wine tourism in Tuscany, Italy during 2040-2050?",
+          "lon": 11.2486,
+          "lat": 43.7711
+        },
+        {
+          "question": "What are the expected climate condition trends affecting hiking-season length in the Scottish Highlands, UK during 2020-2030?",
+          "lon": -5.1052,
+          "lat": 56.8198
+        },
+        {
+          "question": "How could climate conditions influence wildlife-viewing tourism in Maasai Mara, Kenya between 2030-2040?",
+          "lon": 35.0206,
+          "lat": -1.4061
+        },
+        {
+          "question": "What climate condition shifts are anticipated for cherry-blossom tourism in Kyoto, Japan from 2020-2030 to 2040-2050?",
+          "lon": 135.7681,
+          "lat": 35.0116
+        },
+        {
+          "question": "How are projected climate conditions during 2040-2050 expected to impact autumn-foliage tourism in Vermont, USA?",
+          "lon": -72.5778,
+          "lat": 44.5588
+        },
+        {
+          "question": "What climate condition changes may influence desert-adventure tourism in Dubai, UAE during 2030-2040?",
+          "lon": 55.2708,
+          "lat": 25.2048
+        },
+        {
+          "question": "How might climate conditions alter mountain-biking tourism in Queenstown, New Zealand from 2020-2030 to 2040-2050?",
+          "lon": 168.6626,
+          "lat": -45.0312
+        },
+        {
+          "question": "What impacts will climate conditions during 2030-2040 have on lake-based recreation in Lake Tahoe, USA?",
+          "lon": -120.0324,
+          "lat": 39.0968
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean temperature during January between 2020-2030 and 2040-2050 in Aspen, Colorado, USA for snow-reliability assessment?",
+          "lon": -106.8175,
+          "lat": 39.1911
+        },
+        {
+          "question": "How will monthly mean precipitation during September shift in Phuket, Thailand from 2020-2030 to 2030-2040 affecting beach-season length?",
+          "lon": 98.3923,
+          "lat": 7.8804
+        },
+        {
+          "question": "What change in monthly mean temperature during April is expected in Florence, Tuscany, Italy between 2030-2040 and 2040-2050 influencing wine-tourism comfort?",
+          "lon": 11.2558,
+          "lat": 43.7696
+        },
+        {
+          "question": "How is monthly mean wind speed during May projected to evolve in Fort William, Scotland between 2020-2030 and 2030-2040 affecting hiking safety?",
+          "lon": -5.1052,
+          "lat": 56.8198
+        },
+        {
+          "question": "What increase in monthly mean precipitation during March is forecast for Maasai Mara, Kenya from 2020-2030 to 2040-2050 affecting wildlife-viewing access?",
+          "lon": 35.0206,
+          "lat": -1.4061
+        },
+        {
+          "question": "By how much will monthly mean temperature during April rise in Kyoto, Japan between 2020-2030 and 2040-2050 for cherry-blossom timing?",
+          "lon": 135.7681,
+          "lat": 35.0116
+        },
+        {
+          "question": "What are the expected monthly mean temperature changes during October in Burlington, Vermont, USA for 2040-2050 impacting foliage tourism?",
+          "lon": -73.2121,
+          "lat": 44.4759
+        },
+        {
+          "question": "How will monthly mean temperature during July change in Dubai, UAE from 2020-2030 to 2030-2040 affecting outdoor recreation?",
+          "lon": 55.2708,
+          "lat": 25.2048
+        },
+        {
+          "question": "What trend in monthly mean wind direction variability during December is forecast for Queenstown, New Zealand between 2020-2030 and 2040-2050 influencing mountain-biking safety?",
+          "lon": 168.6626,
+          "lat": -45.0312
+        },
+        {
+          "question": "What projected increase in monthly mean precipitation during February could affect ski conditions near Lake Tahoe, USA between 2020-2030 and 2030-2040?",
+          "lon": -120.0324,
+          "lat": 39.0968
+        }
+      ]
+    },
+    "Financial and Insurance Risk": {
+      "general": [
+        {
+          "question": "How will projected climate conditions during 2030-2040 influence crop-insurance risk profiles for maize in Illinois, USA?",
+          "lon": -89.3985,
+          "lat": 40.6331
+        },
+        {
+          "question": "What climate condition changes between 2020-2030 and 2040-2050 could affect loan-default risk for coffee farms in Antioquia, Colombia?",
+          "lon": -75.5658,
+          "lat": 6.2476
+        },
+        {
+          "question": "How might future climate conditions impact re-insurance costs for vineyards in Bordeaux, France during 2040-2050?",
+          "lon": -0.5792,
+          "lat": 44.8378
+        },
+        {
+          "question": "What are the expected climate condition trends affecting micro-finance exposure for rice farmers in Bangladesh during 2020-2030?",
+          "lon": 88.6241,
+          "lat": 24.3636
+        },
+        {
+          "question": "How could climate conditions influence sovereign risk related to wheat production in New South Wales, Australia between 2030-2040?",
+          "lon": 151.2093,
+          "lat": -33.8688
+        },
+        {
+          "question": "What climate condition shifts are anticipated for palm-oil plantation investment risk in Sabah, Malaysia from 2020-2030 to 2040-2050?",
+          "lon": 116.7968,
+          "lat": 5.4204
+        },
+        {
+          "question": "How are projected climate conditions during 2040-2050 expected to impact insurance premiums for soybean farmers in Paran\u00e1, Brazil?",
+          "lon": -53.4185,
+          "lat": -24.181
+        },
+        {
+          "question": "What climate condition changes may influence credit scoring for cocoa producers in the Ashanti Region, Ghana during 2030-2040?",
+          "lon": -1.57,
+          "lat": 6.69
+        },
+        {
+          "question": "How might climate conditions alter catastrophe-bond pricing for corn belts in Nebraska, USA from 2020-2030 to 2040-2050?",
+          "lon": -99.9018,
+          "lat": 41.4925
+        },
+        {
+          "question": "What impacts will climate conditions during 2030-2040 have on yield-based derivatives for barley in Bavaria, Germany?",
+          "lon": 11.4979,
+          "lat": 48.7904
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean precipitation during June between 2020-2030 and 2040-2050 for maize in Champaign County, Illinois, USA affecting insurance-payout models?",
+          "lon": -88.2434,
+          "lat": 40.1164
+        },
+        {
+          "question": "How will monthly mean temperature during December shift in Medell\u00edn, Colombia between 2030-2040 and 2040-2050 impacting coffee-harvest risk?",
+          "lon": -75.5658,
+          "lat": 6.2476
+        },
+        {
+          "question": "What trend in monthly mean wind speed during April is expected for vineyards in Saint-\u00c9milion, France from 2020-2030 to 2030-2040 related to hail insurance?",
+          "lon": -0.155,
+          "lat": 44.895
+        },
+        {
+          "question": "By how much will monthly mean precipitation during September increase for rice in Rajshahi, Bangladesh between 2020-2030 and 2040-2050 affecting micro-finance default rates?",
+          "lon": 88.6241,
+          "lat": 24.3636
+        },
+        {
+          "question": "What projected monthly mean temperature during November could influence wheat yield variance in Wagga Wagga, Australia for 2030-2040?",
+          "lon": 147.3709,
+          "lat": -35.1189
+        },
+        {
+          "question": "How is monthly mean precipitation during January expected to evolve for oil-palm plantations in Sandakan, Sabah, Malaysia from 2020-2030 to 2040-2050 regarding investment risk?",
+          "lon": 118.35352686302838,
+          "lat": 5.788924617752145
+        },
+        {
+          "question": "What change in monthly mean temperature during February is projected for soybean farms in Cascavel, Paran\u00e1, Brazil between 2020-2030 and 2040-2050 affecting premium setting?",
+          "lon": -53.4552,
+          "lat": -24.9578
+        },
+        {
+          "question": "How will monthly mean wind direction variability during October affect cocoa pollination risk in Kumasi, Ghana during 2030-2040?",
+          "lon": -1.57,
+          "lat": 6.69
+        },
+        {
+          "question": "What is the expected monthly mean precipitation during July for corn in Lincoln, Nebraska, USA in 2030-2040 relative to 2020-2030 influencing catastrophe bonds?",
+          "lon": -96.7026,
+          "lat": 40.8136
+        },
+        {
+          "question": "By how much will monthly mean temperature during April rise for barley in Munich, Germany from 2020-2030 to 2040-2050 impacting derivative valuations?",
+          "lon": 11.582,
+          "lat": 48.1351
+        }
+      ]
+    }
+  }
+}

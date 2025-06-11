@@ -1,0 +1,1064 @@
+{
+  "themes": {
+    "Crop Yield and Productivity": {
+      "general": [
+        {
+          "question": "How are changing weather patterns expected to affect agricultural yields in northern Libya in the next three decades?",
+          "lon": 20.03613019388871,
+          "lat": 30.812794464414477
+        },
+        {
+          "question": "What changes in climatic conditions could influence crop productivity in northern Algeria between 2020 and 2050?",
+          "lon": 1.5523,
+          "lat": 35.208
+        },
+        {
+          "question": "In what ways might temperature variations impact the farming sector in the Nile Delta, Egypt over the next decade?",
+          "lon": 31.0007,
+          "lat": 30.7969
+        },
+        {
+          "question": "How will shifts in annual precipitation levels potentially affect crop yields in Khartoum, Sudan from 2030 to 2040?",
+          "lon": 32.5599,
+          "lat": 15.5007
+        },
+        {
+          "question": "What are the expected effects of wind speed variations on agricultural production in Tunisia by the 2040s?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "How is the combination of temperature and precipitation changes likely to affect farming activities in Morocco during 2020-2050?",
+          "lon": -7.0926,
+          "lat": 31.7917
+        },
+        {
+          "question": "What influence might future wind direction trends have on crop fertility in Nouakchott, Mauritania in the coming decades?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "How could evolving climate patterns impact the productivity of staple crops in Ghadames, Libya beyond 2030?",
+          "lon": 9.4934,
+          "lat": 30.1328
+        },
+        {
+          "question": "What potential impacts do projected climate changes have on agricultural output in the High Atlas region of Morocco between 2040 and 2050?",
+          "lon": -7.912,
+          "lat": 31.0676
+        },
+        {
+          "question": "How might the general weather conditions over the next two decades influence crop performance in Port Said, Egypt?",
+          "lon": 32.3019,
+          "lat": 31.2653
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the expected change in monthly temperature during the growing season for wheat in eastern Algeria from 2020-2030?",
+          "lon": 6.6147,
+          "lat": 36.3663
+        },
+        {
+          "question": "How is the maize yield near Kairouan, Tunisia likely to be affected by changes in precipitation across two decades?",
+          "lon": 10.1015,
+          "lat": 35.6743
+        },
+        {
+          "question": "In what ways could evolving wind patterns between 2020-2040 impact barley production in western Sahara?",
+          "lon": -12.0,
+          "lat": 23.1
+        },
+        {
+          "question": "Will the anticipated rise in temperature from 2030 to 2050 impact olive production in southern Morocco?",
+          "lon": -6.1393,
+          "lat": 29.848
+        },
+        {
+          "question": "How do future precipitation changes affect the output of date palms in Al Kufrah, Libya by 2040?",
+          "lon": 23.29,
+          "lat": 24.194
+        },
+        {
+          "question": "In the next two decades, how might temperature fluctuations influence tomato crop productivity in the Nile Delta, Egypt?",
+          "lon": 30.3265,
+          "lat": 31.1313
+        },
+        {
+          "question": "How might shifting wind directions impact the viability of potato farming in El Oued, Algeria from 2020 to 2050?",
+          "lon": 6.8632,
+          "lat": 33.3561
+        },
+        {
+          "question": "What effect will the expected changes in temperature have on citrus yields in the Souss region of Morocco during 2030-2040?",
+          "lon": -9.5981,
+          "lat": 30.4219
+        },
+        {
+          "question": "Can projected precipitation trends ensure the sustainability of rice farming near Adrar, Mauritania by 2050?",
+          "lon": -13.0488,
+          "lat": 20.507
+        },
+        {
+          "question": "What are the anticipated temperature changes during the grapevine growing season in the Bekaa Valley, Egypt between 2020 and 2050?",
+          "lon": 29.6982,
+          "lat": 30.8262
+        }
+      ]
+    },
+    "Food Production": {
+      "general": [
+        {
+          "question": "How might climate variability affect food production systems in the Eastern Desert of Egypt over the coming decades?",
+          "lon": 33.8008,
+          "lat": 26.8206
+        },
+        {
+          "question": "What impact will projected climate changes have on food security in the Rabat region, Morocco from now to 2050?",
+          "lon": -6.8416,
+          "lat": 34.0209
+        },
+        {
+          "question": "How are weather patterns likely to shape food production in Algiers, Algeria from 2020 to 2040?",
+          "lon": 3.0588,
+          "lat": 36.7538
+        },
+        {
+          "question": "In what ways could changes in precipitation influence food supply chains in Khartoum, Sudan, particularly by 2040?",
+          "lon": 32.5599,
+          "lat": 15.5007
+        },
+        {
+          "question": "What are the implications of changing wind patterns for food production capabilities in Tripoli, Libya over the next three decades?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "How could rising temperatures impact food production in Aswan, Egypt by 2030?",
+          "lon": 32.8998,
+          "lat": 24.0889
+        },
+        {
+          "question": "What challenges to food production might arise from climatic shifts in the Tafilalt Oasis, Morocco during 2030-2050?",
+          "lon": -4.6578,
+          "lat": 31.3438
+        },
+        {
+          "question": "How could variations in seasonal precipitation affect food production in Tunis, Tunisia over the long term?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "What are the potential impacts of projected temperature changes on food systems in Nouakchott, Mauritania by 2040?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "How might wind speed changes influence food production cycles in Fez, Morocco between 2020 and 2050?",
+          "lon": -5.0078,
+          "lat": 34.0181
+        }
+      ],
+      "specific": [
+        {
+          "question": "How are predicted precipitation changes from 2020 to 2040 expected to affect wheat production in the El Menzeh area of Tunisia?",
+          "lon": 10.4217,
+          "lat": 36.6357
+        },
+        {
+          "question": "What impact will temperature shifts have on the yield of barley in Beni Mellal, Morocco across the period 2030-2050?",
+          "lon": -6.3498,
+          "lat": 32.3397
+        },
+        {
+          "question": "How might wind direction trends over the next three decades affect the cocoa farming region near Macenta, Libya?",
+          "lon": 27.3245,
+          "lat": 8.5444
+        },
+        {
+          "question": "Will expected climate changes during 2030-2040 affect maize production in the Nile Valley, Egypt?",
+          "lon": 32.6396,
+          "lat": 25.6872
+        },
+        {
+          "question": "How will evolving climate conditions influence olive oil production in the Marrakesh region, Morocco from 2020-2050?",
+          "lon": -7.9811,
+          "lat": 31.6295
+        },
+        {
+          "question": "What is the anticipated impact of changing precipitation on coffee production near Tazrouk, Algeria by 2040?",
+          "lon": 5.314,
+          "lat": 22.7426
+        },
+        {
+          "question": "Will the rise in temperature by 2050 influence rice cultivation in the Inner Delta of Mauritania?",
+          "lon": -15.6566,
+          "lat": 16.3542
+        },
+        {
+          "question": "How effective will changing wind speed be in aiding grape production in the Atlas Mountains, Morocco from 2030 to 2040?",
+          "lon": -6.6796,
+          "lat": 30.726
+        },
+        {
+          "question": "What are the projected effects of temperature increases on strawberry farming in southern Sudan during 2020-2050?",
+          "lon": 30.2176,
+          "lat": 12.8628
+        },
+        {
+          "question": "In what way could precipitation patterns from 2040 into the future impact soybean output in Guelmim-Oued Noun, Morocco?",
+          "lon": -10.0632,
+          "lat": 28.9637
+        }
+      ]
+    },
+    "Agriculture": {
+      "general": [
+        {
+          "question": "What are the anticipated influences of climate change on agricultural practices in Cairo, Egypt throughout 2030-2050?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "How might evolving climate conditions alter agricultural trends in Marrakech, Morocco over the next thirty years?",
+          "lon": -7.9811,
+          "lat": 31.6295
+        },
+        {
+          "question": "What potential disruptions could shifting precipitation patterns cause to agriculture in Western Sahara by mid-century?",
+          "lon": -12.8858,
+          "lat": 24.2155
+        },
+        {
+          "question": "In what way are climate factors expected to drive agricultural developments in Sudan's Gezira Scheme from 2020 to 2030?",
+          "lon": 33.1311,
+          "lat": 14.305
+        },
+        {
+          "question": "What is the predicted impact of temperature rise on agricultural productivity in the Sahel region, Mauritania during 2020-2040?",
+          "lon": -11.105,
+          "lat": 18.5944
+        },
+        {
+          "question": "How will agricultural water requirements change with precipitation patterns in Sousse, Tunisia by 2040?",
+          "lon": 10.6082,
+          "lat": 35.8254
+        },
+        {
+          "question": "What are anticipated effects of evolving wind patterns on agricultural outputs in Cyrenaica, Libya for the next decades?",
+          "lon": 21.0252,
+          "lat": 32.0065
+        },
+        {
+          "question": "How will projected climate trends affect agricultural yields in Tangier, Morocco by 2040-2050?",
+          "lon": -5.834,
+          "lat": 35.7595
+        },
+        {
+          "question": "What role will climate change potentially play in affecting agricultural labor needs in Fez, Morocco in the coming decades?",
+          "lon": -5.0078,
+          "lat": 34.0181
+        },
+        {
+          "question": "How might future climate projections impact the competitiveness of local agriculture in Oran, Algeria between 2020 and 2050?",
+          "lon": -0.6341,
+          "lat": 35.6971
+        }
+      ],
+      "specific": [
+        {
+          "question": "How will changes in seasonal temperature affect the availability of irrigation for barley crops in Fes Valley, Morocco in the next decade?",
+          "lon": -4.9998,
+          "lat": 34.0333
+        },
+        {
+          "question": "What is the forecasted effect of wind variations on wheat harvests in Misrata, Libya over the 2030-2040 time frame?",
+          "lon": 15.0906,
+          "lat": 32.3783
+        },
+        {
+          "question": "How might expected precipitation trends influence the seasonality of squash cultivation in Tlemcen, Algeria during 2020-2050?",
+          "lon": 1.3157,
+          "lat": 34.8784
+        },
+        {
+          "question": "What changes in temperature might affect the flowering season of almond trees near Chott El Jerid, Tunisia from 2020 to 2040?",
+          "lon": 8.4165,
+          "lat": 33.7255
+        },
+        {
+          "question": "Will expected precipitation changes be sufficient to support rice cultivation near Timbuktu, Mali from 2020 to 2050?",
+          "lon": -3.0026,
+          "lat": 16.7666
+        },
+        {
+          "question": "How could temperature increases impact strawberry yields in the Guelmim region, Morocco by 2040?",
+          "lon": -10.0632,
+          "lat": 28.9614
+        },
+        {
+          "question": "In what way might future wind speed affect bee pollination for flower farming around Djanet, Algeria in the next three decades?",
+          "lon": 9.486,
+          "lat": 24.5543
+        },
+        {
+          "question": "What is the projected impact of climate variability on cattle grazing in Ifni, Morocco between 2030 and 2050?",
+          "lon": -10.1796,
+          "lat": 29.3802
+        },
+        {
+          "question": "How could anticipated climate changes influence the sustainability of banana farming in Juba, South Sudan through to 2050?",
+          "lon": 31.582,
+          "lat": 4.8517
+        },
+        {
+          "question": "How might changes in precipitation from 2020-2040 affect the irrigation needs for millet in Kidal, Mali?",
+          "lon": 1.4079,
+          "lat": 18.4411
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "How might future wind speed trends affect wind farm efficiency in Laayoune, Western Sahara over the next three decades?",
+          "lon": -13.2034,
+          "lat": 27.1646
+        },
+        {
+          "question": "What influence will projected temperature changes have on solar panel efficiency in the Sahara region, Algeria by 2050?",
+          "lon": 5.6881,
+          "lat": 23.4162
+        },
+        {
+          "question": "In what ways could precipitation fluctuations impact hydropower production in the Aswan region of Egypt during 2030-2040?",
+          "lon": 32.8998,
+          "lat": 23.9696
+        },
+        {
+          "question": "What are the implications of changing wind directions for off-shore wind energy projects in Casablanca, Morocco throughout 2020-2050?",
+          "lon": -7.5898,
+          "lat": 33.5731
+        },
+        {
+          "question": "How will evolving temperature conditions affect the efficiency of geothermal plants in the East African Rift, Ethiopia by mid-century?",
+          "lon": 38.7578,
+          "lat": 8.9806
+        },
+        {
+          "question": "What effects are anticipated from changes in precipitation on water infrastructure in Khartoum, Sudan by 2040?",
+          "lon": 32.5599,
+          "lat": 15.5007
+        },
+        {
+          "question": "How might temperature increases influence the maintenance needs of electrical grid networks in Tripoli, Libya throughout 2030-2050?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "What role will future climate variability play in affecting the resilience of coastal energy infrastructure in Tunis, Tunisia in the coming decades?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "How could evolving precipitation patterns from 2020 to 2040 disrupt renewable energy supplies in Oran, Algeria?",
+          "lon": -0.6341,
+          "lat": 35.6971
+        },
+        {
+          "question": "What impact might expected temperature changes have on energy demand in Cairo, Egypt over the next two decades?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected impact of increasing temperatures on solar energy productivity in the Zagora region, Morocco by 2040?",
+          "lon": -5.8395,
+          "lat": 30.3448
+        },
+        {
+          "question": "How might changing wind speeds affect the feasibility of new wind energy projects near Luxor, Egypt over the coming three decades?",
+          "lon": 32.6396,
+          "lat": 25.6872
+        },
+        {
+          "question": "Will projected precipitation changes impact dam storage capacity in Tamanrasset, Algeria during 2030-2050?",
+          "lon": 5.5228,
+          "lat": 22.785
+        },
+        {
+          "question": "How are alterations in wind direction likely to influence wind turbine placement near Beni Suef, Egypt through to 2050?",
+          "lon": 31.0994,
+          "lat": 29.0661
+        },
+        {
+          "question": "What impact might anticipated climatic warming have on cooling costs for nuclear power plants in Algeria by 2040?",
+          "lon": 3.26,
+          "lat": 36.631
+        },
+        {
+          "question": "How could projected precipitation trends influence the expansion of hydroelectric power in the Nile region of Sudan by the 2040s?",
+          "lon": 32.5595,
+          "lat": 15.5
+        },
+        {
+          "question": "What is the potential effect of temperature increases on the lifespan of solar panels used in Tidikelt, Algeria across the next decade?",
+          "lon": 2.9749,
+          "lat": 27.3843
+        },
+        {
+          "question": "How will altered wind speed patterns over the coming decades affect turbine efficiency in Smara, Western Sahara?",
+          "lon": -11.6712,
+          "lat": 26.7432
+        },
+        {
+          "question": "What changes in temperature are expected to impact the cooling needs of thermal power stations in Tunis, Tunisia during 2030-2050?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "How might future precipitation changes affect the reliability of solar power installations in Ghadames, Libya by 2050?",
+          "lon": 9.5003,
+          "lat": 30.1349
+        }
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "How might projected climate changes influence urban development policies in Alexandria, Egypt throughout the 2030-2050 period?",
+          "lon": 29.9187,
+          "lat": 31.2001
+        },
+        {
+          "question": "What are the potential impacts of rising temperatures on urban planning strategies in Algiers, Algeria over the next three decades?",
+          "lon": 3.0588,
+          "lat": 36.7538
+        },
+        {
+          "question": "In what ways could shifts in precipitation patterns affect zoning regulations in Nouakchott, Mauritania by 2040?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "How will changes in wind speed influence the design of wind-resistant structures in Rabat, Morocco by 2040?",
+          "lon": -6.8416,
+          "lat": 34.0209
+        },
+        {
+          "question": "What role will evolving temperature trends play in urban heat island mitigation measures in Tripoli, Libya from 2020 to 2050?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "How might future precipitation shifts affect water management infrastructure in Khartoum, Sudan by 2030?",
+          "lon": 32.5599,
+          "lat": 15.5007
+        },
+        {
+          "question": "What are the expected effects of changing climate patterns on public transportation planning in Casablanca, Morocco through 2050?",
+          "lon": -7.5898,
+          "lat": 33.5731
+        },
+        {
+          "question": "How could alterations in wind directions impact air pollution control measures in Tunis, Tunisia from 2030 to 2040?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "What impact might increased temperature levels have on housing demand and urban growth in Oujda, Morocco by 2050?",
+          "lon": -1.9119,
+          "lat": 34.6814
+        },
+        {
+          "question": "How will evolving weather patterns affect the sustainability of high-rise buildings in Agadir, Morocco for the next thirty years?",
+          "lon": -9.5981,
+          "lat": 30.4278
+        }
+      ],
+      "specific": [
+        {
+          "question": "How might forecasts of rising temperatures impact the design of public parks in Marrakech, Morocco over the next decade?",
+          "lon": -7.9811,
+          "lat": 31.6295
+        },
+        {
+          "question": "What influence could wind speed changes over the 2020-2040 period have on the development of wind-resistant buildings in Algiers, Algeria?",
+          "lon": 3.0588,
+          "lat": 36.7538
+        },
+        {
+          "question": "How are changes in precipitation anticipated to affect stormwater management systems in Cairo, Egypt from 2020 to 2050?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "In what ways might projected wind direction changes influence the placement of renewable energy projects within urban areas in El Jadida, Morocco during 2030-2040?",
+          "lon": -8.5085,
+          "lat": 33.2554
+        },
+        {
+          "question": "What impacts could changing temperature trends have on the planning of green spaces in Nouakchott, Mauritania by 2030?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "How can altered precipitation forecasts influence floodplain management strategies in Sfax, Tunisia from 2030 until 2050?",
+          "lon": 10.7603,
+          "lat": 34.7405
+        },
+        {
+          "question": "What are the expected effects of future climate projections on the use of underground parking facilities in Benghazi, Libya by 2040?",
+          "lon": 20.0664,
+          "lat": 32.1169
+        },
+        {
+          "question": "How might changes in wind speeds over the next three decades affect the installation of noise barriers in Constantine, Algeria?",
+          "lon": 6.6147,
+          "lat": 36.365
+        },
+        {
+          "question": "What implications could increasing temperatures have on energy consumption models for residential buildings in Tripoli, Libya by 2050?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "How will anticipated shifts in precipitation patterns affect the future of rooftop gardens in Rabat, Morocco during 2020-2040?",
+          "lon": -6.8416,
+          "lat": 34.0209
+        }
+      ]
+    },
+    "Climate Adaptation in Cropping Systems": {
+      "general": [
+        {
+          "question": "How are cropping systems in the Nile Delta, Egypt expected to adapt to climate variability over the next three decades?",
+          "lon": 31.0007,
+          "lat": 30.7969
+        },
+        {
+          "question": "What are the foreseeable adaptation strategies for cropping systems in Tiznit, Morocco throughout the period 2020-2050?",
+          "lon": -9.7317,
+          "lat": 29.6952
+        },
+        {
+          "question": "How could future precipitation patterns drive adaptation practices in the cropping systems of Khartoum, Sudan by 2040?",
+          "lon": 32.5599,
+          "lat": 15.5007
+        },
+        {
+          "question": "In what ways will increasing temperatures necessitate the adaptation of farming practices in the Atlas Mountains, Algeria during 2030-2040?",
+          "lon": 3.1376,
+          "lat": 32.9775
+        },
+        {
+          "question": "What role might shifting wind patterns play in crop management adaptation strategies near Tunis, Tunisia from 2020 to 2030?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "How can cropping systems near Sirte, Libya adapt to the anticipated changes in climate conditions between 2020 and 2050?",
+          "lon": 16.5887,
+          "lat": 31.2089
+        },
+        {
+          "question": "What are the anticipated adaptation measures for cropping systems in the Middle East once temperature rises become more prevalent by mid-century?",
+          "lon": 35.9294,
+          "lat": 39.1967
+        },
+        {
+          "question": "How might variations in wind direction over the coming decades necessitate changes in shelterbelt use in Zagora, Morocco?",
+          "lon": -5.838,
+          "lat": 30.3326
+        },
+        {
+          "question": "What interventions could help cropping systems cope with reduced water availability in the Bani Walid area, Libya by 2040?",
+          "lon": 13.994,
+          "lat": 31.77
+        },
+        {
+          "question": "How will projected weather changes affect decisions on crop rotation practices near Maradi, Niger during 2030-2050?",
+          "lon": 7.096,
+          "lat": 13.4833
+        }
+      ],
+      "specific": [
+        {
+          "question": "How can maize cropping systems in the Ouarzazate region of Morocco adapt to projected temperature increases by 2040?",
+          "lon": -6.8983,
+          "lat": 30.918
+        },
+        {
+          "question": "What impact could anticipated precipitation changes have on cocoa adaption strategies in Ghadames, Libya over the next three decades?",
+          "lon": 9.4934,
+          "lat": 30.1328
+        },
+        {
+          "question": "How should wheat farmers in the M'hamid area, Morocco alter irrigation practices under expected climate conditions by 2050?",
+          "lon": -5.7302,
+          "lat": 29.8179
+        },
+        {
+          "question": "What are the recommended adaptation strategies for grapes in Gharyan, Libya as a response to a changing climate between 2030 and 2040?",
+          "lon": 13.0203,
+          "lat": 32.1722
+        },
+        {
+          "question": "How might rice paddy fields near El Oued, Algeria need to adjust to accommodate changing precipitation levels through 2040?",
+          "lon": 6.8632,
+          "lat": 33.3561
+        },
+        {
+          "question": "What agronomic decisions are necessary for olive farming in the Souss-Massa region, Morocco due to future climate scenarios up to 2050?",
+          "lon": -9.5981,
+          "lat": 30.4219
+        },
+        {
+          "question": "How should cassava producers near Sabha, Libya consider adapting their practices to cope with increasing temperatures by mid-century?",
+          "lon": 14.4286,
+          "lat": 27.0298
+        },
+        {
+          "question": "What are the adaptive measures for date palm plantations in Timbuktu, Mali to maintain yield levels under changing precipitation conditions for 2020-2040?",
+          "lon": -3.0026,
+          "lat": 16.7666
+        },
+        {
+          "question": "In what ways might rain-fed cereal cropping systems in the Gu\u00e9liz region, Morocco need to adapt by 2030 to optimize productivity?",
+          "lon": -7.9897,
+          "lat": 31.6258
+        },
+        {
+          "question": "How are high-value vegetable cropping systems near Wadi Halfa, Sudan expected to adjust to anticipated climate changes over the coming decades?",
+          "lon": 31.3359,
+          "lat": 21.8025
+        }
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "How might future climate conditions impact the sustainability of agricultural systems in El Jadida, Morocco from now to 2050?",
+          "lon": -8.5085,
+          "lat": 33.2554
+        },
+        {
+          "question": "What are the long-term sustainability implications for agriculture in Birkhadem, Algeria given projected climate changes by 2040?",
+          "lon": 3.0679,
+          "lat": 36.7095
+        },
+        {
+          "question": "How will climate change influence the environmental sustainability of communal farming practices in the Nile Valley, Egypt till mid-century?",
+          "lon": 32.6396,
+          "lat": 25.6872
+        },
+        {
+          "question": "In what ways might anticipated weather shifts affect sustainable development in Dakhla, Western Sahara throughout 2020-2050?",
+          "lon": -15.957,
+          "lat": 23.6848
+        },
+        {
+          "question": "What are the projected effects of rising temperatures on the long-term sustainability of agroforestry in Benghazi, Libya by 2030?",
+          "lon": 20.0664,
+          "lat": 32.1169
+        },
+        {
+          "question": "How do future precipitation scenarios influence the sustainability of tribal lands in Douz, Tunisia by 2040?",
+          "lon": 9.0286,
+          "lat": 33.4632
+        },
+        {
+          "question": "How might climate variability affect the sustainability of grassroots agricultural initiatives in Ouarzazate, Morocco moving forward?",
+          "lon": -6.8983,
+          "lat": 30.918
+        },
+        {
+          "question": "What is the potential impact of increased wind speeds on the sustainability of desert farming in Ghardaia, Algeria by 2030?",
+          "lon": 3.6792,
+          "lat": 32.4907
+        },
+        {
+          "question": "In what ways might future climatic conditions affect the sustainable practice of oasis cultivation in Siwa, Egypt over the next decades?",
+          "lon": 25.5198,
+          "lat": 29.2045
+        },
+        {
+          "question": "How might climate change impact the long-term sustainability of water conservation strategies in Ain Salah, Algeria through 2030-2050?",
+          "lon": 2.4822,
+          "lat": 27.1961
+        }
+      ],
+      "specific": [
+        {
+          "question": "How can olive groves in Dahla, Western Sahara sustain production under future precipitation changes by 2040?",
+          "lon": -15.957,
+          "lat": 23.6848
+        },
+        {
+          "question": "What long-term sustainability strategies should be adopted for tomato farms in the Benghazi region, Libya considering climate impacts by 2050?",
+          "lon": 20.0664,
+          "lat": 32.1169
+        },
+        {
+          "question": "How must dates farmlands in Alexandria, Egypt adjust water management practices for sustainability in line with climate forecasts to 2040?",
+          "lon": 29.9553,
+          "lat": 31.2156
+        },
+        {
+          "question": "What sustainability challenges are posed to saffron production in Taliouine, Morocco under projected climatic conditions for 2020-2050?",
+          "lon": -7.9121,
+          "lat": 30.5328
+        },
+        {
+          "question": "Which sustainable practices are recommended for barley cultivators in the Gharyan area, Libya given temperature projections by 2030?",
+          "lon": 13.0203,
+          "lat": 32.1722
+        },
+        {
+          "question": "How could anticipated variations in wind direction affect the sustainability of citrus orchards near Tizi Ouzou, Algeria through 2040?",
+          "lon": 4.0514,
+          "lat": 36.7213
+        },
+        {
+          "question": "What considerations should be made for sustaining coffee production in Kairouan, Tunisia under predicted climate scenarios up to 2050?",
+          "lon": 10.1012,
+          "lat": 35.6755
+        },
+        {
+          "question": "How can almond orchards in the Midelt region, Morocco maintain yields under future climate scenarios projected to 2030-2040?",
+          "lon": -4.7423,
+          "lat": 32.6838
+        },
+        {
+          "question": "What sustainable pest control strategies need adaptation in date palm groves of El Oued, Algeria by mid-century?",
+          "lon": 6.8674,
+          "lat": 33.3672
+        },
+        {
+          "question": "How might climate projections influence sustainability efforts for rice farming in the Manouba region, Tunisia over the next two decades?",
+          "lon": 9.8627,
+          "lat": 36.8098
+        }
+      ]
+    },
+    "Public Health and Climate": {
+      "general": [
+        {
+          "question": "How might temperature rises between 2020-2050 affect public health outcomes in Cairo, Egypt (30.0444N, 31.2357E)?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "What are the anticipated effects of changing wind patterns on air quality and public health in Marrakech, Morocco (31.6295N, 7.9811W) by 2040?",
+          "lon": -7.9811,
+          "lat": 31.6295
+        },
+        {
+          "question": "In what ways could shifts in precipitation impact the prevalence of waterborne diseases in Khartoum, Sudan (15.5007N, 32.5599E) through to 2030?",
+          "lon": 32.5599,
+          "lat": 15.5007
+        },
+        {
+          "question": "How will future climatic trends relate to public health challenges in Tunis, Tunisia (36.8065N, 10.1815E) in the coming decades?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "What role will increasing temperatures have on heat-related illnesses in Tripoli, Libya (32.8872N, 13.1913E) during the period 2030-2050?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "How might projected changes in precipitation affect the incidence of vector-borne diseases in Fez, Morocco (34.0181N, 5.0078W) by mid-century?",
+          "lon": -5.0078,
+          "lat": 34.0181
+        },
+        {
+          "question": "What potential public health risks are posed by anticipated wind speed changes in Alexandria, Egypt (31.2156N, 29.9553E) over the next thirty years?",
+          "lon": 29.9553,
+          "lat": 31.2156
+        },
+        {
+          "question": "How could hotter temperatures affect vulnerable populations in Nouakchott, Mauritania (18.0735N, 15.9582W) by 2040?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "What public health implications do rising mean temperatures have for the community in Oran, Algeria (35.6971N, 0.6341W) through 2030-2040?",
+          "lon": -0.6341,
+          "lat": 35.6971
+        },
+        {
+          "question": "How might wind direction changes influence respiratory health in Casablanca, Morocco (33.5731N, 7.5898W) in the upcoming decades?",
+          "lon": -7.5898,
+          "lat": 33.5731
+        }
+      ],
+      "specific": [
+        {
+          "question": "What impact could projected rising temperatures have on the prevalence of heatwaves in El-Oued, Algeria (33.3561N, 6.8632E) through to 2040?",
+          "lon": 6.8632,
+          "lat": 33.3561
+        },
+        {
+          "question": "How will the expected changes in precipitation influence the management of malaria in N'Djamena, Chad (12.1348N, 15.0557E) by 2030?",
+          "lon": 15.0557,
+          "lat": 12.1348
+        },
+        {
+          "question": "In what ways might varying wind speeds affect the spread of airborne diseases in Sfax, Tunisia (34.7406N, 10.7603E) from 2020 to 2050?",
+          "lon": 10.7603,
+          "lat": 34.7406
+        },
+        {
+          "question": "How could rising temperatures in Nouakchott, Mauritania (18.0735N, 15.9582W) impact the frequency of hospital admissions due to heat-related issues by 2040?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "What are the projected impacts of climate change on asthma rates due to air quality changes in the Cairo region (30.0444N, 31.2357E) by 2050?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "How might changes in precipitation from 2030 to 2050 influence dengue fever risk in the Nile Delta, Egypt (30.7969N, 31.0007E)?",
+          "lon": 31.0007,
+          "lat": 30.7969
+        },
+        {
+          "question": "What is the expected impact of wind direction changes on the dispersion of pollutants related to respiratory illnesses in Oujda, Morocco (34.6814N, 1.9119W) until 2040?",
+          "lon": -1.9119,
+          "lat": 34.6814
+        },
+        {
+          "question": "What public health measures are necessary to manage anticipated heat stress in Tarfaya, Western Sahara (27.9359N, 12.9226W) by 2030?",
+          "lon": -12.9226,
+          "lat": 27.9359
+        },
+        {
+          "question": "How might regional temperature increases affect cholera outbreaks in Bangui, Central African Republic (4.3947N, 18.5582E) from 2020-2040?",
+          "lon": 18.5582,
+          "lat": 4.3947
+        },
+        {
+          "question": "What preventative strategies are needed for health services in Algiers, Algeria (36.7538N, 3.0588E) to address climate-induced health challenges by 2050?",
+          "lon": 3.0588,
+          "lat": 36.7538
+        }
+      ]
+    },
+    "Tourism and Recreation": {
+      "general": [
+        {
+          "question": "How will projected temperature increases affect tourism attractiveness in Marrakech, Morocco (31.6295N, 7.9811W) during 2020-2050?",
+          "lon": -7.9811,
+          "lat": 31.6295
+        },
+        {
+          "question": "What are the potential impacts of climate change on the seasonal patterns of tourism in Cairo, Egypt (30.0444N, 31.2357E) by mid-century?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "In what ways might changing precipitation levels affect outdoor recreational activities in Tunis, Tunisia (36.8065N, 10.1815E) from 2030 to 2050?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "How will modifications in wind speed influence the suitability for water sports in Alexandria, Egypt (31.2001N, 29.9187E) by 2040?",
+          "lon": 29.9187,
+          "lat": 31.2001
+        },
+        {
+          "question": "What role will climate changes play in the long-term viability of beach tourism in Casablanca, Morocco (33.5731N, 7.5898W) over the next 30 years?",
+          "lon": -7.5898,
+          "lat": 33.5731
+        },
+        {
+          "question": "How could future climate trends affect the appeal of cultural tourism in Tangier, Morocco (35.7595N, 5.8340W) through to 2050?",
+          "lon": -5.834,
+          "lat": 35.7595
+        },
+        {
+          "question": "What are the implications of rising temperatures on the sustainability of desert tourism in Siwa, Egypt (29.2045N, 25.5198E) by 2040?",
+          "lon": 25.5198,
+          "lat": 29.2045
+        },
+        {
+          "question": "How might anticipated climate conditions impact historical site preservation efforts in Giza, Egypt (30.0131N, 31.2089E) over the coming decades?",
+          "lon": 31.2089,
+          "lat": 30.0131
+        },
+        {
+          "question": "What influence could climate variability have on the development of ecotourism in the Atlas Mountains, Morocco (31.7063N, 9.6784W) by 2050?",
+          "lon": -9.650803922372802,
+          "lat": 31.497122853652005
+        },
+        {
+          "question": "How will climate change affect visitor experiences at archaeological sites in Cyrene, Libya (32.8167N, 21.8569E) during 2030-2040?",
+          "lon": 21.8569,
+          "lat": 32.8167
+        }
+      ],
+      "specific": [
+        {
+          "question": "What impact might expected temperature changes have on summer tourism in Chefchaouen, Morocco (35.1716N, 5.2636W) by mid-century?",
+          "lon": -5.2636,
+          "lat": 35.1716
+        },
+        {
+          "question": "How are changing precipitation patterns forecasted to affect winter tourism in Ifrane, Morocco (33.5324N, 5.1081W) from 2020 to 2040?",
+          "lon": -5.1081,
+          "lat": 33.5324
+        },
+        {
+          "question": "In what ways might alterations in wind direction influence kite surfing events in Dakhla, Western Sahara (23.6848N, 15.9570W) by 2040?",
+          "lon": -15.957,
+          "lat": 23.6848
+        },
+        {
+          "question": "How will projected increases in temperature affect the scheduling of outdoor music festivals in Essaouira, Morocco (31.5085N, 9.7582W) by 2050?",
+          "lon": -9.7582,
+          "lat": 31.5085
+        },
+        {
+          "question": "What are the expected effects of future climatic shifts on mountain hiking routes in the Rif Mountains, Morocco (35.2523N, 5.1459W) during 2030-2040?",
+          "lon": -5.1459,
+          "lat": 35.2523
+        },
+        {
+          "question": "How might changing precipitation patterns impact the popularity of wildlife safaris in Figuig, Morocco (32.1103N, 1.2352W) through to 2040?",
+          "lon": -1.2352,
+          "lat": 32.1103
+        },
+        {
+          "question": "What effect will increased temperatures have on the comfort levels for tourists visiting Luxor, Egypt (25.6872N, 32.6396E) by 2040?",
+          "lon": 32.6396,
+          "lat": 25.6872
+        },
+        {
+          "question": "How might changes in wind speeds affect sailing tours in the Gulf of Gab\u00e8s, Tunisia (33.8814N, 10.0982E) from 2020 to 2050?",
+          "lon": 10.0982,
+          "lat": 33.8814
+        },
+        {
+          "question": "What changes might be needed for ski resort operations in the Atlas Mountains, Morocco (31.7063N, 7.9236W) under future climate scenarios by 2030?",
+          "lon": -7.9236,
+          "lat": 31.7063
+        },
+        {
+          "question": "In what ways could projected climate changes impact the visitor experience at beach resorts in Sharm El Sheikh, Egypt (27.9158N, 34.3299E) by 2050?",
+          "lon": 34.3299,
+          "lat": 27.9158
+        }
+      ]
+    },
+    "Financial and Insurance Risk": {
+      "general": [
+        {
+          "question": "How might projected climate changes alter insurance risk assessments in Rabat, Morocco over the next three decades?",
+          "lon": -6.8416,
+          "lat": 34.0209
+        },
+        {
+          "question": "What effects will anticipated weather variability have on financial risk models in Cairo, Egypt by 2030?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        },
+        {
+          "question": "In what ways could increasing temperatures impact the pricing of risk for insurers in Tunis, Tunisia by 2040?",
+          "lon": 10.1815,
+          "lat": 36.8065
+        },
+        {
+          "question": "How will variations in precipitation levels over the next decades influence economic risk management strategies in Tripoli, Libya?",
+          "lon": 13.1913,
+          "lat": 32.8872
+        },
+        {
+          "question": "What is the anticipated impact of wind speed changes on the insurance sector in Casablanca, Morocco by mid-century?",
+          "lon": -7.5898,
+          "lat": 33.5731
+        },
+        {
+          "question": "How could evolving wind patterns affect financial risk planning in Oujda, Morocco during 2020-2050?",
+          "lon": -1.9119,
+          "lat": 34.6814
+        },
+        {
+          "question": "What potential financial risks arise from projected climatic shifts in Alexandria, Egypt by 2030?",
+          "lon": 29.9187,
+          "lat": 31.2001
+        },
+        {
+          "question": "How might future temperature conditions influence the stability of financial markets in Nouakchott, Mauritania over the coming decades?",
+          "lon": -15.9582,
+          "lat": 18.0735
+        },
+        {
+          "question": "What implications do rising temperatures have on risk assessments for the agricultural insurance sector in Fez, Morocco by 2040?",
+          "lon": -5.0078,
+          "lat": 34.0181
+        },
+        {
+          "question": "How will climate change affect the long-term risk projections for infrastructure investments in Agadir, Morocco by 2050?",
+          "lon": -9.5981,
+          "lat": 30.4278
+        }
+      ],
+      "specific": [
+        {
+          "question": "What changes are expected in flood risk insurance models for coastal properties in Sousse, Tunisia given precipitation forecasts through 2040?",
+          "lon": 10.6082,
+          "lat": 35.8254
+        },
+        {
+          "question": "How might temperature shifts affect crop insurance premiums for wheat farms in the Meknes region, Morocco by 2030?",
+          "lon": -5.5473,
+          "lat": 33.8958
+        },
+        {
+          "question": "What financial risks do rising temperatures pose to the viticulture industry in the Bekaa Valley, Lebanon from 2020 to 2040?",
+          "lon": 36.365,
+          "lat": 33.8547
+        },
+        {
+          "question": "How will anticipated wind speed changes influence the cost structure of windstorm insurance in Oran, Algeria by mid-century?",
+          "lon": -0.6341,
+          "lat": 35.6971
+        },
+        {
+          "question": "What are the anticipated effects of climate variability on livestock insurance in the Manouba region, Tunisia by 2050?",
+          "lon": 10.0661,
+          "lat": 36.8532
+        },
+        {
+          "question": "How might flood risk assessments for greenhouses near Chefchaouen, Morocco change with future precipitation trends between 2020-2030?",
+          "lon": -5.2606,
+          "lat": 35.1689
+        },
+        {
+          "question": "How could expected climatic warming alter agricultural insurance terms for olive growers in Sidon, Lebanon by 2040?",
+          "lon": 35.3728,
+          "lat": 33.5564
+        },
+        {
+          "question": "Which strategies should insurance firms in Marrakesh, Morocco consider with wind speed projections when underwriting new policies by 2030-2050?",
+          "lon": -7.9811,
+          "lat": 31.6295
+        },
+        {
+          "question": "What specific factors might affect the pricing of hail damage insurance for crops in Batna, Algeria through 2050?",
+          "lon": 6.175,
+          "lat": 35.555
+        },
+        {
+          "question": "What financial repercussions do climate change implications hold for fisheries' insurance near Tripoli, Libya through 2040?",
+          "lon": 13.24478,
+          "lat": 32.90507 
+        }
+      ]
+    }
+  }
+}

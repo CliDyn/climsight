@@ -24,4 +24,5 @@ class AgentState(BaseModel):
     general_rag_agent_response: str = ""    
     df_list: list = [] # List of dataframes with climate data
     references: list = [] # List of references
+    combine_agent_prompt_text: str = ""
     # stream_handler: StreamHandler  # Uncomment if needed

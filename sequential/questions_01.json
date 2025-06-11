@@ -1,0 +1,164 @@
+{
+  "themes": {
+    "General Climate Risks": {
+      "general": [
+        {
+          "question": "How are average climate conditions projected to change in the Yucat\u00e1n Peninsula, Mexico (20.9674N, 89.5926W) between 2020-2030 and 2030-2040?",
+          "lon": -89.5926,
+          "lat": 20.9674
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean precipitation in the Gauteng region of South Africa (26.2041S, 28.0473E) between 2020-2030 and 2030-2040?",
+          "lon": 28.0473,
+          "lat": -26.2041
+        }
+      ]
+    },
+    "Business-Specific Concerns": {
+      "general": [
+        {
+          "question": "How might changing weather patterns affect business operations in Munich, Germany (48.1351N, 11.5820E) during 2030-2040?",
+          "lon": 11.582,
+          "lat": 48.1351
+        }
+      ],
+      "specific": [
+        {
+          "question": "Will monthly mean wind speeds in Oklahoma City, USA (35.4634N, 97.5151W) during 2030-2040 impact logistics and transportation businesses?",
+          "lon": -97.5151,
+          "lat": 35.4634
+        }
+      ]
+    },
+    "Agriculture and Food Production": {
+      "general": [
+        {
+          "question": "How could projected changes in climate conditions affect crop yields in Punjab, India (31.1471N, 75.3412E) during the 2020-2030 period?",
+          "lon": 75.3412,
+          "lat": 31.1471
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the expected monthly mean temperature change during the growing season for maize in Iowa, USA (41.8780N, 93.0977W) between 2020-2030 and 2040-2050?",
+          "lon": -93.0977,
+          "lat": 41.878
+        }
+      ]
+    },
+    "Renewable Energy and Infrastructure": {
+      "general": [
+        {
+          "question": "How might projected climate trends affect renewable energy generation potential in Andalusia, Spain (37.3891N, 5.9845W) during 2030-2040?",
+          "lon": -5.9845,
+          "lat": 37.3891
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean wind speed at wind farm sites near Wellington, New Zealand (41.2865S, 174.7762E) between 2020-2030 and 2030-2040?",
+          "lon": 174.7762,
+          "lat": -41.2865
+        }
+      ]
+    },
+    "Urban and Community Planning": {
+      "general": [
+        {
+          "question": "How could urban climate conditions shift in Toronto, Canada (43.6511N, 79.3470W) during 2040-2050 compared to 2020-2030?",
+          "lon": -79.347,
+          "lat": 43.6511
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean precipitation in Lagos, Nigeria (6.5244N, 3.3792E) between 2020-2030 and 2040-2050, and how might this affect urban flood risk?",
+          "lon": 3.3792,
+          "lat": 6.5244
+        }
+      ]
+    },
+    "Energy and Supply Chain Resilience": {
+      "general": [
+        {
+          "question": "How might evolving climate conditions impact energy supply chain reliability in Shanghai, China (31.2304N, 121.4737E) during 2030-2040?",
+          "lon": 121.4737,
+          "lat": 31.2304
+        }
+      ],
+      "specific": [
+        {
+          "question": "What changes in monthly mean wind direction are projected for the port of Rotterdam, Netherlands (51.9225N, 4.4792E) between 2020-2030 and 2030-2040, and how could this affect shipping logistics?",
+          "lon": 4.4792,
+          "lat": 51.9225
+        }
+      ]
+    },
+    "Long-Term Sustainability": {
+      "general": [
+        {
+          "question": "How will long-term changes in climate variables affect sustainability planning in Melbourne, Australia (37.8136S, 144.9631E) by 2040-2050?",
+          "lon": 144.9631,
+          "lat": -37.8136
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean temperature for the Amazon region near Manaus, Brazil (3.1190S, 60.0217W) between 2020-2030 and 2040-2050, and how could this affect forest sustainability?",
+          "lon": -60.0217,
+          "lat": -3.119
+        }
+      ]
+    },
+    "Public Health and Climate": {
+      "general": [
+        {
+          "question": "How could changes in climate conditions influence public health outcomes in Cairo, Egypt (30.0444N, 31.2357E) during the 2030-2040 period?",
+          "lon": 31.2357,
+          "lat": 30.0444
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean temperature in Athens, Greece (37.9838N, 23.7275E) between 2020-2030 and 2040-2050, and how might this affect heat-related health risks?",
+          "lon": 23.7275,
+          "lat": 37.9838
+        }
+      ]
+    },
+    "Tourism and Recreation": {
+      "general": [
+        {
+          "question": "How might projected climate trends affect tourism patterns in Queenstown, New Zealand (45.0312S, 168.6626E) during 2030-2040?",
+          "lon": 168.6626,
+          "lat": -45.0312
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the expected change in monthly mean precipitation during the peak tourist season in Banff, Canada (51.1784N, 115.5708W) between 2020-2030 and 2030-2040?",
+          "lon": -115.5708,
+          "lat": 51.1784
+        }
+      ]
+    },
+    "Financial and Insurance Risk": {
+      "general": [
+        {
+          "question": "How do projected shifts in climate variables affect insurance risk assessments in Miami, USA (25.7617N, 80.1918W) for the period 2030-2040?",
+          "lon": -80.25772861164602,
+          "lat": 25.71441305623119
+        }
+      ],
+      "specific": [
+        {
+          "question": "What is the projected change in monthly mean precipitation in Jakarta, Indonesia (6.2088S, 106.8456E) between 2020-2030 and 2040-2050, and how could this influence flood insurance premiums?",
+          "lon": 106.8456,
+          "lat": -6.2088
+        }
+      ]
+    }
+  }
+}
