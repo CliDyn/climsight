@@ -51,7 +51,7 @@ from typing import Optional, Literal, Union, List
 from climsight_classes import AgentState
 
 # import smart_agent
-from smart_agent import smart_agent
+from smart_agent import get_aitta_chat_model, smart_agent
 
 # import climsight functions
 from geo_functions import (
@@ -659,6 +659,12 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 model_name=config['model_name_combine_agent'],
                 max_tokens=16000,
             )   
+    elif config['model_type'] == 'aitta':
+        llm_intro = get_aitta_chat_model(config['model_name_agents'])
+        llm_combine_agent = get_aitta_chat_model(
+            config['model_name_combine_agent'],
+            max_completion_tokens=4096
+        )
         # streaming=True,
         # callbacks=[stream_handler],    
     '''
@@ -998,7 +1004,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             # Pass the dictionary to invoke
             input = {"user_text": state.user}
             response = chain.invoke(input)
-        elif config['model_type'] == "local":        
+        elif config['model_type'] in ("local", "aitta"):
             prompt_text = intro_prompt.format(user_text=state.user)
             response_raw = llm_intro.invoke(prompt_text)
             import re, json
@@ -1063,7 +1069,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
             logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
-        if config['model_type'] == "local":
+        if config['model_type'] in ("local", "aitta"):
             system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         elif config['model_type'] == "openai":         
             if "o1" in config['model_name_combine_agent']:

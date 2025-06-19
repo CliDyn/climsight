@@ -32,3 +32,4 @@ dependencies:
     - wikipedia
     - scipy
     - pyproj
+    - aitta-client
