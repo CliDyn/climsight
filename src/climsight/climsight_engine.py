@@ -951,11 +951,11 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
         1. **FINISH:** If the question is unrelated to ClimSight's purpose or is a simple inquiry outside your primary objectives,
         you can choose to finish the conversation by selecting FINISH and providing a concise answer. Examples of unrelated or simple questions:
-        - “Hi”
-        - “How are you?”
-        - “Who are you?”
-        - “Write an essay on the history of trains.”
-        - “Translate some text for me.”
+        - "Hi"
+        - "How are you?"
+        - "Who are you?"
+        - "Write an essay on the history of trains."
+        - "Translate some text for me."
 
         2. **CONTINUE:** For all other cases, if the question relates to climate or location, select CONTINUE to proceed,
         which will prompt other agents to address the user's question. Note that the specific location may not be mentioned in the user's initial question, 
@@ -1097,12 +1097,16 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         for msg in prompt_messages:
             role = getattr(msg, "type", getattr(msg, "role", ""))
             chat_prompt_text += f"{role.capitalize()}: {msg.content}\n"
-            
+        
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")    
+        #print("chat_prompt_text: ", chat_prompt_text)
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")    
         return {
             'final_answer': output_content, 
             'input_params': state.input_params, 
             'content_message': state.content_message,
-            'combine_agent_prompt_text': chat_prompt_text}
+            'combine_agent_prompt_text': chat_prompt_text
+        }
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
         output = []
@@ -1173,7 +1177,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
     input_params = output['input_params']
     content_message = output['content_message']
-    combine_agent_prompt_text = output['combine_agent_prompt_text']
+    combine_agent_prompt_text = output.get('combine_agent_prompt_text', '')
     
     stream_handler.update_progress("Analysis complete!")
     
