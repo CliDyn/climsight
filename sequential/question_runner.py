@@ -139,10 +139,12 @@ output_answers = []
 #            output_answers = []
             
 # Loop over all themes
+question_count = 0
 for theme, categories in questions['themes'].items():
     for category_type in ('general', 'specific'):
         for q in categories.get(category_type, []):
-            
+            question_count += 1
+            print(f"!!!!!!!!!!!!!!!!!!!!!!!! Processing question {question_count} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             print(theme, category_type, q['question'], q['lon'], q['lat'])
             try:
                 user_message = q['question']
