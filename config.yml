@@ -1,10 +1,10 @@
 #model_names: gpt-4o, o1-preview, o1-mini
-model_type: "openai" #"openai / local
-model_name: "gpt-4.1-nano" # used only for  direct_llm_request
-model_name_rag: "gpt-4.1-nano" # used only for  rag_request
-model_name_tools: "gpt-4.1-nano"
-model_name_combine_agent: "gpt-4.1-nano" 
-model_name_agents: "gpt-4.1-nano" #should be gpt-4o
+model_type: "openai" #"openai / local / aitta
+model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
+model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
+model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
+model_name_combine_agent: "gpt-4.1-nano" #"LumiOpen/Poro" #"gpt-4.1-nano" 
+model_name_agents: "gpt-4.1-nano" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_high_resolution_climate_model: true
@@ -55,9 +55,22 @@ ecocrop:
     data_path: "./data/ecocrop/ecocrop_database/"
 rag_settings:
     rag_activated: True
-    embedding_model: "text-embedding-3-large"
-    chroma_path_ipcc: "rag_db/ipcc_reports"
-    chroma_path_general: "rag_db/general_reports"
+    # Which embedding backend to use: openai, aitta, mistral, etc.
+    embedding_model_type: "openai"  # options: openai, aitta, mistral
+    # Embedding model name for each backend
+    embedding_model_openai: "text-embedding-3-large"
+    embedding_model_aitta: "lightonai/modernbert-embed-large"
+    # Add more as needed, e.g.:
+    # embedding_model_mistral: "mistral-embed-xyz"
+    # Chroma DB paths for each backend
+    chroma_path_ipcc_openai: "rag_db/ipcc_reports_openai"
+    chroma_path_ipcc_aitta: "rag_db/ipcc_reports_aitta"
+    # chroma_path_ipcc_mistral: "rag_db/ipcc_reports_mistral"
+    chroma_path_general_openai: "rag_db/general_reports_openai"
+    chroma_path_general_aitta: "rag_db/general_reports_aitta"
+    # chroma_path_general_mistral: "rag_db/general_reports_mistral"
+    # AITTA configuration for open models (optional, only needed for aitta)
+    aitta_url: "https://api-climatedt-aitta.2.rahtiapp.fi"
     document_path: './data/general_reports/' # or ipcc_text_reports
     chunk_size: 2000
     chunk_overlap: 200
@@ -140,14 +153,14 @@ system_role_new: |
 
   ### QUANTITATIVE-PRECISION RULES
   - **Every numeric value must name its reference** (month, season, decade, scenario label, baseline), e.g.  
-      “In July the mean temperature rises by …°C relative to …”  
+      "In July the mean temperature rises by …°C relative to …"  
   - Avoid vague phrases like *consistent trend, more variable, significant shift* **unless** the exact magnitude (unit or %) appears in the same sentence.  
   - Words such as *doubled, halved, dramatic, substantial* are permitted only when followed by the correct factor or percentage from the data.
 
   ### BEHAVIOUR RULES
   - Produce only the report. No greetings, apologies, or meta commentary.  
-  - Never begin with “Sure”, “Okay”, “Here is”, etc.  
-  - Write in third person; avoid “I” and “you”.  
+  - Never begin with "Sure", "Okay", "Here is", etc.  
+  - Write in third person; avoid "I" and "you".  
   - Cite IPCC or policy material inline as *(IPCC AR six, Working-Group two, Section twelve-point-four)*.  
   - Do not use level-1 or level-2 Markdown headings.  
   - Length: unrestricted—include all necessary detail.
