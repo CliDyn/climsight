@@ -911,6 +911,9 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             if 'ipcc_rag' in references['references']:
                 for ref in references['references']['ipcc_rag']:
                     references['used'].append(ref)
+        else:
+            ipcc_rag_agent_response = "None"
+                    
         # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
         logger.info(f"ipcc_rag_agent_response: {ipcc_rag_response}")
         return {'ipcc_rag_agent_response': ipcc_rag_response}
@@ -924,6 +927,8 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             if 'reports_rag' in references['references']:
                 for ref in references['references']['reports_rag']:
                     references['used'].append(ref)
+        else:
+            general_rag_agent_response = "None"
         # logger.info(f"General RAG says: {general_rag_response}")
         logger.info(f"general_rag_agent_response: {general_rag_response}")
         return {'general_rag_agent_response': general_rag_response}
@@ -1097,6 +1102,10 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         for msg in prompt_messages:
             role = getattr(msg, "type", getattr(msg, "role", ""))
             chat_prompt_text += f"{role.capitalize()}: {msg.content}\n"
+        
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")    
+        #print("chat_prompt_text: ", chat_prompt_text)
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
             
         return {
             'final_answer': output_content, 
@@ -1173,7 +1182,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
     input_params = output['input_params']
     content_message = output['content_message']
-    combine_agent_prompt_text = output['combine_agent_prompt_text']
+    combine_agent_prompt_text = output.get('combine_agent_prompt_text', '')
     
     stream_handler.update_progress("Analysis complete!")
     
