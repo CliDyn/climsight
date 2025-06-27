@@ -1,5 +1,5 @@
 #model_names: gpt-4o, o1-preview, o1-mini
-model_type: "aitta" #"openai / local / aitta
+model_type: "openai" #"openai / local / aitta
 model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
 model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
 model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
