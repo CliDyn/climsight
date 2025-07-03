@@ -43,6 +43,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
+from langchain_mistralai import ChatMistralAI
 
 from rag import query_rag
 from typing import Optional, Literal, Union, List
@@ -658,7 +659,23 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 openai_api_key=api_key,
                 model_name=config['model_name_combine_agent'],
                 max_tokens=16000,
-            )   
+            )
+    # Mistral
+    elif config['model_type'] == "mistral":
+        mistral_api_key = os.getenv("MISTRAL_API_KEY")
+        if not mistral_api_key:
+            raise ValueError("MISTRAL_API_KEY environment variable not set")
+        
+        llm_intro = ChatMistralAI(
+            api_key=mistral_api_key,
+            model=config['model_name_agents_mistral'],
+        )
+        llm_combine_agent = ChatMistralAI(
+            api_key=mistral_api_key,
+            model=config['model_name_combine_agent_mistral'],
+            max_tokens=16000, # Adjust as needed
+        )
+    # /Mistral 
     elif config['model_type'] == 'aitta':
         llm_intro = get_aitta_chat_model(config['model_name_agents'])
         llm_combine_agent = get_aitta_chat_model(
@@ -1009,6 +1026,17 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             # Pass the dictionary to invoke
             input = {"user_text": state.user}
             response = chain.invoke(input)
+        # Mistral
+        elif config['model_type'] == "mistral":
+            structured_llm = llm_intro.with_structured_output(routeResponse, method="function_calling")
+            chain = (
+                intro_prompt
+                | structured_llm
+            )
+            # Pass the dictionary to invoke
+            input = {"user_text": state.user}
+            response = chain.invoke(input)
+        # /Mistral
         elif config['model_type'] in ("local", "aitta"):
             prompt_text = intro_prompt.format(user_text=state.user)
             response_raw = llm_intro.invoke(prompt_text)
@@ -1081,6 +1109,10 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
             else:
                 system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        # Mistral
+        elif config['model_type'] == "mistral":
+            system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
+        # /Mistral
   
         human_message_prompt = HumanMessagePromptTemplate.from_template(state.content_message)
         chat_prompt = ChatPromptTemplate.from_messages(

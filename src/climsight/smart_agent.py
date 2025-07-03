@@ -11,6 +11,7 @@ from typing import Union
 from langchain.agents import AgentExecutor, create_openai_tools_agent, Tool
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
+from langchain_mistralai import ChatMistralAI
 from langchain_core.tools import StructuredTool
 from langchain_community.document_loaders import WikipediaLoader
 from langchain_community.utilities import WikipediaAPIWrapper
@@ -50,6 +51,19 @@ def get_aitta_chat_model(model_name, **kwargs):
         model_name=model.id,
         **kwargs
     )
+
+# Mistral helper
+# New helper function
+def get_mistral_chat_model(model_name, **kwargs):
+    mistral_api_key = os.getenv("MISTRAL_API_KEY")
+    if not mistral_api_key:
+        raise ValueError("MISTRAL_API_KEY environment variable not set for smart_agent")
+    return ChatMistralAI(
+        api_key=mistral_api_key,
+        model=model_name,
+        **kwargs
+    )
+# /Mistral helper
 
 def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handler):
 #def smart_agent(state: AgentState, config, api_key):
@@ -315,6 +329,12 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],
                 temperature=temperature
             )
+        # Mistral
+        elif config['model_type'] == "mistral":
+            llm = get_mistral_chat_model(
+                config.get('model_name_tools_mistral', 'mistral-small-latest'), temperature=temperature
+            )
+        # /Mistral
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(
                 config['model_name_tools'], temperature = temperature)
@@ -524,7 +544,13 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 openai_api_key=api_key,
                 model_name=config['model_name_tools'],
                 temperature=temperature
-            )        
+            )
+        # Mistral
+        elif config['model_type'] == "mistral":
+            llm = get_mistral_chat_model(
+                config.get('model_name_tools_mistral', 'mistral-small-latest'), temperature=temperature
+            )
+        # /Mistral
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(
                 config['model_name_tools'], temperature = temperature)
@@ -587,7 +613,13 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 openai_api_key=api_key,
                 model_name=config['model_name_tools'],
                 temperature=0.0
-            )        
+            )
+        # Mistral
+        elif config['model_type'] == "mistral":
+            llm = get_mistral_chat_model(
+                config.get('model_name_tools_mistral', 'mistral-small-latest'), temperature=0.0
+            )
+        # /Mistral
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
 
@@ -649,6 +681,12 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             model_name=config['model_name_agents'],
             temperature=0.0
         )
+    # Mistral
+    elif config['model_type'] == "mistral":
+        llm = get_mistral_chat_model(
+            config.get('model_name_agents_mistral', 'mistral-large-latest'), temperature=0.0
+        )
+    # /Mistral
     elif config['model_type'] == "aitta":
         llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
 

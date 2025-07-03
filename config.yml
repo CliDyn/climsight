@@ -1,10 +1,15 @@
 #model_names: gpt-4o, o1-preview, o1-mini
-model_type: "openai" #"openai / local / aitta
+model_type: "mistral" #"openai / local / aitta / mistral
 model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
 model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
 model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
 model_name_combine_agent: "gpt-4.1-nano" #"LumiOpen/Poro" #"gpt-4.1-nano" 
 model_name_agents: "gpt-4.1-nano" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
+
+# Mistral model configurations
+model_name_agents_mistral: "mistral-medium"
+model_name_combine_agent_mistral: "mistral-medium"
+model_name_tools_mistral: "mistral-medium"
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_high_resolution_climate_model: true
