@@ -27,8 +27,11 @@ from langchain.document_loaders import WikipediaLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from aitta_client import Model, Client
-from aitta_client.authentication import APIKeyAccessTokenSource
+try:
+    from aitta_client import Model, Client
+    from aitta_client.authentication import APIKeyAccessTokenSource
+except:
+    pass
 
 # Import AgentState from climsight_classes
 from climsight_classes import AgentState

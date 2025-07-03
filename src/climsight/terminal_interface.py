@@ -32,7 +32,7 @@ def print_verbose(verbose, message):
     if verbose:
         print(message)  
 
-def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True, rag_activated=None, embedding_model='', chroma_path='', references=None):
+def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, user_message='', show_add_info='',verbose=True, rag_activated=None, references=None):
     '''
         Inputs:
         - config (dict): Configuration, default is an empty dictionary.   
@@ -44,8 +44,6 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         - show_add_info (string): If 'y' - show additional information, if 'n' - do not show additional information. default ''
         - verbose (bool): If True - print additional information, if False - do not print additional information (used for loop request). default True
         - rag_activated (bool): whether or not to include the text based rag
-        - embedding_model (str): embedding model to be used for loading the Chroma database.
-        - chroma_path (str): Path where the Chroma database is stored.
         Output:
         - output (string): Output from the LLM.
     '''      
@@ -147,18 +145,16 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
 
     # RAG
     if not skip_llm_call and rag_activated:
-        chroma_path_ipcc = chroma_path[0]
-        chroma_path_general = chroma_path[1]
         try:
             logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
-            ipcc_rag_ready, ipcc_rag_db = load_rag(embedding_model, chroma_path_ipcc, api_key) # load the RAG database 
+            ipcc_rag_ready, ipcc_rag_db = load_rag(config, openai_api_key=api_key, db_type='ipcc')
         except Exception as e:
             logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
             rag_ready = False
             rag_db = None
         try:
             logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
-            general_rag_ready, general_rag_db = load_rag(embedding_model, chroma_path_general, api_key) # load the RAG database 
+            general_rag_ready, general_rag_db = load_rag(config, openai_api_key=api_key, db_type='general')
         except Exception as e:
             logger.warning(f"(General) RAG database initialization skipped or failed: {e}")
             general_rag_ready = False
