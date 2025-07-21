@@ -36,11 +36,30 @@ from langchain_openai import ChatOpenAI
 import uuid
 import streamlit as st
 from pathlib import Path
+try:
+    from aitta_client import Model, Client
+    from aitta_client.authentication import APIKeyAccessTokenSource
+except:
+    pass
 
 # Import AgentState from climsight_classes
 from climsight_classes import AgentState
 import calendar
 import pandas as pd
+
+def get_aitta_chat_model(model_name, **kwargs):
+    aitta_url = 'https://api-climatedt-aitta.2.rahtiapp.fi'
+    aitta_api_key = os.environ['AITTA_API_KEY']
+    client = Client(aitta_url, APIKeyAccessTokenSource(aitta_api_key, aitta_url))
+    model = Model.load(model_name, client)
+    access_token = client.access_token_source.get_access_token()
+    return ChatOpenAI(
+        openai_api_key=access_token,
+        openai_api_base=model.openai_api_url,
+        model_name=model.id,
+        **kwargs
+    )
+
 def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handler):
 #def smart_agent(state: AgentState, config, api_key):
     stream_handler.update_progress("Running advanced analysis with smart agent...")
@@ -135,7 +154,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         **Always use the full path stored in a variable when calling image_viewer!**
         </Important>
     """
-    if config['model_type'] == "local":
+    if config['model_type'] in ("local", "aitta"):
         prompt += f"""
 
         <Important> - Tool use order. Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
@@ -387,6 +406,9 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],
                 temperature=temperature
             )
+        elif config['model_type'] == "aitta":
+            llm = get_aitta_chat_model(
+                config['model_name_tools'], temperature = temperature)
         # Define your custom prompt template
         template = """
         Read the provided  {wikipage} carefully. Extract and present information related to the following keywords relative to {question}:
@@ -594,6 +616,9 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],
                 temperature=temperature
             )        
+        elif config['model_type'] == "aitta":
+            llm = get_aitta_chat_model(
+                config['model_name_tools'], temperature = temperature)
         
         # Create the chain with the prompt and LLM
         chain = prompt | llm
@@ -654,6 +679,8 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],
                 temperature=0.0
             )        
+        elif config['model_type'] == "aitta":
+            llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
 
         # Create the prompt template
         prompt = ChatPromptTemplate.from_template("""
@@ -763,9 +790,9 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             temperature=0.0
         )
 
+    elif config['model_type'] == "aitta":
+        llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
 
-
-    
     # List of tools
     #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
     tools = [data_extraction_tool, rag_tool, ecocrop_tool, python_repl_tool]

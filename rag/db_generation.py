@@ -17,6 +17,11 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 from langchain_core.documents.base import Document
 
+# Import the new embedding utility
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+from climsight.embedding_utils import create_embeddings
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
    filename='db_generation.log',
@@ -136,13 +141,16 @@ def split_docs(documents, chunk_size=2000, chunk_overlap=200, separators=[" ", "
     return docs
 
 
-def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
+def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, aitta_url, model_type, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
     """
     Chunks and embeds documents from the specified directory using provided embedding function.
 
     Args:
     - document_path (str): The path to the directory containing the documents.
-    - embedding_model (OpenAIEmbeddings): The embedding function to use for generating embeddings.
+    - embedding_model (str): The embedding model name to use for generating embeddings.
+    - openai_api_key (str): OpenAI API key for OpenAI models.
+    - aitta_url (str): AITTA API URL for open models.
+    - model_type (str): The type of embedding model backend (e.g., 'openai', 'aitta').
     - chunk_size (int): maximum number of characters per chunk. Default: 2000.
     - chunk_overlap (int): number of characters to overlap per chunk. Default: 200.
     - separators (list): list of characters where text can be split. Default: [" ", ",", "\n"]
@@ -172,10 +180,18 @@ def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, ch
 
     logger.info(f"Chunked documents into {len(chunked_docs)} pieces.")
 
-    # embedding documents 
-    embedded_docs = []
-    embedding_item = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model) 
+    # Create embedding model using the utility function
     try:
+        aitta_api_key = os.getenv('AITTA_API_KEY')
+        embedding_item = create_embeddings(
+            embedding_model=embedding_model,
+            openai_api_key=openai_api_key,
+            aitta_api_key=aitta_api_key,
+            aitta_url=aitta_url,
+            model_type=model_type
+        )
+        # embedding documents 
+        embedded_docs = []
         for doc in chunked_docs:
             embedding = embedding_item.embed_documents([doc.page_content])[0]  # embed_documents returns a list, so we take the first element
             embedded_docs.append({"text": doc.page_content, "embedding": embedding, "metadata": doc.metadata})
@@ -201,31 +217,52 @@ def initialize_rag(config):
     rag_ready = False
 
     rag_settings = config['rag_settings']
+    embedding_model_type = rag_settings.get('embedding_model_type', 'openai')
+    # Select embedding model and chroma path based on type
+    if embedding_model_type == 'openai':
+        embedding_model = rag_settings.get('embedding_model_openai')
+        chroma_path = rag_settings.get('chroma_path_ipcc_openai')
+    elif embedding_model_type == 'aitta':
+        embedding_model = rag_settings.get('embedding_model_aitta')
+        chroma_path = rag_settings.get('chroma_path_ipcc_aitta')
+    # Add more types here as needed
+    # elif embedding_model_type == 'mistral':
+    #     embedding_model = rag_settings.get('embedding_model_mistral')
+    #     chroma_path = rag_settings.get('chroma_path_ipcc_mistral')
+    else:
+        raise ValueError(f"Unknown embedding_model_type: {embedding_model_type}")
+
     openai_api_key = os.getenv('OPENAI_API_KEY')
-    embedding_model = rag_settings['embedding_model']
-    chroma_path = rag_settings['chroma_path']
+    aitta_api_key = os.getenv('AITTA_API_KEY')
+    aitta_url = rag_settings.get('aitta_url', os.getenv('AITTA_URL', 'https://api-climatedt-aitta.2.rahtiapp.fi'))
     document_path = rag_settings['document_path']
     chunk_size = rag_settings['chunk_size']
     chunk_overlap = rag_settings['chunk_overlap']
     separators = rag_settings['separators']
 
-    # check if api key there
-    if not openai_api_key:
+    # check if api key there (either OpenAI or AITTA)
+    if embedding_model_type == 'openai' and not openai_api_key:
         logger.warning("No OpenAI API Key found. Skipping RAG initialization.")
-        rag_ready = False
-        return rag_ready
+        return False
+    if embedding_model_type == 'aitta' and not aitta_api_key:
+        logger.warning("No AITTA API Key found. Skipping RAG initialization.")
+        return False
 
     # check if documents are present and valid
     if not os.path.exists(document_path) or not any(file.endswith('.txt') for file in os.listdir(document_path)):
         logger.warning("No valid documents found in the specified path. Skipping RAG initialization.")
-        rag_ready = False
-        return rag_ready
+        return False
 
     # Perform chunking and embedding
     try:
-        # embedding function, using the langchain chroma package (not chromadb directly)
-        langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)  # max_retries, request_timeout, retry_min_seconds
-        documents = chunk_and_embed_documents(document_path, embedding_model, openai_api_key, chunk_size, chunk_overlap, separators)
+        langchain_ef = create_embeddings(
+            embedding_model=embedding_model,
+            openai_api_key=openai_api_key,
+            aitta_api_key=aitta_api_key,
+            aitta_url=aitta_url,
+            model_type=embedding_model_type
+        )
+        documents = chunk_and_embed_documents(document_path, embedding_model, openai_api_key, aitta_url, embedding_model_type, chunk_size, chunk_overlap, separators)
         converted_documents = [
             Document(page_content=doc['text'], metadata=doc['metadata'])
             for doc in documents
@@ -239,12 +276,10 @@ def initialize_rag(config):
         rag_ready = True
         logger.info(f"RAG ready: {rag_ready}")
         logger.info("RAG database has been initialized and documents embedded.")
-
         return rag_ready
-
     except Exception as e:
         logger.error(f"Failed to initialize the RAG database: {e}")
-        return rag_ready
+        return False
 
 
 def main():

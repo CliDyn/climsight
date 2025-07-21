@@ -50,9 +50,7 @@ try:
    end_year = config['end_year']
    system_role = config['system_role']
    rag_settings = config['rag_settings']
-   embedding_model = rag_settings['embedding_model']
-   chroma_path_ipcc = rag_settings['chroma_path_ipcc']
-   chroma_path_general = rag_settings['chroma_path_general']
+   embedding_model_type = rag_settings['embedding_model_type']
    document_path = rag_settings['document_path']
    chunk_size = rag_settings['chunk_size']
    chunk_overlap = rag_settings['chunk_overlap']
@@ -62,8 +60,6 @@ try:
 except KeyError as e:
    logging.error(f"Missing configuration key: {e}")
    raise RuntimeError(f"Missing configuration key: {e}")
-
-chroma_path = [chroma_path_ipcc, chroma_path_general]
 
 references = {'references': {}, 'used': []}
 # reading references file
@@ -78,6 +74,6 @@ if not references:
       logging.error(f"An error occurred while reading the file: {references_path}")
       raise RuntimeError(f"An error occurred while reading the file: {references_path}") from e
 if not terminal_call:
-   run_streamlit(config, skip_llm_call=skip_llm_call, rag_activated=rag_activated, embedding_model=embedding_model, chroma_path=chroma_path, references=references)
+   run_streamlit(config, skip_llm_call=skip_llm_call, rag_activated=rag_activated, references=references)
 else:   
-   output = run_terminal(config, skip_llm_call=skip_llm_call, embedding_model=embedding_model, chroma_path=chroma_path, references=references)
+   output = run_terminal(config, skip_llm_call=skip_llm_call, references=references)

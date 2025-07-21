@@ -13,13 +13,14 @@ from streamlit_folium import st_folium
 import folium
 
 # rag
-from rag import load_rag 
+from rag import load_rag
 
 # climsight modules
 from stream_handler import StreamHandler
 from data_container import DataContainer
 from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
 from extract_climatedata_functions import plot_climate_data
+from embedding_utils import create_embeddings
 
 #ui for saving docs
 from datetime import datetime
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 data_pocket = DataContainer()
 
-def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, embedding_model='', chroma_path='', references=None):
+def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, references=None):
     """
     Runs the Streamlit interface for ClimSight, allowing users to interact with the system.
     Args:
@@ -37,8 +38,6 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         - api_key (string): API Key, default is an empty string.
         - skip_llm_call (bool): If True - skip final call to LLM
         - rag_activated (bool): whether or not to include the text based rag
-        - embedding_model (str): embedding model to be used for loading the Chroma database.
-        - chroma_path (str): Path where the Chroma database is stored.
         - references (dict): References for the data used in the analysis.
     Returns:
         None
@@ -155,28 +154,38 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, e
         config['show_add_info'] = show_add_info
         config['use_smart_agent'] = smart_agent
         
-        # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
-        # for the moment. Just making a note here for any potential problems that might arise later one. 
-        # Load RAG
-        if not skip_llm_call and rag_activated:
-            chroma_path_ipcc = chroma_path[0]
-            chroma_path_general = chroma_path[1]
-            try:
-                logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
-                ipcc_rag_ready, ipcc_rag_db = load_rag(embedding_model, chroma_path_ipcc, api_key) # load the RAG database 
-            except Exception as e:
-                st.error(f"Loading of the IPCC RAG database failed unexpectedly, please check the logs. {e}")
-                logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
-                ipcc_rag_ready = False
-                ipcc_rag_db = None
-            try:
-                logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
-                general_rag_ready, general_rag_db = load_rag(embedding_model, chroma_path_general, api_key) # load the RAG database 
-            except Exception as e:
-                st.error(f"Loading of the (general) RAG database failed unexpectedly, please check the logs. {e}")
-                logger.warning(f"(General) RAG database initialization skipped or failed: {e}")
-                general_rag_ready = False
-                general_rag_db = None
+    # RUN submit button 
+        if submit_button and user_message:
+            if not api_key:
+                api_key = api_key_input
+            if (not api_key) and (not skip_llm_call) and (config['model_type'] == "openai"):
+                st.error("Please provide an OpenAI API key.")
+                st.stop()
+            # Update config with the selected LLM mode
+            #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            config['show_add_info'] = show_add_info
+            config['use_smart_agent'] = smart_agent
+            
+            # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
+            # for the moment. Just making a note here for any potential problems that might arise later one. 
+            # Load RAG
+            if not skip_llm_call and rag_activated:
+                try:
+                    logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
+                    ipcc_rag_ready, ipcc_rag_db = load_rag(config, openai_api_key=api_key, db_type='ipcc')
+                except Exception as e:
+                    st.error(f"Loading of the IPCC RAG database failed unexpectedly, please check the logs. {e}")
+                    logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
+                    ipcc_rag_ready = False
+                    ipcc_rag_db = None
+                try:
+                    logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
+                    general_rag_ready, general_rag_db = load_rag(config, openai_api_key=api_key, db_type='general')
+                except Exception as e:
+                    st.error(f"Loading of the (general) RAG database failed unexpectedly, please check the logs. {e}")
+                    logger.warning(f"(General) RAG database initialization skipped or failed: {e}")
+                    general_rag_ready = False
+                    general_rag_db = None
                  
         is_on_land = True
 

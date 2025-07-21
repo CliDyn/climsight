@@ -253,13 +253,6 @@ def request_answers_from_climsight(question_answers, llm_model_request, series =
         user_message = user_message + ' ' + question_answers[series][qa_indx]['question']
         lon = question_answers[series][qa_indx].get('lon', 13.37)
         lat = question_answers[series][qa_indx].get('lat', 52.524)
-
-        rag_settings = config['rag_settings']
-        embedding_model = rag_settings['embedding_model']
-        chroma_path_ipcc = rag_settings['chroma_path_ipcc']
-        chroma_path_general = rag_settings['chroma_path_general'] 
-        chroma_path = [chroma_path_ipcc, chroma_path_general]
-        
         #set LLM to be used for the Climsight 
         config['model_name_combine_agent']=llm_model_request
 
@@ -269,9 +262,7 @@ def request_answers_from_climsight(question_answers, llm_model_request, series =
                             user_message=user_message, 
                             show_add_info='n', 
                             verbose=False, 
-                            rag_activated=True, 
-                            embedding_model=embedding_model, 
-                            chroma_path=chroma_path)
+                            rag_activated=True)
    
         output_answers.append(output)
 

@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-model_name = "gpt-4o"#"gpt-4.1"
+model_name = "gpt-4.1-nano"#"gpt-4.1"
 llm_temperature = 1
 
 # Categories and their counts
@@ -80,7 +80,7 @@ def generate_llm_prompt() -> str:
 
 Every question **must**:
 - Focus only on variables available in the data: temperature, precipitation, wind speed, or wind direction  
-  *For **general** questions, you may mention these variables more broadly (e.g., “climate conditions” or “weather patterns”) without listing each one explicitly.*  
+  *For **general** questions, you may mention these variables more broadly (e.g., "climate conditions" or "weather patterns") without listing each one explicitly.*  
 - Specify one or more of the three decadal periods (2020-2030, 2030-2040, 2040-2050) or the change between two of them, it is not neccery to include years in the question, you can specify any year range or time period in words between 2020 - 2050, example: next decade
 - Be answerable using those decadal **monthly mean** values (no daily extremes or percentiles), no need to include "monthly mean" in the question
 - Reference a realistic land location and include its latitude and longitude
@@ -385,16 +385,112 @@ def print_validation_report(stats: dict):
     
     print("\n" + "="*80)
 
+def fix_questions_file(file_path: str) -> dict:
+    """
+    Validate and fix questions from an existing JSON file.
+    If a question's location is not on land, find a nearby land point and update it.
+    The updated questions are written back to the same file.
+    Returns statistics about the fixes performed.
+    """
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+
+        stats = {
+            'total_questions': 0,
+            'fixed_questions': 0,
+            'unchanged_questions': 0,
+            'categories': {},
+            'fixed_locations': []
+        }
+
+        changed = False
+
+        for category, types in data.get('themes', data).items():
+            if isinstance(types, dict):
+                stats['categories'][category] = {'general': 0, 'specific': 0, 'fixed': []}
+                for q_type, questions in types.items():
+                    if q_type in ['general', 'specific'] and isinstance(questions, list):
+                        for i, q in enumerate(questions):
+                            stats['total_questions'] += 1
+                            lat = q.get('lat')
+                            lon = q.get('lon')
+                            if lat is None or lon is None:
+                                continue
+                            if is_valid_location(lat, lon):
+                                stats['unchanged_questions'] += 1
+                                continue
+                            # Try to find a nearby land point
+                            new_point = find_nearby_land_point(lat, lon)
+                            if new_point:
+                                new_lat, new_lon = new_point
+                                q['lat'] = new_lat
+                                q['lon'] = new_lon
+                                stats['fixed_questions'] += 1
+                                stats['categories'][category]['fixed'].append({
+                                    'type': q_type,
+                                    'index': i,
+                                    'old_lat': lat,
+                                    'old_lon': lon,
+                                    'new_lat': new_lat,
+                                    'new_lon': new_lon,
+                                    'question': q.get('question', 'No question text')
+                                })
+                                stats['fixed_locations'].append({
+                                    'category': category,
+                                    'type': q_type,
+                                    'old_lat': lat,
+                                    'old_lon': lon,
+                                    'new_lat': new_lat,
+                                    'new_lon': new_lon,
+                                    'question': q.get('question', 'No question text')
+                                })
+                                changed = True
+                            else:
+                                stats['unchanged_questions'] += 1
+        # Write back if any changes were made
+        if changed:
+            with open(file_path, 'w') as f:
+                json.dump(data, f, indent=2)
+        return stats
+    except Exception as e:
+        logger.error(f"Error fixing questions file: {e}")
+        raise
+
+def print_fix_report(stats: dict):
+    """Print a report of the location fixes."""
+    print("\n" + "="*80)
+    print("LOCATION FIX REPORT")
+    print("="*80)
+    print(f"\nTotal questions: {stats['total_questions']}")
+    print(f"Fixed questions: {stats['fixed_questions']}")
+    print(f"Unchanged questions: {stats['unchanged_questions']}")
+    if stats['fixed_locations']:
+        print("\nFixed locations:")
+        for loc in stats['fixed_locations']:
+            print(f"\nCategory: {loc['category']} ({loc['type']})")
+            print(f"Old: {loc['old_lat']}, {loc['old_lon']}")
+            print(f"New: {loc['new_lat']}, {loc['new_lon']}")
+            print(f"Question: {loc['question']}")
+    print("\n" + "="*80)
+
 def main():
     """Main function to handle both question generation and validation."""
     import argparse
     
     parser = argparse.ArgumentParser(description='Generate or validate climate questions.')
-    parser.add_argument('file', nargs='?', help='Optional: Path to the JSON file to validate')
+    parser.add_argument('file', nargs='?', help='Optional: Path to the JSON file to validate or fix')
+    parser.add_argument('--fix-locations', action='store_true', help='Fix invalid locations in the questions file')
     args = parser.parse_args()
     
     try:
-        if args.file:
+        if args.file and args.fix_locations:
+            # Fix mode
+            logger.info(f"Fixing question locations in file: {args.file}")
+            stats = fix_questions_file(args.file)
+            print_fix_report(stats)
+            logger.info("Location fixing completed successfully")
+        elif args.file:
             # Validate mode
             logger.info(f"Validating questions from file: {args.file}")
             stats = validate_questions_file(args.file)

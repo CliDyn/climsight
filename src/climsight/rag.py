@@ -14,6 +14,8 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 from langchain_core.documents.base import Document
 
+from embedding_utils import create_embeddings
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
    filename='climsight.log',
@@ -38,6 +40,7 @@ def get_folder_name(rag_db_path):
 def is_valid_rag_db(rag_db_path):
     """Checks if the rag_db folder contains chroma.sqlite3 and non-empty UUID folder."""
     # check for chroma.sqlite3
+
     chroma_file = os.path.join(rag_db_path, 'chroma.sqlite3')
     if not os.path.exists(chroma_file):
         return False
@@ -47,35 +50,58 @@ def is_valid_rag_db(rag_db_path):
     folder_path = os.path.join(rag_db_path, folder_name)
     if os.path.isdir(folder_path) and os.listdir(folder_path): # check if folder is non-empty
         return True
-        
     return False
 
 
-def load_rag(embedding_model, chroma_path, openai_api_key):
+def load_rag(config, openai_api_key=None, db_type='ipcc'):
     """
     Loads the RAG database if it has been initialized before and is ready to use.
 
     Args:
-    - embedding_model (str): Name of the embedding model to be used for loading embeddings.
-    - chroma_path (str): Path where the Chroma database is stored.
-    - openai_api_key (str): OpenAI API Key
+    - config (dict): Configuration dictionary.
+    - openai_api_key (str): OpenAI API Key (do not overwrite with os.getenv)
+    - db_type (str): 'ipcc' or 'general' (determines which DB to load)
 
     Returns:
     - tuple (bool, Chroma or None): 
         - rag_ready (bool): true if the RAG database was successfully loaded, false otherwise.
         - rag_db (Chroma or None): The loaded Chroma database object if successful, None if loading failed.
-
     """
+    rag_settings = config['rag_settings']
+    embedding_model_type = rag_settings.get('embedding_model_type', 'openai')
+    # Select embedding model and chroma path based on type and db_type
+    if embedding_model_type == 'openai':
+        embedding_model = rag_settings.get('embedding_model_openai')
+        chroma_path = rag_settings.get(f'chroma_path_{db_type}_openai')
+    elif embedding_model_type == 'aitta':
+        embedding_model = rag_settings.get('embedding_model_aitta')
+        chroma_path = rag_settings.get(f'chroma_path_{db_type}_aitta')
+    # Add more types here as needed
+    # elif embedding_model_type == 'mistral':
+    #     embedding_model = rag_settings.get('embedding_model_mistral')
+    #     chroma_path = rag_settings.get(f'chroma_path_{db_type}_mistral')
+    else:
+        raise ValueError(f"Unknown embedding_model_type: {embedding_model_type}")
+
+    # Use the openai_api_key parameter as-is (do not overwrite)
+    aitta_api_key = os.getenv('AITTA_API_KEY')
+    aitta_url = rag_settings.get('aitta_url', os.getenv('AITTA_URL', 'https://api-climatedt-aitta.2.rahtiapp.fi'))
+
     rag_ready = False
     valid_rag_db = is_valid_rag_db(chroma_path)
-
     if not valid_rag_db:
-        logger.warning("RAG database is not valid. Not loading it. Please run 'python db_generation.py first.")
+        logger.warning("RAG database is not valid. Not loading it. Please run 'python db_generation.py' first.")
         rag_db = None
         return rag_ready, rag_db
 
     try:
-        langchain_ef = OpenAIEmbeddings(openai_api_key=openai_api_key, model=embedding_model)
+        langchain_ef = create_embeddings(
+            model_type=embedding_model_type,
+            embedding_model=embedding_model,
+            openai_api_key=openai_api_key,
+            aitta_api_key=aitta_api_key,
+            aitta_url=aitta_url
+        )
         rag_db = Chroma(persist_directory=chroma_path, embedding_function=langchain_ef, collection_name="ipcc_collection")
         logger.info(f"RAG database loaded with {rag_db._collection.count()} documents.")
         rag_ready = True

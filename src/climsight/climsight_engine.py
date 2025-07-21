@@ -51,7 +51,7 @@ from typing import Optional, Literal, Union, List
 from climsight_classes import AgentState
 
 # import smart_agent
-from smart_agent import smart_agent
+from smart_agent import get_aitta_chat_model, smart_agent
 
 # import climsight functions
 from geo_functions import (
@@ -659,6 +659,12 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 model_name=config['model_name_combine_agent'],
                 max_tokens=16000,
             )   
+    elif config['model_type'] == 'aitta':
+        llm_intro = get_aitta_chat_model(config['model_name_agents'])
+        llm_combine_agent = get_aitta_chat_model(
+            config['model_name_combine_agent'],
+            max_completion_tokens=4096
+        )
         # streaming=True,
         # callbacks=[stream_handler],    
     '''
@@ -905,6 +911,9 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             if 'ipcc_rag' in references['references']:
                 for ref in references['references']['ipcc_rag']:
                     references['used'].append(ref)
+        else:
+            ipcc_rag_agent_response = "None"
+                    
         # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
         logger.info(f"ipcc_rag_agent_response: {ipcc_rag_response}")
         return {'ipcc_rag_agent_response': ipcc_rag_response}
@@ -918,6 +927,8 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             if 'reports_rag' in references['references']:
                 for ref in references['references']['reports_rag']:
                     references['used'].append(ref)
+        else:
+            general_rag_agent_response = "None"
         # logger.info(f"General RAG says: {general_rag_response}")
         logger.info(f"general_rag_agent_response: {general_rag_response}")
         return {'general_rag_agent_response': general_rag_response}
@@ -945,11 +956,11 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
         1. **FINISH:** If the question is unrelated to ClimSight's purpose or is a simple inquiry outside your primary objectives,
         you can choose to finish the conversation by selecting FINISH and providing a concise answer. Examples of unrelated or simple questions:
-        - “Hi”
-        - “How are you?”
-        - “Who are you?”
-        - “Write an essay on the history of trains.”
-        - “Translate some text for me.”
+        - "Hi"
+        - "How are you?"
+        - "Who are you?"
+        - "Write an essay on the history of trains."
+        - "Translate some text for me."
 
         2. **CONTINUE:** For all other cases, if the question relates to climate or location, select CONTINUE to proceed,
         which will prompt other agents to address the user's question. Note that the specific location may not be mentioned in the user's initial question, 
@@ -998,7 +1009,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             # Pass the dictionary to invoke
             input = {"user_text": state.user}
             response = chain.invoke(input)
-        elif config['model_type'] == "local":        
+        elif config['model_type'] in ("local", "aitta"):
             prompt_text = intro_prompt.format(user_text=state.user)
             response_raw = llm_intro.invoke(prompt_text)
             import re, json
@@ -1063,7 +1074,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
             logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
-        if config['model_type'] == "local":
+        if config['model_type'] in ("local", "aitta"):
             system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         elif config['model_type'] == "openai":         
             if "o1" in config['model_name_combine_agent']:
@@ -1091,12 +1102,17 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         for msg in prompt_messages:
             role = getattr(msg, "type", getattr(msg, "role", ""))
             chat_prompt_text += f"{role.capitalize()}: {msg.content}\n"
-            
+        
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")    
+        #print("chat_prompt_text: ", chat_prompt_text)
+        #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
+
         return {
             'final_answer': output_content, 
             'input_params': state.input_params, 
             'content_message': state.content_message,
-            'combine_agent_prompt_text': chat_prompt_text}
+            'combine_agent_prompt_text': chat_prompt_text
+        }
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
         output = []
@@ -1167,7 +1183,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
     input_params = output['input_params']
     content_message = output['content_message']
-    combine_agent_prompt_text = output['combine_agent_prompt_text']
+    combine_agent_prompt_text = output.get('combine_agent_prompt_text', '')
     
     stream_handler.update_progress("Analysis complete!")
     
