@@ -40,7 +40,7 @@ dependencies = [
     "wikipedia",
     "scipy",
     "pyproj",
-    "reportlab"
+    "reportlab",
     "aitta-client"
 ]
 
