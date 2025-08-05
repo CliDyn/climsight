@@ -120,10 +120,6 @@ except Exception as e:
 references = None
 
 rag_settings = config['rag_settings']
-embedding_model = rag_settings['embedding_model']
-chroma_path_ipcc = rag_settings['chroma_path_ipcc']
-chroma_path_general = rag_settings['chroma_path_general'] 
-chroma_path = [chroma_path_ipcc, chroma_path_general]
 
 #set LLM to be used for the Climsight 
 config['model_name_combine_agent'] = llm_model
@@ -157,8 +153,6 @@ for theme, categories in questions['themes'].items():
                                     show_add_info='n', 
                                     verbose=False, 
                                     rag_activated=True, 
-                                    embedding_model=embedding_model, 
-                                    chroma_path=chroma_path,
                                     references=references)    
 
             except Exception as e:
