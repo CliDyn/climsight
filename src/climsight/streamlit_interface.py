@@ -22,6 +22,10 @@ from climsight_engine import normalize_longitude, llm_request, forming_request, 
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
 
+#ui for saving docs
+from datetime import datetime
+from ui import prepare_download_content, prepare_pdf_content
+
 logger = logging.getLogger(__name__)
 
 data_pocket = DataContainer()
@@ -137,8 +141,18 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
        
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
-
         
+    # RUN submit button - ANALYSIS LOGIC ONLY (NO DISPLAY HERE!)
+    if submit_button and user_message:
+        if not api_key:
+            api_key = api_key_input
+        if (not api_key) and (not skip_llm_call) and (config['model_type'] == "openai"):
+            st.error("Please provide an OpenAI API key.")
+            st.stop()
+        # Update config with the selected LLM mode
+        #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+        config['show_add_info'] = show_add_info
+        config['use_smart_agent'] = smart_agent
         
     # RUN submit button 
         if submit_button and user_message:
@@ -173,183 +187,250 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     general_rag_ready = False
                     general_rag_db = None
                  
-            is_on_land = True
+        is_on_land = True
 
-            if config['llmModeKey'] == "direct_llm":
-                # Call the forming_request function
-                with st.spinner("Getting info on a point..."):
-                    # Create a generator object by calling func2
-                    generator = forming_request(config, lat, lon, user_message)
-                    while True:
-                        try:
-                            # Get the next intermediate result from the generator
-                            result = next(generator)
-                            st.markdown(f"{result}")
-                        except StopIteration as e:
-                            # The generator is exhausted, and e.value contains the final result
-                            
-                            gen_output = e.value
-                            # check if Error ocure:
-                            if isinstance(gen_output,str):
-                                if "Error" in gen_output:
-                                    if "point_is_in_ocean" in gen_output:
-                                        is_on_land = False
-                                        st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
-                            else:    
-                                content_message, input_params, df_data, figs, data = e.value
-                                data_pocket.df['df_data'] = df_data
-                                data_pocket.figs = figs
-                                data_pocket.data = data
-                            break            
-            else:
-                # Agent LLM mode (load only location info)
-                with st.spinner("Getting info on a point..."):
-                    st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
-                    # get first location information only, input_params and content_message are only partly filled
-                    content_message, input_params = location_request(config, lat, lon)
-                    if not input_params:
-                        is_on_land = False
-                        st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
-                    else:
-                        # extend input_params with user_message
-                        input_params['user_message'] = user_message
-                        content_message = "Human request: {user_message} \n " + content_message
-                        st.markdown(f"{input_params['location_str_for_print']}")
-                        if input_params['is_inland_water']:
-                            st.markdown(f"""{input_params['water_body_status']}: Our analyses are currently only meant for land areas. Please select another location for a better result.""")
-
-            if is_on_land:        
-            #with st.spinner("Generating..."):
-                #chat_box = st.empty()
-                #stream_handler = StreamHandler(chat_box, display_method="write")
-                #if not skip_llm_call:
-                #    output, input_params, content_message = llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket)   
-                progress_area = st.empty()  # This will display progress updates
-                if show_add_info:
-                    tab_text, tab_add, tab_refs  = st.tabs(["Report", "Additional information", "References"])
+        if config['llmModeKey'] == "direct_llm":
+            # Call the forming_request function
+            with st.spinner("Getting info on a point..."):
+                # Create a generator object by calling func2
+                generator = forming_request(config, lat, lon, user_message)
+                while True:
+                    try:
+                        # Get the next intermediate result from the generator
+                        result = next(generator)
+                        st.markdown(f"{result}")
+                    except StopIteration as e:
+                        # The generator is exhausted, and e.value contains the final result
+                        
+                        gen_output = e.value
+                        # check if Error ocure:
+                        if isinstance(gen_output,str):
+                            if "Error" in gen_output:
+                                if "point_is_in_ocean" in gen_output:
+                                    is_on_land = False
+                                    st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
+                        else:    
+                            content_message, input_params, df_data, figs, data = e.value
+                            data_pocket.df['df_data'] = df_data
+                            data_pocket.figs = figs
+                            data_pocket.data = data
+                        break            
+        else:
+            # Agent LLM mode (load only location info)
+            with st.spinner("Getting info on a point..."):
+                st.markdown(f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}")
+                # get first location information only, input_params and content_message are only partly filled
+                content_message, input_params = location_request(config, lat, lon)
+                if not input_params:
+                    is_on_land = False
+                    st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
                 else:
-                    tab_text, tab_refs = st.tabs(["Report", "References"])
+                    # extend input_params with user_message
+                    input_params['user_message'] = user_message
+                    content_message = "Human request: {user_message} \n " + content_message
+                    st.markdown(f"{input_params['location_str_for_print']}")
+                    if input_params['is_inland_water']:
+                        st.markdown(f"""{input_params['water_body_status']}: Our analyses are currently only meant for land areas. Please select another location for a better result.""")
+
+        # SIMPLIFIED PROCESSING - NO DISPLAY HERE!
+        if is_on_land:        
+            progress_area = st.empty()  # This will display progress updates
+            
+            # Create temporary containers for streaming (not for final display)
+            temp_result_container = st.empty()
+            temp_reference_container = st.empty()
+            
+            # Initialize the spinner outside, but we'll use our own progress messages
+            with st.spinner("Processing your request..."):
+                # Create StreamHandler with temporary components
+                stream_handler = StreamHandler(temp_result_container, temp_reference_container)
+
+                # Add a method to update the progress area
+                def update_progress_ui(message):
+                    progress_area.info(message)
+
+                # Attach this method to your StreamHandler
+                stream_handler.update_progress = update_progress_ui
+
+                # Now call llm_request with this enhanced stream_handler
+                if not skip_llm_call:
+                    output, input_params, content_message, combine_agent_prompt_text = llm_request(
+                        content_message, input_params, config, api_key, api_key_local, 
+                        stream_handler, ipcc_rag_ready, ipcc_rag_db, 
+                        general_rag_ready, general_rag_db, data_pocket,
+                        references=references
+                    )
+            
+            # Clear the progress area and temporary containers after completion
+            progress_area.empty()
+            temp_result_container.empty()
+            temp_reference_container.empty()
+            
+            # Store results in session state
+            if not skip_llm_call and 'output' in locals() and output:
+                st.session_state['last_output'] = output
+                st.session_state['last_input_params'] = input_params
+                st.session_state['last_figs'] = data_pocket.figs
+                st.session_state['last_references'] = references
+                st.session_state['last_show_add_info'] = show_add_info
+                st.session_state['last_climatemodel_name'] = climatemodel_name
                 
-                with tab_refs:
-                    reference_area = st.empty()               
-                    
-                with tab_text:
-                    result_area = st.empty()    # This will display the final LLM response
+    # DISPLAY LOGIC - OUTSIDE OF SUBMIT BUTTON BLOCK
+    # This will show the report whenever it exists in session state
+    if 'last_output' in st.session_state and st.session_state['last_output']:
+        # Get show_add_info from session state
+        show_add_info_display = st.session_state.get('last_show_add_info', False)
+        
+        if show_add_info_display:
+            tab_text, tab_add, tab_refs = st.tabs(["Report", "Additional information", "References"])
+        else:
+            tab_text, tab_refs = st.tabs(["Report", "References"])
+        
+        with tab_text:
+            st.markdown(st.session_state['last_output'])
+        
+        with tab_refs:
+            if 'last_references' in st.session_state and st.session_state['last_references']:
+                for ref in st.session_state['last_references'].get('used', []):
+                    st.markdown(f"- {ref}")
+        
+        if show_add_info_display:
+            with tab_add:
+                stored_input_params = st.session_state.get('last_input_params', {})
+                stored_figs = st.session_state.get('last_figs', {})
+                stored_climatemodel_name = st.session_state.get('last_climatemodel_name', 'unknown')
+                
+                st.subheader("Additional information", divider='rainbow')
+                if 'lat' in stored_input_params and 'lon' in stored_input_params:
+                    st.markdown(f"**Coordinates:** {stored_input_params['lat']}, {stored_input_params['lon']}")
+                if 'elevation' in stored_input_params:
+                    st.markdown(f"**Elevation:** {stored_input_params['elevation']} m")
+                if 'current_land_use' in stored_input_params:  
+                    st.markdown(f"**Current land use:** {stored_input_params['current_land_use']}")
+                if 'soil' in stored_input_params:
+                    st.markdown(f"**Soil type:** {stored_input_params['soil']}")
+                if 'biodiv' in stored_input_params:    
+                    st.markdown(f"**Occuring species:** {stored_input_params['biodiv']}")
+                if 'distance_to_coastline' in stored_input_params:  
+                    st.markdown(f"**Distance to the shore:** {round(float(stored_input_params['distance_to_coastline']), 2)} m")
+                
+                # Climate Data
+                if (not config.get('use_high_resolution_climate_model', False)) and ('df_data' in data_pocket.df and data_pocket.df['df_data'] is not None):
+                    df_data = data_pocket.df['df_data']
+                    st.markdown("**Climate data:**")
+                    st.markdown(
+                        "Near surface temperature (in °C)",
+                    )
+                    st.line_chart(
+                        df_data,
+                        x="Month",
+                        y=["Present Day Temperature", "Future Temperature"],
+                        color=["#1f77b4", "#d62728"],
+                    )
+                    st.markdown(
+                        "Precipitation (in mm)",
+                    )
+                    st.line_chart(
+                        df_data,
+                        x="Month",
+                        y=["Present Day Precipitation", "Future Precipitation"],
+                        color=["#1f77b4", "#d62728"],
+                    )
+                    st.markdown(
+                        "Wind speed (in m*s-1)",
+                    )
+                    st.line_chart(
+                        df_data,
+                        x="Month",
+                        y=["Present Day Wind Speed", "Future Wind Speed"],
+                        color=["#1f77b4", "#d62728"],
+                    )
+                    # Determine the model information string based on climatemodel_name
+                    if stored_climatemodel_name == 'AWI_CM':
+                        model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
+                    elif stored_climatemodel_name == 'tco1279':
+                        model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
+                    elif stored_climatemodel_name == 'tco319':
+                        model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
+                    else:
+                        model_info = 'unknown climate model'
 
-                    # Initialize the spinner outside, but we'll use our own progress messages
-                    with st.spinner("Processing your request..."):
-                        # Create StreamHandler with both components
-                        stream_handler = StreamHandler(result_area, reference_area)
+                    with st.expander("Source"):
+                        st.markdown(model_info)
+
+                if config.get('use_high_resolution_climate_model', False):
+                    to_plot = False
+                    try:                             
+                        df_list = data_pocket.data['high_res_climate']['df_list']
+                        to_plot = True
+                    except Exception as e:
+                        logger.warning(f"Error by getting high resolution climate data from data pocket: {e}")
+                    if to_plot:    
+                        figs_climate = plot_climate_data(df_list)
+                        st.markdown("**Climate data:**")
+                        for fig_dict in figs_climate:
+                            st.pyplot(fig_dict['fig'])
+                        
+                        with st.expander("Source"):
+                            st.markdown(figs_climate[0]['source'])
+
+                # Natural Hazards
+                if 'haz_fig' in stored_figs:
+                    st.markdown("**Natural hazards:**")
+                    st.pyplot(stored_figs['haz_fig']['fig'])
+                    with st.expander("Source"):
+                        st.markdown(stored_figs['haz_fig']['source'])
+
+                # Population Data
+                if 'population_plot' in stored_figs:
+                    st.markdown("**Population Data:**")
+                    st.pyplot(stored_figs['population_plot']['fig'])
+                    with st.expander("Source"):
+                        st.markdown(stored_figs['population_plot']['source'])
+        
+        # Download buttons
+        st.markdown("---")  # Add a separator
+        
+        # Get data from session state
+        stored_output = st.session_state['last_output']
+        stored_input_params = st.session_state.get('last_input_params', {})
+        stored_figs = st.session_state.get('last_figs', {})
+        stored_references = st.session_state.get('last_references', {})
+        
+        # Prepare both text and PDF content
+        download_content_text = prepare_download_content(
+            stored_output, stored_input_params, stored_figs, data_pocket, stored_references
+        )
+        
+        download_content_pdf = prepare_pdf_content(
+            stored_output, stored_input_params, stored_figs, data_pocket, stored_references
+        )
+        
+        # Create download buttons with centered layout
+        col1, col2, col3, col4, col5 = st.columns([1, 2, 0.5, 2, 1])
+        with col2:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename_pdf = f"climsight_report_{timestamp}.pdf"
             
-                        # Add a method to update the progress area
-                        def update_progress_ui(message):
-                            progress_area.info(message)
+            st.download_button(
+                label="📥 Download PDF Report",
+                data=download_content_pdf,
+                file_name=filename_pdf,
+                mime="application/pdf",
+                help="Download the complete analysis report as a PDF file",
+                key=f"download_button_pdf_{timestamp}"
+            )
+        
+        with col4:
+            filename_txt = f"climsight_report_{timestamp}.txt"
             
-                        # Attach this method to your StreamHandler
-                        stream_handler.update_progress = update_progress_ui
-            
-                        # Now call llm_request with this enhanced stream_handler
-                        if not skip_llm_call:
-                            output, input_params, content_message, combine_agent_prompt_text = llm_request(
-                                content_message, input_params, config, api_key, api_key_local, 
-                                stream_handler, ipcc_rag_ready, ipcc_rag_db, 
-                                general_rag_ready, general_rag_db, data_pocket,
-                                references=references
-                            )
-            
-                # PLOTTING ADDITIONAL INFORMATION
-                if show_add_info: 
-                    with tab_add:                        
-                        figs = data_pocket.figs
-                        if 'df_data' in data_pocket.df:
-                            df_data = data_pocket.df['df_data']
-                        else:
-                            df_data = None
-                        st.subheader("Additional information", divider='rainbow')
-                        if 'lat' and 'lon' in input_params:
-                            st.markdown(f"**Coordinates:** {input_params['lat']}, {input_params['lon']}")
-                        if 'elevation' in input_params:
-                            st.markdown(f"**Elevation:** {input_params['elevation']} m")
-                        if 'current_land_use' in input_params:  
-                            st.markdown(f"**Current land use:** {input_params['current_land_use']}")
-                        if 'soil' in input_params:
-                            st.markdown(f"**Soil type:** {input_params['soil']}")
-                        if 'biodiv' in input_params:    
-                            st.markdown(f"**Occuring species:** {input_params['biodiv']}")
-                        if 'distance_to_coastline' in input_params:  
-                            st.markdown(f"**Distance to the shore:** {round(float(input_params['distance_to_coastline']), 2)} m")
-                        # Climate Data
-                        if (not config['use_high_resolution_climate_model']) and  (df_data is not None):
-                            st.markdown("**Climate data:**")
-                            st.markdown(
-                                "Near surface temperature (in °C)",
-                            )
-                            st.line_chart(
-                                df_data,
-                                x="Month",
-                                y=["Present Day Temperature", "Future Temperature"],
-                                color=["#1f77b4", "#d62728"],
-                            )
-                            st.markdown(
-                                "Precipitation (in mm)",
-                            )
-                            st.line_chart(
-                                df_data,
-                                x="Month",
-                                y=["Present Day Precipitation", "Future Precipitation"],
-                                color=["#1f77b4", "#d62728"],
-                            )
-                            st.markdown(
-                                "Wind speed (in m*s-1)",
-                            )
-                            st.line_chart(
-                                df_data,
-                                x="Month",
-                                y=["Present Day Wind Speed", "Future Wind Speed"],
-                                color=["#1f77b4", "#d62728"],
-                            )
-                            # Determine the model information string based on climatemodel_name
-                            if climatemodel_name == 'AWI_CM':
-                                model_info = 'AWI-CM-1-1-MR, scenarios: historical and SSP5-8.5'
-                            elif climatemodel_name == 'tco1279':
-                                model_info = 'AWI-CM-3 TCo1279_DART, scenarios: historical (2000-2009) and SSP5-8.5 (2090-2099)'
-                            elif climatemodel_name == 'tco319':
-                                model_info = 'AWI-CM-3 TCo319_DART, scenarios: historical (2000-2009), and SSP5-8.5 (2090-2099)'
-                            else:
-                                model_info = 'unknown climate model'
-
-                            with st.expander("Source"):
-                                st.markdown(model_info)
-
-                        if config['use_high_resolution_climate_model']:
-                            to_plot = False
-                            try:                             
-                                df_list = data_pocket.data['high_res_climate']['df_list']
-                                to_plot = True
-                            except Exception as e:
-                                logger.warning(f"Error by getting high resolution climate data from data pocket: {e}")
-                            if to_plot:    
-                                figs_climate = plot_climate_data(df_list)
-                                st.markdown("**Climate data:**")
-                                for fig_dict in figs_climate:
-                                    st.pyplot(fig_dict['fig'])
-                                
-                                with st.expander("Source"):
-                                    st.markdown(figs_climate[0]['source'])
-
-                                
-                        # Natural Hazards
-                        if 'haz_fig' in figs:
-                            st.markdown("**Natural hazards:**")
-                            st.pyplot(figs['haz_fig']['fig'])
-                            with st.expander("Source"):
-                                st.markdown(figs['haz_fig']['source'])
-
-                        # Population Data
-                        if 'population_plot' in figs:
-                            st.markdown("**Population Data:**")
-                            st.pyplot(figs['population_plot']['fig'])
-                            with st.expander("Source"):
-                                st.markdown(figs['population_plot']['source'])
+            st.download_button(
+                label="📄 Download Text Report",
+                data=download_content_text,
+                file_name=filename_txt,
+                mime="text/plain",
+                help="Download the complete analysis report as a text file",
+                key=f"download_button_txt_{timestamp}"
+            )
                             
     return

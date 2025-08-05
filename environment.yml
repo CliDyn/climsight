@@ -32,4 +32,5 @@ dependencies:
     - wikipedia
     - scipy
     - pyproj
+    - reportlab
     - aitta-client

@@ -19,6 +19,11 @@ from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
+
+#Import tools
+from tools.python_repl import create_python_repl_tool
+from tools.image_viewer import create_image_viewer_tool
+
 #import requests
 #from bs4 import BeautifulSoup
 #from urllib.parse import quote_plus
@@ -27,6 +32,10 @@ from langchain.document_loaders import WikipediaLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+#Import for working Path
+import uuid
+import streamlit as st
+from pathlib import Path
 try:
     from aitta_client import Model, Client
     from aitta_client.authentication import APIKeyAccessTokenSource
@@ -60,26 +69,101 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     if "o1" in config['model_name_tools']:
         temperature = 1
 
+
+    if 'session_uuid' not in st.session_state:
+        st.session_state.session_uuid = str(uuid.uuid4())
+
+    # Create working directory
+    work_dir = Path("tmp/sandbox") / st.session_state.session_uuid
+    work_dir.mkdir(parents=True, exist_ok=True)
+
     # System prompt
     prompt = f"""
     You are the smart agent of ClimSight. Your task is to retrieve necessary components of the climatic datasets based on the user's request.
-    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search" and "ECOCROP_search" which you can use to retrieve the necessary environmental data components.
+    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search" and "ECOCROP_search" and "python_repl" which you can use to retrieve the necessary environmental data components.
     - "get_data_components" will retrieve the necessary data from the climatic datasets at the location of interest (latitude: {lat}, longitude: {lon}). It accepts an 'environmental_data' parameter to specify the type of data, and a 'months' parameter to specify which months to retrieve data for. The 'months' parameter is a list of month names (e.g., ['Jan', 'Feb', 'Mar']). If 'months' is not specified, data for all months will be retrieved.
     <Important> Call "get_data_components" tool multiple times if necessary, but only within one iteration, [chat_completion -> n * "get_data_components" -> chat_completion] after you recieve the necessary data from wikipedia_search and RAG_search. </Important>
     - "wikipedia_search" will help you determine the necessary data to retrieve with the get_data_components tool.
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
-    call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
+    <Important> call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
+    - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. 
+        <Important> Use this tool when:
+        - Creating visualizations (plots, charts, graphs) of climate data
+        - Performing statistical analysis (means, trends, correlations, standard deviations)
+        - Comparing data between different time periods (e.g., historical vs future projections)
+        - Calculating climate indicators or derived metrics
+        - Any analysis that requires more than simple data retrieval
+        
+        The tool has access to pandas, numpy, matplotlib, and xarray.
+        
+        **IMPORTANT: Climate data is pre-loaded in the Python environment. To see what's available, run:**
+        ```python
+        print(DATA_CATALOG)  # Shows all available climate datasets and their descriptions
+        print(list(locals().keys()))  # Shows all available variables
+        ```
+        The climate data includes historical reference periods and future projections with monthly temperature, 
+        precipitation, and wind data for your specific location.
+        
+        **CRITICAL: Your working directory is available at `work_dir` = '{str(work_dir)}'**
+        **When saving plots, ALWAYS store the full path in a variable for later use!**
+        
+        **CORRECT way to save and reference images:**
+        ```python
+        # Save the plot and store the full path
+        plot_path = f'{{{{work_dir}}}}/my_plot.png'  # Or use Path(work_dir) / 'my_plot.png'
+        plt.savefig(plot_path)
+        print(f"Plot saved to: {{{{plot_path}}}}")  # Verify the path
+        # Now plot_path contains the full path for image_viewer
+        ```
+        
+        **WRONG way (DO NOT do this):**
+        ```python
+        plt.savefig('work_dir/my_plot.png')  # This is just a string, not the actual path!
+        ```
+        </Important>
+
+    - "image_viewer" allows you to analyze saved climate visualizations to extract scientific insights.
+        <Important> Use this tool when:
+        - You have created and saved a visualization using python_repl
+        - You need to describe the patterns shown in a climate plot
+        - You want to extract specific values or trends from a generated figure
+        
+        The tool will provide scientific analysis of the image including:
+        - Data description and quantitative observations
+        - Temporal patterns and climate insights
+        - Key findings and implications
+        
+        **CRITICAL: How to use image_viewer correctly:**
+        1. First save your plot in python_repl and store the path:
+           ```python
+           plot_path = f'{{{{work_dir}}}}/temperature_plot.png'
+           plt.savefig(plot_path)
+           ```
+        2. Then use image_viewer with the VARIABLE containing the path:
+           ```
+           image_viewer(plot_path)  # Use the variable, not a string!
+           ```
+        
+        **NEVER do this:**
+        ```
+        image_viewer('work_dir/plot.png')  # WRONG - this is just a string!
+        ```
+        
+        **Your actual work_dir path is: {str(work_dir)}**
+        **Always use the full path stored in a variable when calling image_viewer!**
+        </Important>
     """
     if config['model_type'] in ("local", "aitta"):
         prompt += f"""
 
-        <Important> Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        <Important> - Tool use order. Always call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed, but only one at a time per turn.; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
         """
     else:
         prompt += f"""
 
-        <Important> ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        <Important> - Tool use order. ALWAYS call FIRST SIMULTANIOUSLY the wikipedia_search, RAG_search and "ECOCROP_search"; it will help you determine the necessary data to retrieve with the get_data_components tool. At second step, call the get_data_components tool with the necessary data.</Important>
+        
         """        
     prompt += f"""
 
@@ -89,6 +173,13 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     Do not include any chain-of-thought reasoning or action steps in your final answer.
     Do not ask the user for any additional information, but you can include into the final answer what kind of information user should provide in the future.
     
+    Additional workflow guidance:
+    - If the user asks for analysis, trends, comparisons, or visualizations, use python_repl after retrieving data to:
+       * Create plots and charts
+       * Calculate statistics (averages, changes, trends)
+       * Compare different time periods
+       * Save any outputs to work_dir
+
     <Important> 
     For the final response try to follow the following format:
     'The [retrieved values of the parameter] for the [object of interest] at [location] is [value for current and future are ...], [according to the Wikipedia article] the required [parameter] for [object of interest] is [value]. [Two sentence of clarification, with criitcal montly-based assessment of the potential changes]'
@@ -635,6 +726,55 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         ),
         args_schema=EcoCropSearchArgs
     )
+
+    python_repl_tool = create_python_repl_tool()
+
+    def inject_climate_context():
+        context = {
+            'lat': lat,
+            'lon': lon,
+            'location_str': state.input_params.get('location_str', ''),
+            'work_dir': str(work_dir),
+        }
+        
+        # Add climate data if available
+        if state.df_list:
+            # Add all dataframes from df_list
+            for i, entry in enumerate(state.df_list):
+                df = entry.get('dataframe')
+                if df is not None:
+                    context[f'climate_df_{i}'] = df
+                    context[f'climate_info_{i}'] = {
+                        'years': entry.get('years_of_averaging', ''),
+                        'description': entry.get('description', ''),
+                        'variables': entry.get('extracted_vars', {})
+                    }
+            
+            # ADD THIS - Build DATA_CATALOG dynamically
+            catalog = "Available climate datasets:\n"
+            for i, entry in enumerate(state.df_list):
+                years = entry.get('years_of_averaging', '')
+                desc = entry.get('description', '')
+                is_main = " (historical reference)" if entry.get('main', False) else ""
+                catalog += f"- climate_df_{i}: {years}{is_main} - {desc}\n"
+            
+            catalog += "\nEach dataset contains monthly values for:\n"
+            if state.df_list and state.df_list[0].get('extracted_vars'):
+                for var_name, var_info in state.df_list[0]['extracted_vars'].items():
+                    catalog += f"- {var_info['full_name']} ({var_info['units']})\n"
+            
+            context['DATA_CATALOG'] = catalog
+                        
+        return context
+
+    # Inject climate context into Python REPL BEFORE agent runs
+    if hasattr(python_repl_tool.func, '__self__'):
+        repl_instance = python_repl_tool.func.__self__
+        context = inject_climate_context()
+        repl_instance.locals.update(context)
+
+
+
     # Initialize the LLM
     if config['model_type'] == "local":
         llm = ChatOpenAI(
@@ -649,11 +789,24 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             model_name=config['model_name_agents'],
             temperature=0.0
         )
+
     elif config['model_type'] == "aitta":
         llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
 
     # List of tools
-    tools = [data_extraction_tool, rag_tool,wikipedia_tool, ecocrop_tool]
+    #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
+    tools = [data_extraction_tool, rag_tool, ecocrop_tool, python_repl_tool]
+
+    #Append image viewer for openai models
+    if config['model_type'] == "openai":
+        try:
+            image_viewer_tool = create_image_viewer_tool(
+                api_key, 
+                config['model_name_agents']  # Use model from config
+            )
+            tools.append(image_viewer_tool)
+        except Exception as e:
+            pass
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n
@@ -719,6 +872,11 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 tool_outputs['ECOCROP_search'] = observation
             if any("FAO, IIASA" not in element for element in state.references):    
                 state.references.append("FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en")    
+        elif action.tool == 'python_repl':            
+            if isinstance(observation, AIMessage):
+                tool_outputs['python_repl'] = observation.content
+            else:
+                tool_outputs['python_repl'] = observation
         if action.tool == 'RAG_search':
             if isinstance(observation, AIMessage):
                 tool_outputs['RAG_search'] = observation.content
