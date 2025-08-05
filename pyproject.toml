@@ -41,6 +41,7 @@ dependencies = [
     "scipy",
     "pyproj",
     "reportlab",
+    "tqdm",
     "aitta-client"
 ]
 

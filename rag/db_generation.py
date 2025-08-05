@@ -3,6 +3,7 @@
 
 import os
 import logging
+import tqdm
 import yaml
 import re
 
@@ -141,22 +142,18 @@ def split_docs(documents, chunk_size=2000, chunk_overlap=200, separators=[" ", "
     return docs
 
 
-def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, aitta_url, model_type, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
+def chunk_documents(document_path, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
     """
-    Chunks and embeds documents from the specified directory using provided embedding function.
+    Chunks and documents from the specified directory.
 
     Args:
     - document_path (str): The path to the directory containing the documents.
-    - embedding_model (str): The embedding model name to use for generating embeddings.
-    - openai_api_key (str): OpenAI API key for OpenAI models.
-    - aitta_url (str): AITTA API URL for open models.
-    - model_type (str): The type of embedding model backend (e.g., 'openai', 'aitta').
     - chunk_size (int): maximum number of characters per chunk. Default: 2000.
     - chunk_overlap (int): number of characters to overlap per chunk. Default: 200.
     - separators (list): list of characters where text can be split. Default: [" ", ",", "\n"]
 
     Returns:
-    - list: A list of documents with embeddings.
+    - list: A list of chunked documents.
     """
     # load documents
     file_names = get_file_names(document_path)
@@ -167,7 +164,7 @@ def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, ai
         all_documents.extend(documents)  # save all of them into one
 
     if not all_documents:
-        logger.info("No documents found for chunking and embedding.")
+        logger.info("No documents found for chunking.")
         return []
 
     # Chunk documents
@@ -179,28 +176,7 @@ def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, ai
     )
 
     logger.info(f"Chunked documents into {len(chunked_docs)} pieces.")
-
-    # Create embedding model using the utility function
-    try:
-        aitta_api_key = os.getenv('AITTA_API_KEY')
-        embedding_item = create_embeddings(
-            embedding_model=embedding_model,
-            openai_api_key=openai_api_key,
-            aitta_api_key=aitta_api_key,
-            aitta_url=aitta_url,
-            model_type=model_type
-        )
-        # embedding documents 
-        embedded_docs = []
-        for doc in chunked_docs:
-            embedding = embedding_item.embed_documents([doc.page_content])[0]  # embed_documents returns a list, so we take the first element
-            embedded_docs.append({"text": doc.page_content, "embedding": embedding, "metadata": doc.metadata})
-    except Exception as e:
-        logger.error(f"Failed to embed document chunks: {e}")
-        return []
-
-    logger.info(f"Embedded {len(embedded_docs)} document chunks.")
-    return embedded_docs
+    return chunked_docs
 
 
 def initialize_rag(config):
@@ -262,17 +238,15 @@ def initialize_rag(config):
             aitta_url=aitta_url,
             model_type=embedding_model_type
         )
-        documents = chunk_and_embed_documents(document_path, embedding_model, openai_api_key, aitta_url, embedding_model_type, chunk_size, chunk_overlap, separators)
-        converted_documents = [
-            Document(page_content=doc['text'], metadata=doc['metadata'])
-            for doc in documents
-        ]
-        rag_db = Chroma.from_documents(
-            documents=converted_documents,
+        documents = chunk_documents(document_path, chunk_size, chunk_overlap, separators)
+        rag_db = Chroma(
+            collection_name="ipcc_collection",
             persist_directory=chroma_path,
-            embedding=langchain_ef,
-            collection_name="ipcc_collection"
+            embedding_function=langchain_ef
         )
+        batch_size = 32
+        for i in tqdm.tqdm(range(0, len(documents), batch_size)):
+            rag_db.add_documents(documents[i:i+batch_size])
         rag_ready = True
         logger.info(f"RAG ready: {rag_ready}")
         logger.info("RAG database has been initialized and documents embedded.")
