@@ -15,6 +15,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.documents.base import Document
 
 from embedding_utils import create_embeddings
+from smart_agent import get_aitta_chat_model
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -199,11 +200,18 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
         #     | ChatOpenAI(model=config['model_name'], api_key=openai_api_key)
         #     | StrOutputParser()
         # )   
+        llm = None
+        if config['model_type'] == 'openai':
+            llm = ChatOpenAI(model=config['model_name_rag'], api_key=openai_api_key)
+        elif config['model_type'] == 'aitta':
+            llm = get_aitta_chat_model(config['model_name_rag'])
+        else:
+            raise NotImplementedError(f"Unknown model type: {config['model_type']}")
         rag_chain = (
             {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
             | RunnableLambda(inspect)
             | custom_rag_prompt
-            | ChatOpenAI(model=config['model_name_rag'], api_key=openai_api_key)
+            | llm
             | StrOutputParser()
         )
         rag_response = rag_chain.invoke(input_params['user_message'])
