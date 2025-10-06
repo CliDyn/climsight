@@ -1,7 +1,7 @@
 # climsight_classes.py
 
 from pydantic import BaseModel
-from typing import Sequence
+from typing import Sequence, Literal
 from typing import Annotated
 from langchain_core.messages import BaseMessage
 import operator
@@ -26,3 +26,6 @@ class AgentState(BaseModel):
     references: list = [] # List of references
     combine_agent_prompt_text: str = ""
     # stream_handler: StreamHandler  # Uncomment if needed
+
+class SmartAgentState(AgentState):
+    next_agent: Literal["researcher", "data_agent", "__end__"] = "__end__"  # Supervisor decision
