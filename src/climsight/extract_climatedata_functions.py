@@ -165,7 +165,9 @@ def post_process_data(df, df_vars):
     
     # Round other variables to 2 decimal places
     for var in df_processed.columns:
-        df_processed[var] = df_processed[var].round(2)
+        #df_processed[var] = df_processed[var].round(2)
+        if pd.api.types.is_numeric_dtype(df_processed[var]):
+            df_processed[var] = df_processed[var].round(2)
     
     return df_processed, df_vars_processed
 

@@ -109,7 +109,8 @@ def create_python_repl_tool():
         description=(
             "Execute Python code for data analysis and calculations. "
             "Available: pandas as pd, numpy as np, matplotlib.pyplot as plt, xarray as xr. "
-            "Variables and imports persist between executions like a Jupyter notebook."
+            "Variables and imports persist between executions like a Jupyter notebook. "
+            "IMPORTANT: This tool is for calculations and data manipulation only. Do not generate plots or images."
             + vars_description
         ),
         args_schema=PythonREPLInput

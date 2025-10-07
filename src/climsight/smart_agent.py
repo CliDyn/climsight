@@ -22,7 +22,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 #Import tools
 from tools.python_repl import create_python_repl_tool
-from tools.image_viewer import create_image_viewer_tool
+# from tools.image_viewer import create_image_viewer_tool
 
 #import requests
 #from bs4 import BeautifulSoup
@@ -87,72 +87,56 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     <Important> call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
-    - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. 
-        <Important> Use this tool when:
-        - Creating visualizations (plots, charts, graphs) of climate data
+    - "python_repl" allows you to execute Python code for data analysis and calculations.
+        <Important> Use this tool for:
         - Performing statistical analysis (means, trends, correlations, standard deviations)
         - Comparing data between different time periods (e.g., historical vs future projections)
         - Calculating climate indicators or derived metrics
-        - Any analysis that requires more than simple data retrieval
-        
-        The tool has access to pandas, numpy, matplotlib, and xarray.
-        
+        - Any complex analysis that requires more than simple data retrieval.
+
+        The tool has access to pandas, numpy, and xarray.
+
+        **CRITICAL: Do NOT attempt to create plots, charts, or save any kind of images with this tool. It is for numerical calculations and data processing only.**
+
         **IMPORTANT: Climate data is pre-loaded in the Python environment. To see what's available, run:**
         ```python
         print(DATA_CATALOG)  # Shows all available climate datasets and their descriptions
         print(list(locals().keys()))  # Shows all available variables
         ```
-        The climate data includes historical reference periods and future projections with monthly temperature, 
+        The climate data includes historical reference periods and future projections with monthly temperature,
         precipitation, and wind data for your specific location.
-        
-        **CRITICAL: Your working directory is available at `work_dir` = '{str(work_dir)}'**
-        **When saving plots, ALWAYS store the full path in a variable for later use!**
-        
-        **CORRECT way to save and reference images:**
-        ```python
-        # Save the plot and store the full path
-        plot_path = f'{{{{work_dir}}}}/my_plot.png'  # Or use Path(work_dir) / 'my_plot.png'
-        plt.savefig(plot_path)
-        print(f"Plot saved to: {{{{plot_path}}}}")  # Verify the path
-        # Now plot_path contains the full path for image_viewer
-        ```
-        
-        **WRONG way (DO NOT do this):**
-        ```python
-        plt.savefig('work_dir/my_plot.png')  # This is just a string, not the actual path!
-        ```
         </Important>
 
-    - "image_viewer" allows you to analyze saved climate visualizations to extract scientific insights.
-        <Important> Use this tool when:
-        - You have created and saved a visualization using python_repl
-        - You need to describe the patterns shown in a climate plot
-        - You want to extract specific values or trends from a generated figure
-        
-        The tool will provide scientific analysis of the image including:
-        - Data description and quantitative observations
-        - Temporal patterns and climate insights
-        - Key findings and implications
-        
-        **CRITICAL: How to use image_viewer correctly:**
-        1. First save your plot in python_repl and store the path:
-           ```python
-           plot_path = f'{{{{work_dir}}}}/temperature_plot.png'
-           plt.savefig(plot_path)
-           ```
-        2. Then use image_viewer with the VARIABLE containing the path:
-           ```
-           image_viewer(plot_path)  # Use the variable, not a string!
-           ```
-        
-        **NEVER do this:**
-        ```
-        image_viewer('work_dir/plot.png')  # WRONG - this is just a string!
-        ```
-        
-        **Your actual work_dir path is: {str(work_dir)}**
-        **Always use the full path stored in a variable when calling image_viewer!**
-        </Important>
+# - "image_viewer" allows you to analyze saved climate visualizations to extract scientific insights.
+#     <Important> Use this tool when:
+#     - You have created and saved a visualization using python_repl
+#     - You need to describe the patterns shown in a climate plot
+#     - You want to extract specific values or trends from a generated figure
+#
+#     The tool will provide scientific analysis of the image including:
+#     - Data description and quantitative observations
+#     - Temporal patterns and climate insights
+#     - Key findings and implications
+#
+#     **CRITICAL: How to use image_viewer correctly:**
+#     1. First save your plot in python_repl and store the path:
+#        ```python
+#        plot_path = f'{{{{work_dir}}}}/temperature_plot.png'
+#        plt.savefig(plot_path)
+#        ```
+#     2. Then use image_viewer with the VARIABLE containing the path:
+#        ```
+#        image_viewer(plot_path)  # Use the variable, not a string!
+#        ```
+#
+#     **NEVER do this:**
+#     ```
+#     image_viewer('work_dir/plot.png')  # WRONG - this is just a string!
+#     ```
+#
+#     **Your actual work_dir path is: {str(work_dir)}**
+#     **Always use the full path stored in a variable when calling image_viewer!**
+#     </Important>
     """
     if config['model_type'] in ("local", "aitta"):
         prompt += f"""
@@ -174,11 +158,9 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     Do not ask the user for any additional information, but you can include into the final answer what kind of information user should provide in the future.
     
     Additional workflow guidance:
-    - If the user asks for analysis, trends, comparisons, or visualizations, use python_repl after retrieving data to:
-       * Create plots and charts
+    - If the user asks for analysis, trends, or comparisons, use python_repl after retrieving data to:
        * Calculate statistics (averages, changes, trends)
        * Compare different time periods
-       * Save any outputs to work_dir
 
     <Important> 
     For the final response try to follow the following format:
@@ -798,15 +780,15 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     tools = [data_extraction_tool, rag_tool, ecocrop_tool, python_repl_tool]
 
     #Append image viewer for openai models
-    if config['model_type'] == "openai":
-        try:
-            image_viewer_tool = create_image_viewer_tool(
-                api_key, 
-                config['model_name_agents']  # Use model from config
-            )
-            tools.append(image_viewer_tool)
-        except Exception as e:
-            pass
+    # if config['model_type'] == "openai":
+    #     try:
+    #         image_viewer_tool = create_image_viewer_tool(
+    #             api_key,
+    #             config['model_name_agents']  # Use model from config
+    #         )
+    #         tools.append(image_viewer_tool)
+    #     except Exception as e:
+    #         pass
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n
