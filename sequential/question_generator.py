@@ -16,12 +16,7 @@ from dotenv import load_dotenv
 
 # Import LangChain components
 from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain_core.messages import HumanMessage, SystemMessage
 
 # Import geo functions
 import sys
@@ -35,8 +30,8 @@ logger = logging.getLogger(__name__)
 # Load environment variables
 load_dotenv()
 
-model_name = "gpt-4.1-nano"#"gpt-4.1"
-llm_temperature = 1
+model_name = "gpt-5"#"gpt-4.1"
+llm_temperature = 0.3
 
 # Categories and their counts
 CATEGORIES = [
@@ -52,8 +47,27 @@ CATEGORIES = [
     "Financial and Insurance Risk"
 ]
 
-QUESTION_TYPES = ["general", "specific"]
 
+
+QUESTION_TYPES = ["general", "specific", "natural"]
+QUESTIONS_PER_TYPE = 10 
+
+ALL_AREAS=[
+    "Whole World - Includes all major land regions on Earth, spanning every continent from North and South America to Europe, Africa, Asia, Australia, and Antarctica.",
+	"North America - Includes Canada, the United States, Greenland, and Mexico, as well as Central America and the Caribbean.",
+	"South America - Covers all countries of the South American continent, from Colombia and Brazil down to Argentina and Chile.",
+	"Europe - Encompasses the entire European continent from the Atlantic coast to the Ural Mountains, including the European part of Russia.",
+	"Middle East & North Africa - Spans North Africa and the Middle East, stretching from Morocco and Egypt across to Turkey, Saudi Arabia, and Iran.",
+	"Sub-Saharan Africa - Includes all of Africa south of the Sahara Desert, such as Nigeria, Kenya, and South Africa.",
+	"South & Southeast Asia - Covers the Indian subcontinent and Southeast Asia, from India and Pakistan to Thailand, Indonesia, and the Philippines.",
+	"East Asia - Includes China, Mongolia, Japan, and the Korean Peninsula.",
+	"Australia & Oceania - Includes Australia, New Zealand, Papua New Guinea, and the Pacific Island nations.",
+	"Central & Northern Asia - Includes Russia's vast Siberian region and the Central Asian countries such as Kazakhstan and Uzbekistan.",
+    "Antarctica - The entire ice-covered continent around the South Pole, with no permanent population."
+]
+
+AREA_FOR_QUESTIONS =ALL_AREAS[2]
+ 
 # Path to land shapefile (adjust as needed)
 LAND_SHAPEFILE = str(Path(__file__).parent.parent / 'data' / 'natural_earth')
 # Example questions for the prompt
@@ -70,21 +84,40 @@ General format for questions:
 - Be specific about the location and time frame
 - Focus on measurable impacts
 - Include relevant metrics (yield, temperature, precipitation, etc.)
+
+Natural style examples (for everyday/business users):
+- "If I'm running a small vineyard near here, will summers in the 2030s be too hot for our grapes?"
+- "I'm planning a wind farm near this location—do prevailing wind directions look stable in the next decade?"
+- "Will outdoor work days be rained out more often around here in the 2040s?"
+- "I manage a logistics hub near this spot—are stronger winds likely in the 2030s that could affect operations?"
+- "If we expand our ski resort around here, will winters in the 2040s bring less snowfall (via lower precipitation or warmer temperatures)?"
+- "For a rental property near this area, will summer heat waves feel noticeably worse in the next decade?"
+- "We're opening a café with a big terrace at this location—how often should we expect rainy days in the 2030s?"
+- "I'm evaluating rooftop solar near here—will cloudier months become more frequent due to precipitation changes in the 2040s?"
+- "Is gardening near this location going to be tougher in the 2030s because of less regular rainfall?"
+- "Could stronger winds around here in the next decade make cycling commutes harder?"
 """
 
 def generate_llm_prompt() -> str:
     """Generate a prompt for the LLM to create climate questions for all categories."""
     return f"""Generate climate-related questions that can be answered with **monthly climatological means** from a climate model. For each category, provide:
-- 10 general questions
-- 10 specific questions 
+- {QUESTIONS_PER_TYPE} general questions
+- {QUESTIONS_PER_TYPE} specific questions
+- {QUESTIONS_PER_TYPE} natural questions
 
 Every question **must**:
+- Include a "type" field of either "general", "specific", or "natural"
 - Focus only on variables available in the data: temperature, precipitation, wind speed, or wind direction  
   *For **general** questions, you may mention these variables more broadly (e.g., "climate conditions" or "weather patterns") without listing each one explicitly.*  
 - Specify one or more of the three decadal periods (2020-2030, 2030-2040, 2040-2050) or the change between two of them, it is not neccery to include years in the question, you can specify any year range or time period in words between 2020 - 2050, example: next decade
 - Be answerable using those decadal **monthly mean** values (no daily extremes or percentiles), no need to include "monthly mean" in the question
 - Reference a realistic land location and include its latitude and longitude
 - Try to be as specific as possible with focus on particular crop or crop group
+- For **natural** questions:
+  - Use everyday language suitable for non-experts (business owners, residents, travelers).
+  - Keep the focus on the same allowed variables (temperature, precipitation, wind speed/direction).
+  - Prefer relative phrases (next decade, coming decade, over the next ten years, between the current decade and the next, toward the 2040-2050 horizon).
+  - Phrase the question as a practical decision or concern (e.g., operations, comfort, scheduling, property use).
 
 {EXAMPLE_QUESTIONS}
 
@@ -98,18 +131,25 @@ Format your response as a JSON object with the following structure:
     "specific": [
       {{"question": "question text", "lon": longitude, "lat": latitude}},
       ...
-    ]
+    ],
+    "natural": [
+      {{"question": "question text", "lon": longitude, "lat": latitude}},
+      ...
+    ]    
   }},
   ...
 }}
 
 Important guidelines:
-1. Generate 10 general and 10 specific questions for each category
+0. Region to focus on: {AREA_FOR_QUESTIONS}\nAll generated questions must refer to locations inside: {AREA_FOR_QUESTIONS}.
+1. Generate {QUESTIONS_PER_TYPE} general and {QUESTIONS_PER_TYPE} specific questions and {QUESTIONS_PER_TYPE} natural questions for each category
 2. Choose realistic coordinates on land (not in oceans, seas, or large lakes)
 3. Ensure questions are specific to the category and location
 4. Include a variety of locations around the world
 5. Focus on measurable climate impacts
 6. Consider different time horizons (near-term (2020-2030), mid-century (2030-2040))
+7. Do not include any coordinates in the question text
+8. Prefer relative phrases (next decade, coming decade, over the next ten years, between the current decade and the next, toward the 2040-2050 horizon).
 
 Categories to generate questions for:
 {', '.join(CATEGORIES)}
@@ -192,39 +232,45 @@ def generate_questions() -> Dict:
         # Generate prompt for all categories
         prompt = generate_llm_prompt()
         
+        llm_kwargs = {
+            'model': model_name,
+            'temperature': llm_temperature,
+        }
+        if "gpt-5" in model_name:
+            llm_kwargs.update({
+                'verbosity': "low",
+                'reasoning_effort': "minimal",
+                })
+
         # Create LLM instance
         llm = ChatOpenAI(
             openai_api_key=api_key,
-            model_name=model_name,
+            **llm_kwargs,
             streaming=False,
-            temperature=llm_temperature
         )
-        
-        # Create prompt template
-        system_message_prompt = SystemMessagePromptTemplate.from_template(
-            "You are a helpful assistant that generates high-quality, specific climate-related questions "
-            "with appropriate geographic locations. You always respond with valid JSON."
-        )
-        human_message_prompt = HumanMessagePromptTemplate.from_template("{prompt}")
-        chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
-        
-        # Create and run chain
-        chain = LLMChain(
-            llm=llm,
-            prompt=chat_prompt,
-            verbose=True,
-        )
-        
+
+        # Create messages for the LLM
+        messages = [
+            SystemMessage(content=(
+                "You are a helpful assistant that generates high-quality, specific climate-related questions "
+                "with appropriate geographic locations. You always respond with valid JSON."
+            )),
+            HumanMessage(content=prompt)
+        ]
+
         logger.info("Generating all questions in a single request...")
-        response = chain.run(prompt=prompt)
-        
+        response = llm.invoke(messages)
+
+        # Extract content from AIMessage response
+        response_text = response.content
+
         # Clean up the response to handle potential markdown code blocks
-        if '```json' in response:
-            content = response.split('```json')[1].split('```')[0]
-        elif '```' in response:
-            content = response.split('```')[1].split('```')[0]
+        if '```json' in response_text:
+            content = response_text.split('```json')[1].split('```')[0]
+        elif '```' in response_text:
+            content = response_text.split('```')[1].split('```')[0]
         else:
-            content = response
+            content = response_text
         
         # Parse the response
         all_questions = json.loads(content)
@@ -300,10 +346,11 @@ def validate_questions_file(file_path: str) -> dict:
         # Process each category
         for category, types in data.get('themes', data).items():
             if isinstance(types, dict):
-                stats['categories'][category] = {'general': 0, 'specific': 0, 'invalid': []}
+                stats['categories'][category] = {t: 0 for t in QUESTION_TYPES}
+                stats['categories'][category]['invalid'] = []
                 
                 for q_type, questions in types.items():
-                    if q_type in ['general', 'specific'] and isinstance(questions, list):
+                    if q_type in QUESTION_TYPES and isinstance(questions, list):
                         for i, q in enumerate(questions):
                             stats['total_questions'] += 1
                             stats['categories'][category][q_type] += 1
@@ -317,6 +364,7 @@ def validate_questions_file(file_path: str) -> dict:
                                     
                                 if not is_valid_location(lat, lon):
                                     stats['invalid_questions'] += 1
+                                    logger.warning(f"Location ({lat}, {lon}) is not on land for question: {q.get('question', 'No question text')}")
                                     stats['categories'][category]['invalid'].append({
                                         'type': q_type,
                                         'index': i,
@@ -337,6 +385,7 @@ def validate_questions_file(file_path: str) -> dict:
                                     
                             except Exception as e:
                                 stats['invalid_questions'] += 1
+                                logger.warning(f"Error validating question: {q.get('question', 'No question text')}. Error: {e}")
                                 stats['categories'][category]['invalid'].append({
                                     'type': q_type,
                                     'index': i,
@@ -366,11 +415,11 @@ def print_validation_report(stats: dict):
     # By category
     print("\nQuestions by category:")
     for category, counts in stats['categories'].items():
-        total = counts['general'] + counts['specific']
+        total = sum(counts.get(t, 0) for t in QUESTION_TYPES)
         invalid = len(counts['invalid'])
         print(f"\n{category}:")
-        print(f"  - General: {counts['general']}")
-        print(f"  - Specific: {counts['specific']}")
+        for t in QUESTION_TYPES:
+            print(f"  - {t.capitalize()}: {counts.get(t, 0)}")
         print(f"  - Invalid: {invalid} ({(invalid/total)*100:.1f}%)")
     
     # Invalid locations
@@ -408,9 +457,10 @@ def fix_questions_file(file_path: str) -> dict:
 
         for category, types in data.get('themes', data).items():
             if isinstance(types, dict):
-                stats['categories'][category] = {'general': 0, 'specific': 0, 'fixed': []}
+                stats['categories'][category] = {t: 0 for t in QUESTION_TYPES}
+                stats['categories'][category]['fixed'] = []
                 for q_type, questions in types.items():
-                    if q_type in ['general', 'specific'] and isinstance(questions, list):
+                    if q_type in QUESTION_TYPES and isinstance(questions, list):
                         for i, q in enumerate(questions):
                             stats['total_questions'] += 1
                             lat = q.get('lat')
