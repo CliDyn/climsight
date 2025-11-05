@@ -11,3 +11,5 @@ rag_db/
 rag_articles/
 .*
 *.log
+venv311
+venv

@@ -562,7 +562,12 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         retriever = vectorstore.as_retriever()
 
         # Retrieve relevant documents
-        retrieved_docs = retriever.get_relevant_documents(query)
+        # Use invoke() for newer LangChain versions, fallback to get_relevant_documents() for older
+        try:
+            retrieved_docs = retriever.invoke(query)
+        except AttributeError:
+            retrieved_docs = retriever.get_relevant_documents(query)
+
         if not retrieved_docs:
             return "No relevant documents found for the query."
         

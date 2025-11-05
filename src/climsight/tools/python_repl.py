@@ -85,7 +85,10 @@ def create_python_repl_tool():
     Returns:
         StructuredTool configured for Python code execution
     """
-    from langchain.tools import StructuredTool
+    try:
+        from langchain.tools import StructuredTool
+    except ImportError:
+        from langchain_core.tools import StructuredTool
     from pydantic import BaseModel, Field
     
     class PythonREPLInput(BaseModel):
