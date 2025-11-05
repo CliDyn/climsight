@@ -1,4 +1,4 @@
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks.base import BaseCallbackHandler
 
 class StreamHandler(BaseCallbackHandler):
     """

@@ -8,14 +8,22 @@ import os
 import ast
 from typing import Union
 
-from langchain.agents import AgentExecutor, create_openai_tools_agent, Tool
+try:
+    from langchain.agents import AgentExecutor, create_openai_tools_agent, Tool
+except ImportError:
+    from langchain_classic.agents import AgentExecutor, create_openai_tools_agent, Tool
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
 from langchain_community.document_loaders import WikipediaLoader
 from langchain_community.utilities import WikipediaAPIWrapper
-from langchain.schema import AIMessage
-from langchain.chains import RetrievalQA
+from langchain_core.messages import AIMessage
+
+try:
+    from langchain.chains import RetrievalQA
+except ImportError:
+    from langchain_classic.chains import RetrievalQA
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
@@ -27,8 +35,8 @@ from tools.image_viewer import create_image_viewer_tool
 #import requests
 #from bs4 import BeautifulSoup
 #from urllib.parse import quote_plus
-#from langchain.schema import Document
-from langchain.document_loaders import WikipediaLoader
+#from langchain_core.documents import Document
+# WikipediaLoader already imported above at line 15
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
