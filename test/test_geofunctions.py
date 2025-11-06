@@ -36,7 +36,8 @@ from geo_functions import (
 )
 
 config_path = '../config.yml'
-test_config_path = 'config_test_geofunctions.yml'
+# Use absolute path based on test file location
+test_config_path = os.path.join(os.path.dirname(__file__), 'config_test_geofunctions.yml')
 
 def test_config_files_exist():
     assert os.path.exists(config_path), f"Configuration file does not exist: {config_path}"
