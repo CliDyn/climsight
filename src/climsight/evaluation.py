@@ -15,16 +15,30 @@ import re
 import numpy as np
 
 from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
+try:
+    from langchain.prompts import PromptTemplate
+except ImportError:
+    from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 
-from langchain.chains import LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+try:
+    from langchain.chains import LLMChain
+except ImportError:
+    from langchain_classic.chains import LLMChain
+
+try:
+    from langchain.prompts.chat import (
+        ChatPromptTemplate,
+        SystemMessagePromptTemplate,
+        HumanMessagePromptTemplate,
+    )
+except ImportError:
+    from langchain_core.prompts.chat import (
+        ChatPromptTemplate,
+        SystemMessagePromptTemplate,
+        HumanMessagePromptTemplate,
+    )
 
 #Initialize logging at the beginning of your main application
 logger = logging.getLogger(__name__)

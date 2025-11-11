@@ -163,9 +163,10 @@ def post_process_data(df, df_vars):
         df_processed['wind_speed'] = wind_speed.round(2)
         df_processed['wind_direction'] = wind_direction.round(2)
     
-    # Round other variables to 2 decimal places
+    # Round other variables to 2 decimal places (skip non-numeric columns like 'Month')
     for var in df_processed.columns:
-        df_processed[var] = df_processed[var].round(2)
+        if var != 'Month' and pd.api.types.is_numeric_dtype(df_processed[var]):
+            df_processed[var] = df_processed[var].round(2)
     
     return df_processed, df_vars_processed
 
@@ -269,24 +270,28 @@ def extract_all_data(input_files, desired_lon, desired_lat, variable_mapping, mo
 def prepare_data_agent_response(df_list):
     """
     Prepares the data_agent_response dictionary from the extracted DataFrames.
-    
+
     Parameters:
     - df_list: List of dictionaries containing metadata and DataFrames for each file.
-    
+
     Returns:
     - data_agent_response: Dictionary with 'input_params' and 'content_message'.
     """
-  
+
     response2llm = {
         'input_params': {},
         'content_message': ""
     }
-    
+
     total_simulations = len(df_list)
     # Add dataframes to  input parameters from the all files
     for i, entry in enumerate(df_list):
         # rename columns and add units
         df = rename_columns(entry['dataframe'], entry['extracted_vars'])
+        # Convert all columns except 'Month' to numeric, forcing errors to NaN
+        for col in df.columns:
+            if col != 'Month' and not col.lower().startswith('month'):
+                df[col] = pd.to_numeric(df[col], errors='coerce')
         # Convert the renamed DataFrame to JSON
         df_json = df.to_json(orient='records', indent=2)
         sim_name = 'simulation'+str(i+1)
@@ -311,6 +316,11 @@ def prepare_data_agent_response(df_list):
             continue
         df_main = df_list[main_index]['dataframe'].copy()
         df = entry['dataframe'].copy()
+        # Convert all columns except 'Month' to numeric first
+        for col in df.columns:
+            if col != 'Month' and not col.lower().startswith('month'):
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+                df_main[col] = pd.to_numeric(df_main[col], errors='coerce')
         numeric_cols = df.select_dtypes(include=['number']).columns
         df = df[numeric_cols] - df_main[numeric_cols]
         # rename columns and add units

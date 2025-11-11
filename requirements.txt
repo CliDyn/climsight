@@ -1,0 +1,57 @@
+# ClimSight Dependencies
+# Generated from pyproject.toml
+# Install with: pip install -r requirements.txt
+
+# Web Framework
+streamlit
+streamlit-folium
+
+# Climate & Geospatial Data Processing
+xarray
+netcdf4
+geopandas
+pyproj
+geopy
+osmnx
+folium
+
+# Data Science & Numerical Computing
+pandas
+numpy
+scipy
+dask
+matplotlib
+
+# LLM & AI Framework
+# Note: Using LangChain 1.0+ with updated import paths
+# Legacy components (LLMChain, agents) are now in langchain-classic
+langchain
+langchain-classic
+langchain-community
+langchain-openai
+langchain-chroma
+langchain-core
+langchain-text-splitters
+langgraph
+openai
+pydantic
+
+# Web Scraping & Data Retrieval
+bs4
+wikipedia
+requests
+requests-mock
+
+# PDF Generation
+reportlab
+
+# Optional: CSC's AITTA Platform (local/custom AI models)
+# Uncomment if you need CSC AITTA integration
+# aitta-client
+
+# Development & Testing
+pytest
+pyyaml
+
+# Package Management
+pip

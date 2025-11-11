@@ -229,8 +229,18 @@ def get_adress_string(location):
     location (dict): A dictionary containing the location address information.
 
     Returns:
-    tuple: A tuple containing three strings.
+    tuple: A tuple containing three strings, or (None, None, None) if address is unavailable.
     """
+    # Check if location has the expected structure
+    if not location or 'features' not in location:
+        return None, None, None
+
+    if not location['features'] or len(location['features']) == 0:
+        return None, None, None
+
+    if 'properties' not in location['features'][0] or 'address' not in location['features'][0]['properties']:
+        return None, None, None
+
     address = location['features'][0]['properties']['address']
 
     location_str = "Address: "
@@ -271,10 +281,21 @@ def get_location_details(location):
     location (dict): A dictionary containing the location address information.
 
     Returns:
-    extracted_properties: A dictionary containing five elements.
+    extracted_properties: A dictionary containing properties, or empty dict if unavailable.
     """
+    # Check if location has the expected structure
+    if not location or 'features' not in location:
+        return {}
+
+    if not location['features'] or len(location['features']) == 0:
+        return {}
+
+    if 'properties' not in location['features'][0]:
+        return {}
+
     properties = location['features'][0]['properties']
-    extracted_properties = {key: properties[key] for key in ['osm_type', 'category', 'type', 'extratags']} #, 'namedetails']}
+    # Extract only the keys that exist in properties
+    extracted_properties = {key: properties.get(key, None) for key in ['osm_type', 'category', 'type', 'extratags']} #, 'namedetails']}
 
     return extracted_properties
 

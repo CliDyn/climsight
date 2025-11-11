@@ -21,12 +21,23 @@ from data_container import DataContainer
 
 # import langchain functions
 # from langchain_community.chat_models import ChatOpenAI
-from langchain.chains import LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+try:
+    from langchain.chains import LLMChain
+except ImportError:
+    from langchain_classic.chains import LLMChain
+
+try:
+    from langchain.prompts.chat import (
+        ChatPromptTemplate,
+        SystemMessagePromptTemplate,
+        HumanMessagePromptTemplate,
+    )
+except ImportError:
+    from langchain_core.prompts.chat import (
+        ChatPromptTemplate,
+        SystemMessagePromptTemplate,
+        HumanMessagePromptTemplate,
+    )
 # import components for used by agent
 from pydantic import BaseModel
 #from typing import Annotated
@@ -134,13 +145,21 @@ def location_request(config, lat, lon):
     except Exception as e:
         logging.error(f"Unexpected error in get_location: {e}")
         raise RuntimeError(f"Unexpected error in get_location: {e}")
-    ##  == adress 
-    logger.debug(f"get_adress_string from: {lat}, {lon}")        
+    ##  == adress
+    logger.debug(f"get_adress_string from: {lat}, {lon}")
     try:
         location_str, location_str_for_print, country = get_adress_string(location)
+        # Handle cases where address is not available
+        if location_str is None:
+            location_str = "Address information not available"
+            location_str_for_print = "**Address:** Not available"
+            country = ""
     except Exception as e:
         logging.error(f"Unexpected error in get_adress_string: {e}")
-        raise RuntimeError(f"Unexpected error in get_adress_string: {e}")
+        # Don't raise, just set default values
+        location_str = "Address information not available"
+        location_str_for_print = "**Address:** Not available"
+        country = ""
 
     logger.debug(f"is_point_onland from: {lat}, {lon}")            
     try:
@@ -150,13 +169,17 @@ def location_request(config, lat, lon):
         raise RuntimeError(f"Unexpected error in where_is_point: {e}")
 
     ##  == location details
-    logger.debug(f"get_location_details")            
+    logger.debug(f"get_location_details")
     try:
         add_properties = get_location_details(location)
+        # Handle cases where location details are not available
+        if not add_properties:
+            add_properties = "Location details not available"
     except Exception as e:
         logging.error(f"Unexpected error in get_location_details: {e}")
-        raise RuntimeError(f"Unexpected error in get_location_details: {e}")
-    
+        # Don't raise, just set default value
+        add_properties = "Location details not available"
+
     content_message = """
         Location: latitude = {lat}, longitude = {lon} \n
         Adress: {location_str} \n
@@ -257,13 +280,21 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     except Exception as e:
         logging.error(f"Unexpected error in get_location: {e}")
         raise RuntimeError(f"Unexpected error in get_location: {e}")
-    ##  == adress 
-    logger.debug(f"get_adress_string from: {lat}, {lon}")        
+    ##  == adress
+    logger.debug(f"get_adress_string from: {lat}, {lon}")
     try:
         location_str, location_str_for_print, country = get_adress_string(location)
+        # Handle cases where address is not available
+        if location_str is None:
+            location_str = "Address information not available"
+            location_str_for_print = "**Address:** Not available"
+            country = ""
     except Exception as e:
         logging.error(f"Unexpected error in get_adress_string: {e}")
-        raise RuntimeError(f"Unexpected error in get_adress_string: {e}")
+        # Don't raise, just set default values
+        location_str = "Address information not available"
+        location_str_for_print = "**Address:** Not available"
+        country = ""
 
     yield f"**Coordinates:** {round(lat, 4)}, {round(lon, 4)}"
     ##  == wet / dry
@@ -283,13 +314,17 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     
     
     ##  == location details
-    logger.debug(f"get_location_details")            
+    logger.debug(f"get_location_details")
     try:
         add_properties = get_location_details(location)
+        # Handle cases where location details are not available
+        if not add_properties:
+            add_properties = "Location details not available"
     except Exception as e:
         logging.error(f"Unexpected error in get_location_details: {e}")
-        raise RuntimeError(f"Unexpected error in get_location_details: {e}")
-    
+        # Don't raise, just set default value
+        add_properties = "Location details not available"
+
     #if is_on_land:  We already have return if is_on_land
     if not is_inland_water:
         yield f"{location_str_for_print}"            

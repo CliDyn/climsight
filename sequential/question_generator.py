@@ -16,12 +16,23 @@ from dotenv import load_dotenv
 
 # Import LangChain components
 from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+try:
+    from langchain.chains import LLMChain
+except ImportError:
+    from langchain_classic.chains import LLMChain
+
+try:
+    from langchain.prompts.chat import (
+        ChatPromptTemplate,
+        SystemMessagePromptTemplate,
+        HumanMessagePromptTemplate,
+    )
+except ImportError:
+    from langchain_core.prompts.chat import (
+        ChatPromptTemplate,
+        SystemMessagePromptTemplate,
+        HumanMessagePromptTemplate,
+    )
 
 # Import geo functions
 import sys
