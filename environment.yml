@@ -33,4 +33,7 @@ dependencies:
     - scipy
     - pyproj
     - reportlab
-    - aitta-client
+  # pip-only packages must go under this section:
+    - pip:
+      - aitta-client
+      - langchain_classic
