@@ -106,7 +106,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
 
         # Predefined options
-        options = ["gpt-4.1-nano", "gpt-4o","o3-mini","gpt-4.1", "o1", "o3"]
+        options = ["gpt-5-nano","gpt-5-mini","gpt-5", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
         # Determine the default value and modify the options list if needed
         default_model = config.get('model_name_combine_agent')
         if default_model:

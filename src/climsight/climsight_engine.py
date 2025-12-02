@@ -700,23 +700,6 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             config['model_name_combine_agent'],
             max_completion_tokens=4096
         )
-        # streaming=True,
-        # callbacks=[stream_handler],    
-    '''
-    class AgentState(BaseModel):
-        messages: Annotated[Sequence[BaseMessage], operator.add]  #not in use up to now
-        user: str = "" #user question
-        next: str = "" #list of next actions
-        ipcc_rag_agent_response: str = ""
-        general_rag_agent_response: str = ""
-        data_agent_response: dict = {}
-        zero_agent_response: dict = {}
-        final_answer: str = ""
-        content_message: str = ""
-        input_params: dict = {}
-        smart_agent_response: dict = {}
-        # stream_handler: StreamHandler
-    '''
                
     def zero_rag_agent(state: AgentState, figs = {}):
         logger.debug(f"get_elevation_from_api from: {lat}, {lon}")      

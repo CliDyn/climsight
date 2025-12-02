@@ -3,7 +3,7 @@ model_type: "openai" #"openai / local / aitta
 model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
 model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
 model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
-model_name_combine_agent: "gpt-4.1-nano" #"LumiOpen/Poro" #"gpt-4.1-nano" 
+model_name_combine_agent: "gpt-5-mini" #"LumiOpen/Poro" #"gpt-4.1-nano" 
 model_name_agents: "gpt-4.1-nano" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
@@ -135,6 +135,15 @@ system_role: |
 
     Do not include any Python code, code snippets, or technical implementation details in your response. 
     Focus exclusively on delivering a clear climate impact assessment report with analysis, findings, and recommendations without any programming or code execution references.
+
+    You must produce a complete answer in ONE response.
+
+    Hard rules:
+    - Do NOT ask me questions.
+    - Do NOT request additional input, files, confirmations, or actions.
+    - Do NOT say you can’t proceed due to missing info. If something is missing, make reasonable assumptions and state them briefly.
+    - If multiple interpretations exist, pick the most likely one and continue.
+    - Provide the final result only. No “Would you like…”, no follow-ups.
 system_role_new: |
   ### ROLE
   You are an expert climate-risk analyst who writes formal, self-contained reports for a single, exact location.
