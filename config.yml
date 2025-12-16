@@ -3,37 +3,80 @@ model_type: "openai" #"openai / local / aitta
 model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
 model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
 model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
-model_name_combine_agent: "gpt-5-mini" #"LumiOpen/Poro" #"gpt-4.1-nano" 
+model_name_combine_agent: "gpt-5-mini" #"LumiOpen/Poro" #"gpt-4.1-nano"
 model_name_agents: "gpt-4.1-nano" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
-use_high_resolution_climate_model: true
 use_smart_agent: false
-climate_model_input_files:
-  climatology_IFS_9-FESOM_5-production_2020x_compressed.nc:
-    file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2020x_compressed.nc'
-    years_of_averaging: '2020-2029'
-    description: 'The nextGEMS pre-final simulations for years 2030x..'
-    coordinate_system: 'healpix'
-    source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: FS_9-FESOM_5-production, 2020-2050 .'
-    is_main: true
-  climatology_IFS_9-FESOM_5-production_2030x_compressed.nc:
-    file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2030x_compressed.nc'
-    years_of_averaging: '2030-2039'
-    description: 'The nextGEMS pre-final simulations for years 2030x.'
-    coordinate_system: 'healpix'
-    source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: FS_9-FESOM_5-production, 2020-2050 .'
-  climatology_IFS_9-FESOM_5-production_2040x_compressed.nc:
-    file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2040x_compressed.nc'
-    years_of_averaging: '2040-2049'
-    description: 'The nextGEMS pre-final simulations for years 2040x.'
-    coordinate_system: 'healpix' 
-    source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: FS_9-FESOM_5-production, 2020-2050 .'
-climate_model_variable_mapping:
-    Temperature: mean2t
-    Total Precipitation: tp
-    Wind U: wind_u
-    Wind V: wind_v   
+
+# Climate Data Source Configuration
+# Options: "nextGEMS", "ICCP", "AWI_CM"
+climate_data_source: "nextGEMS"
+
+climate_data_sources:
+  nextGEMS:
+    enabled: true
+    coordinate_system: "healpix"
+    description: "nextGEMS high-resolution climate simulations (IFS-FESOM coupled model)"
+    input_files:
+      climatology_IFS_9-FESOM_5-production_2020x_compressed.nc:
+        file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2020x_compressed.nc'
+        years_of_averaging: '2020-2029'
+        description: 'The nextGEMS pre-final simulations for years 2020x.'
+        coordinate_system: 'healpix'
+        source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: IFS_9-FESOM_5-production, 2020-2050.'
+        is_main: true
+      climatology_IFS_9-FESOM_5-production_2030x_compressed.nc:
+        file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2030x_compressed.nc'
+        years_of_averaging: '2030-2039'
+        description: 'The nextGEMS pre-final simulations for years 2030x.'
+        coordinate_system: 'healpix'
+        source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: IFS_9-FESOM_5-production, 2020-2050.'
+      climatology_IFS_9-FESOM_5-production_2040x_compressed.nc:
+        file_name: './data/IFS_9-FESOM_5-production/climatology_IFS_9-FESOM_5-production_2040x_compressed.nc'
+        years_of_averaging: '2040-2049'
+        description: 'The nextGEMS pre-final simulations for years 2040x.'
+        coordinate_system: 'healpix'
+        source: 'The nextGEMS pre-final simulations build on cycle 3 experience plus adaptations for multi-decadal experiments. Model: IFS_9-FESOM_5-production, 2020-2050.'
+    variable_mapping:
+      Temperature: mean2t
+      Total Precipitation: tp
+      Wind U: wind_u
+      Wind V: wind_v
+
+  ICCP:
+    enabled: true
+    coordinate_system: "regular"
+    description: "ICCP climate reanalysis data on regular lat/lon grid"
+    input_files:
+      # ICCP data files will be added when available
+      # Expected format: regular lat/lon grid (192 x 400)
+      # Variables: 2t (temperature), 10u/10v (wind), tp (precipitation)
+    variable_mapping:
+      Temperature: 2t
+      Wind U: 10u
+      Wind V: 10v
+      # Total Precipitation: tp  # Add when confirmed
+
+  AWI_CM:
+    enabled: true
+    coordinate_system: "regular"
+    description: "AWI-CM CMIP6 climate model data (historical and SSP5-8.5 scenarios)"
+    data_path: "./data/"
+    historical_pattern: "historical"
+    projection_pattern: "ssp585"
+    climatemodel_name: "AWI_CM"
+    variable_mapping:
+      Temperature: tas
+      Precipitation: pr
+      u_wind: uas
+      v_wind: vas
+    dimension_mappings:
+      latitude: "lat"
+      longitude: "lon"
+      time: "month"
+
+# Legacy settings (kept for backwards compatibility, will be migrated automatically)
 data_settings:
     data_path: "./data/"
     historical: "historical"
@@ -41,7 +84,7 @@ data_settings:
 variable_mappings:
     Temperature: "tas"
     Precipitation: "pr"
-    u_wind: "uas" 
+    u_wind: "uas"
     v_wind: "vas"
 dimension_mappings:
     latitude: "lat"

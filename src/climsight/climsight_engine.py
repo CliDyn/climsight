@@ -91,10 +91,17 @@ from climate_functions import (
 from economic_functions import (
    get_population,
    plot_population,
-   x_year_mean_population   
+   x_year_mean_population
 )
 from extract_climatedata_functions import (
     request_climate_data,
+)
+# Import new climate data provider system
+from climate_data_providers import (
+    get_climate_data_provider,
+    get_available_providers,
+    migrate_legacy_config,
+    ClimateDataResult
 )
 
 logger = logging.getLogger(__name__)
@@ -439,61 +446,33 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
             logging.error(f"Unexpected error in population_plot: {e}")
             raise RuntimeError(f"Unexpected error in population_plot: {e}")       
         
-    ##  =================== climate data 
-    # data
-    df_data = {}
-    if config['use_high_resolution_climate_model']:
-        try:
-            data_agent_response, df_list = request_climate_data(config, lon, lat)
-        except Exception as e:
-            logging.error(f"Unexpected error in request_climate_data: {e}")
-            raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
-        data['high_res_climate'] = {
-        'df_list': df_list,
-        'data_agent_response': data_agent_response,
-        'lon': lon,
-        'lat': lat
-        }
+    ##  =================== climate data
+    # Get climate data source from config (supports runtime override)
+    climate_source = config.get('climate_data_source', None)
+    # Migrate legacy config if needed
+    config = migrate_legacy_config(config)
 
-    else:
-        datakeys = list(data)
-        if 'hist' and 'future' not in datakeys:
-            logger.info(f"reading data from: {data_path}")        
-            yield f"reading data"
-            hist, future = load_data(config)
-            data['hist'] = hist
-            data['future'] = future
-        else:
-            logger.info(f"Data are preloaded in data dict")                
-            hist, future = data['hist'], data['future']
-                
-        ## == create pandas dataframe
-        logger.debug(f"extract_climate_data for: {lat, lon}")              
-        try:
-            df_data, data_dict = extract_climate_data(lat, lon, hist, future, config)
-        except Exception as e:
-            logging.error(f"Unexpected error in extract_climate_data: {e}")
-            raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")
-        data_agent_response = {}
-        data_agent_response['content_message'] = """ Current mean monthly temperature for each month: {hist_temp_str} \n
-         Future monthly temperatures for each month at the location: {future_temp_str}\n
-         Current precipitation flux (mm/month): {hist_pr_str} \n
-         Future precipitation flux (mm/month): {future_pr_str} \n
-         Current u wind component (in m/s): {hist_uas_str} \n
-         Future u wind component (in m/s): {future_uas_str} \n
-         Current v wind component (in m/s): {hist_vas_str} \n
-         Future v wind component (in m/s): {future_vas_str} \n 
-         """
-        data_agent_response['input_params'] = {
-        "hist_temp_str": data_dict["hist_Temperature"],
-        "future_temp_str": data_dict["future_Temperature"],
-        "hist_pr_str": data_dict["hist_Precipitation"],
-        "future_pr_str": data_dict["future_Precipitation"],
-        "hist_uas_str": data_dict["hist_u_wind"],
-        "future_uas_str": data_dict["future_u_wind"],
-        "hist_vas_str": data_dict["hist_v_wind"],
-        "future_vas_str": data_dict["future_v_wind"]
+    df_data = {}
+    df_list = []
+
+    try:
+        # Use the new provider system
+        data_agent_response, df_list = request_climate_data(config, lon, lat, source_override=climate_source)
+        data['climate_data'] = {
+            'df_list': df_list,
+            'data_agent_response': data_agent_response,
+            'lon': lon,
+            'lat': lat,
+            'source': climate_source or config.get('climate_data_source', 'nextGEMS')
         }
+        # Also store in legacy key for backwards compatibility
+        data['high_res_climate'] = data['climate_data']
+    except NotImplementedError as e:
+        logger.warning(f"Climate data provider not implemented: {e}")
+        data_agent_response = {'input_params': {}, 'content_message': ''}
+    except Exception as e:
+        logging.error(f"Unexpected error in request_climate_data: {e}")
+        raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
 
     
     ## == policy IS NOT IN USE
@@ -852,70 +831,48 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     def data_agent(state: AgentState, data={}, df={}):
         # data
         # config, lat, lon  -  from the outer function (agent_clim_request(config,...))
-        #ik stream_handler.update_progress("Analyzing climate model data for your location...")        
+        #ik stream_handler.update_progress("Analyzing climate model data for your location...")
+
+        # Get climate source from config (may be overridden at runtime)
+        climate_source = config.get('climate_data_source', 'nextGEMS')
         df_list = []
-        if config['use_high_resolution_climate_model']:
-            try:
-                data_agent_response, df_list = request_climate_data(config, lon, lat)
-            except Exception as e:
-                logging.error(f"Unexpected error in request_climate_data: {e}")
-                raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
-            data['high_res_climate'] = {
-            'df_list': df_list,
-            'data_agent_response': data_agent_response,
-            'lon': lon,
-            'lat': lat
-            }    
+
+        try:
+            # Use unified provider system for all climate data sources
+            data_agent_response, df_list = request_climate_data(config, lon, lat, source_override=climate_source)
+            data['climate_data'] = {
+                'df_list': df_list,
+                'data_agent_response': data_agent_response,
+                'lon': lon,
+                'lat': lat,
+                'source': climate_source
+            }
+            # Also store in legacy key for backwards compatibility
+            data['high_res_climate'] = data['climate_data']
             state.df_list = df_list
-            if 'high_resolution_climate_model' in references['references']:
-                for ref in references['references']['high_resolution_climate_model']:
-                    references['used'].append(ref)
-            
-        else:    
-            datakeys = list(data)
-            if 'hist' and 'future' not in datakeys:
-                logger.info(f"reading data from: {config['data_settings']['data_path']}")        
-                data['hist'], data['future'] = load_data(config)
-            else:
-                logger.info(f"Data are preloaded in data dict")                
 
-            ## == create pandas dataframe
-            logger.debug(f"extract_climate_data for: {lat, lon}")              
-            try:
-                df_data_local, data_dict = extract_climate_data(lat, lon, data['hist'], data['future'], config)
-                df['df_data'] = df_data_local
-            except Exception as e:
-                logging.error(f"Unexpected error in extract_climate_data: {e}")
-                raise RuntimeError(f"Unexpected error in extract_climate_data: {e}")        
-            if 'cmip6_awi_cm' in references['references']:
-                for ref in references['references']['cmip6_awi_cm']:
+            # Add appropriate references based on data source
+            ref_key_map = {
+                'nextGEMS': 'high_resolution_climate_model',
+                'ICCP': 'iccp_climate_data',
+                'AWI_CM': 'cmip6_awi_cm'
+            }
+            ref_key = ref_key_map.get(climate_source, 'high_resolution_climate_model')
+            if ref_key in references['references']:
+                for ref in references['references'][ref_key]:
                     references['used'].append(ref)
-            data_agent_response = {}
-            data_agent_response['input_params'] = {}
-            data_agent_response['content_message'] = ""
 
-            data_agent_response['input_params']["hist_temp_str"]   = data_dict["hist_Temperature"],
-            data_agent_response['input_params']["future_temp_str"] = data_dict["future_Temperature"],
-            data_agent_response['input_params']["hist_pr_str"]     = data_dict["hist_Precipitation"],
-            data_agent_response['input_params']["future_pr_str"]   = data_dict["future_Precipitation"],
-            data_agent_response['input_params']["hist_uas_str"]    = data_dict["hist_u_wind"],
-            data_agent_response['input_params']["future_uas_str"]  = data_dict["future_u_wind"],
-            data_agent_response['input_params']["hist_vas_str"]    = data_dict["hist_v_wind"],
-            data_agent_response['input_params']["future_vas_str"]  = data_dict["future_v_wind"],       
-            data_agent_response['content_message'] += """\n
-            Current mean monthly temperature for each month: {hist_temp_str} \n
-            Future monthly temperatures for each month at the location: {future_temp_str}\n
-            Current precipitation flux (mm/month): {hist_pr_str} \n
-            Future precipitation flux (mm/month): {future_pr_str} \n
-            Current u wind component (in m/s): {hist_uas_str} \n
-            Future u wind component (in m/s): {future_uas_str} \n
-            Current v wind component (in m/s): {hist_vas_str} \n
-            Future v wind component (in m/s): {future_vas_str} \n """
-        
-        logger.info(f"Data agent in work.")
-        
+        except NotImplementedError as e:
+            logger.warning(f"Climate data provider '{climate_source}' not implemented: {e}")
+            data_agent_response = {'input_params': {}, 'content_message': ''}
+        except Exception as e:
+            logging.error(f"Unexpected error in request_climate_data: {e}")
+            raise RuntimeError(f"Unexpected error in request_climate_data: {e}")
+
+        logger.info(f"Data agent in work (source: {climate_source}).")
+
         respond = {'data_agent_response': data_agent_response, 'df_list': df_list}
-    
+
         logger.info(f"data_agent_response: {data_agent_response}")
         return respond
 
