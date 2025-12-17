@@ -6,7 +6,7 @@ Each provider implements a common interface to extract climate data for a given 
 
 Supported providers:
 - NextGEMSProvider: High-resolution nextGEMS data on HEALPix grid
-- ICCPProvider: ICCP reanalysis data on regular lat/lon grid (stub)
+- ICCPProvider: ICCP TCo319-DART climate data on regular lat/lon grid
 - AWICMProvider: AWI-CM CMIP6 model data on regular lat/lon grid
 """
 
@@ -116,6 +116,112 @@ class ClimateDataProvider(ABC):
             True if the provider can be used, False otherwise
         """
         pass
+
+    def _prepare_data_agent_response(self, df_list: List[Dict]) -> Dict:
+        """Prepare the data_agent_response dictionary from extracted DataFrames.
+
+        This is a shared utility method that can be used by providers that follow
+        the standard df_list format (NextGEMS, ICCP, etc.).
+
+        Args:
+            df_list: List of dictionaries with climate data
+
+        Returns:
+            Dictionary with formatted data for LLM consumption
+        """
+        response = {
+            'input_params': {},
+            'content_message': ""
+        }
+
+        if not df_list:
+            return response
+
+        total_simulations = len(df_list)
+
+        # Add dataframes as JSON to input parameters
+        for i, entry in enumerate(df_list):
+            df = self._rename_columns(entry['dataframe'], entry['extracted_vars'])
+            for col in df.columns:
+                if col != 'Month' and not col.lower().startswith('month'):
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+            df_json = df.to_json(orient='records', indent=2)
+            sim_name = f'simulation{i+1}'
+            response['input_params'][sim_name] = df_json
+
+        # Add explanations to content_message
+        for i, entry in enumerate(df_list):
+            sim_name = f'simulation{i+1}'
+            ifmain = ""
+            if entry['main']:
+                ifmain = " This simulation serves as a historical reference to extract its values from other simulations."
+            response['content_message'] += (
+                f"\n\n Climate parameters are obtained from atmospheric model simulations. "
+                f"The climatology is based on the average years: {entry['years_of_averaging']}. "
+                f"{entry['description']}{ifmain} :\n {{{sim_name}}}"
+            )
+
+        # Find main simulation index
+        main_index = 0
+        for i, entry in enumerate(df_list):
+            if entry['main']:
+                main_index = i
+                break
+
+        # Add difference dataframes
+        for i, entry in enumerate(df_list):
+            if entry['main']:
+                continue
+
+            df_main = df_list[main_index]['dataframe'].copy()
+            df = entry['dataframe'].copy()
+
+            for col in df.columns:
+                if col != 'Month' and not col.lower().startswith('month'):
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                    df_main[col] = pd.to_numeric(df_main[col], errors='coerce')
+
+            numeric_cols = df.select_dtypes(include=['number']).columns
+            df_diff = df[numeric_cols] - df_main[numeric_cols]
+            df_diff = self._rename_columns(df_diff, entry['extracted_vars'])
+
+            df_json = df_diff.to_json(orient='records', indent=2)
+            sim_name = f'simulation{total_simulations + i + 1}'
+            response['input_params'][sim_name] = df_json
+
+        # Add difference explanations
+        for i, entry in enumerate(df_list):
+            if entry['main']:
+                continue
+            sim_name = f'simulation{total_simulations + i + 1}'
+            response['content_message'] += (
+                f"\n\n Difference between simulations (changes in climatological parameters (Δ)) "
+                f"for the years {entry['years_of_averaging']} compared to the simulation for "
+                f"{df_list[main_index]['years_of_averaging']}. :\n {{{sim_name}}}"
+            )
+
+        return response
+
+    def _rename_columns(self, df: pd.DataFrame, extracted_vars: Dict) -> pd.DataFrame:
+        """Rename columns to include full names and units.
+
+        Args:
+            df: DataFrame with raw column names
+            extracted_vars: Dictionary mapping variable names to metadata
+
+        Returns:
+            DataFrame with renamed columns
+        """
+        rename_mapping = {}
+        for col in df.columns:
+            if col in extracted_vars:
+                full_name = extracted_vars[col]['full_name']
+                units = extracted_vars[col]['units']
+                rename_mapping[col] = f"{full_name} ({units})"
+            else:
+                rename_mapping[col] = col
+        return df.rename(columns=rename_mapping)
 
 
 class NextGEMSProvider(ClimateDataProvider):
@@ -355,105 +461,18 @@ class NextGEMSProvider(ClimateDataProvider):
             source_description=self.description
         )
 
-    def _prepare_data_agent_response(self, df_list: List[Dict]) -> Dict:
-        """Prepare the data_agent_response dictionary from extracted DataFrames."""
-        response = {
-            'input_params': {},
-            'content_message': ""
-        }
-
-        if not df_list:
-            return response
-
-        total_simulations = len(df_list)
-
-        # Add dataframes as JSON to input parameters
-        for i, entry in enumerate(df_list):
-            df = self._rename_columns(entry['dataframe'], entry['extracted_vars'])
-            for col in df.columns:
-                if col != 'Month' and not col.lower().startswith('month'):
-                    df[col] = pd.to_numeric(df[col], errors='coerce')
-
-            df_json = df.to_json(orient='records', indent=2)
-            sim_name = f'simulation{i+1}'
-            response['input_params'][sim_name] = df_json
-
-        # Add explanations to content_message
-        for i, entry in enumerate(df_list):
-            sim_name = f'simulation{i+1}'
-            ifmain = ""
-            if entry['main']:
-                ifmain = " This simulation serves as a historical reference to extract its values from other simulations."
-            response['content_message'] += (
-                f"\n\n Climate parameters are obtained from atmospheric model simulations. "
-                f"The climatology is based on the average years: {entry['years_of_averaging']}. "
-                f"{entry['description']}{ifmain} :\n {{{sim_name}}}"
-            )
-
-        # Find main simulation index
-        main_index = 0
-        for i, entry in enumerate(df_list):
-            if entry['main']:
-                main_index = i
-                break
-
-        # Add difference dataframes
-        for i, entry in enumerate(df_list):
-            if entry['main']:
-                continue
-
-            df_main = df_list[main_index]['dataframe'].copy()
-            df = entry['dataframe'].copy()
-
-            for col in df.columns:
-                if col != 'Month' and not col.lower().startswith('month'):
-                    df[col] = pd.to_numeric(df[col], errors='coerce')
-                    df_main[col] = pd.to_numeric(df_main[col], errors='coerce')
-
-            numeric_cols = df.select_dtypes(include=['number']).columns
-            df_diff = df[numeric_cols] - df_main[numeric_cols]
-            df_diff = self._rename_columns(df_diff, entry['extracted_vars'])
-
-            df_json = df_diff.to_json(orient='records', indent=2)
-            sim_name = f'simulation{total_simulations + i + 1}'
-            response['input_params'][sim_name] = df_json
-
-        # Add difference explanations
-        for i, entry in enumerate(df_list):
-            if entry['main']:
-                continue
-            sim_name = f'simulation{total_simulations + i + 1}'
-            response['content_message'] += (
-                f"\n\n Difference between simulations (changes in climatological parameters (Δ)) "
-                f"for the years {entry['years_of_averaging']} compared to the simulation for "
-                f"{df_list[main_index]['years_of_averaging']}. :\n {{{sim_name}}}"
-            )
-
-        return response
-
-    def _rename_columns(self, df: pd.DataFrame, extracted_vars: Dict) -> pd.DataFrame:
-        """Rename columns to include full names and units."""
-        rename_mapping = {}
-        for col in df.columns:
-            if col in extracted_vars:
-                full_name = extracted_vars[col]['full_name']
-                units = extracted_vars[col]['units']
-                rename_mapping[col] = f"{full_name} ({units})"
-            else:
-                rename_mapping[col] = col
-        return df.rename(columns=rename_mapping)
-
 
 class ICCPProvider(ClimateDataProvider):
-    """Provider for ICCP climate reanalysis data on regular lat/lon grid.
+    """Provider for ICCP climate data on regular lat/lon grid.
 
-    This is a stub implementation that will be completed when ICCP data files
-    are available. The ICCP data uses a regular 192x400 lat/lon grid.
+    Uses xarray bilinear interpolation on the regular 640x1312 lat/lon grid.
+    Supports multiple time periods (2020-2099) from TCo319-DART SSP5-8.5 scenario.
 
-    Expected data structure:
-    - Coordinates: lat (192), lon (400), time_counter
-    - Variables: 2t (temperature), 10u/10v (wind), tp (precipitation)
-    - Longitude range: 0-360 (will need conversion for -180 to 180)
+    Data structure:
+    - Coordinates: lat (640), lon (1312), time (12 months)
+    - Variables: mean2t (temperature K), wind_u, wind_v (m/s), tp (precipitation m)
+    - Longitude range: -180 to 180
+    - Post-processing: K→°C, m→mm/month, wind speed/direction calculation
     """
 
     @property
@@ -479,26 +498,191 @@ class ICCPProvider(ClimateDataProvider):
                 return True
         return False
 
+    def _extract_data_regular_grid(
+        self,
+        file_path: str,
+        lon: float,
+        lat: float,
+        months: List[int],
+        variable_mapping: Dict[str, str]
+    ) -> Tuple[pd.DataFrame, Dict]:
+        """Extract data from a single NetCDF file using bilinear interpolation.
+
+        Args:
+            file_path: Path to NetCDF file
+            lon: Longitude (-180 to 180)
+            lat: Latitude (-90 to 90)
+            months: List of month indices (1-12)
+            variable_mapping: Dict mapping display names to NetCDF variable names
+
+        Returns:
+            Tuple of (DataFrame with raw data, metadata dict)
+        """
+        import xarray as xr
+        import calendar
+
+        try:
+            # Open NetCDF file
+            ds = xr.open_dataset(file_path)
+
+            # Use bilinear interpolation to get data at the exact point
+            ds_interpolated = ds.interp(lat=lat, lon=lon, method='linear')
+
+            # Extract variables for all 12 months
+            month_names = [calendar.month_name[i] for i in range(1, 13)]
+
+            # Build dataframe with Month column
+            df_data = {'Month': month_names}
+            df_vars = {}
+
+            # Get variable mapping (reverse: NetCDF var -> display name)
+            var_map = variable_mapping or {}
+
+            # Extract each variable
+            for display_name, nc_var in var_map.items():
+                if nc_var in ds_interpolated.variables:
+                    # Extract all 12 months
+                    values = ds_interpolated[nc_var].values
+                    if len(values) == 12:
+                        df_data[nc_var] = values
+
+                        # Get metadata from NetCDF
+                        var_attrs = ds[nc_var].attrs
+                        df_vars[nc_var] = {
+                            'name': nc_var,
+                            'units': var_attrs.get('units', ''),
+                            'full_name': display_name,
+                            'long_name': var_attrs.get('long_name', display_name)
+                        }
+                else:
+                    warnings.warn(f"Variable '{nc_var}' not found in {file_path}")
+
+            ds.close()
+
+            df = pd.DataFrame(df_data)
+            return df, df_vars
+
+        except Exception as e:
+            logger.error(f"Error extracting data from {file_path}: {e}")
+            raise
+
+    def _post_process_data(
+        self,
+        df: pd.DataFrame,
+        df_vars: Dict
+    ) -> Tuple[pd.DataFrame, Dict]:
+        """Apply unit conversions and calculate wind speed/direction.
+
+        Args:
+            df: DataFrame with raw data
+            df_vars: Metadata dict for variables
+
+        Returns:
+            Tuple of (processed DataFrame, updated metadata dict)
+        """
+        df_processed = df.copy()
+        df_vars_processed = df_vars.copy()
+
+        # Temperature: K to °C
+        if 'mean2t' in df_processed.columns:
+            df_processed['mean2t'] = df_processed['mean2t'] - 273.15
+            df_vars_processed['mean2t']['units'] = '°C'
+
+        # Precipitation: m to mm/month
+        if 'tp' in df_processed.columns:
+            df_processed['tp'] = df_processed['tp'] * 1000.0
+            df_vars_processed['tp']['units'] = 'mm/month'
+
+        # Calculate wind speed and direction
+        if 'wind_u' in df_processed.columns and 'wind_v' in df_processed.columns:
+            wind_speed = np.sqrt(df_processed['wind_u']**2 + df_processed['wind_v']**2)
+            wind_direction = (180.0 + np.degrees(
+                np.arctan2(df_processed['wind_u'], df_processed['wind_v'])
+            )) % 360
+
+            df_vars_processed['wind_speed'] = {
+                'name': 'wind_speed', 'units': 'm/s',
+                'full_name': 'Wind Speed', 'long_name': 'Wind Speed'
+            }
+            df_vars_processed['wind_direction'] = {
+                'name': 'wind_direction', 'units': '°',
+                'full_name': 'Wind Direction', 'long_name': 'Wind Direction'
+            }
+            df_processed['wind_speed'] = wind_speed.round(2)
+            df_processed['wind_direction'] = wind_direction.round(2)
+
+        # Round numeric columns
+        for var in df_processed.columns:
+            if var != 'Month' and pd.api.types.is_numeric_dtype(df_processed[var]):
+                df_processed[var] = df_processed[var].round(2)
+
+        return df_processed, df_vars_processed
+
     def extract_data(
         self,
         lon: float,
         lat: float,
         months: Optional[List[int]] = None
     ) -> ClimateDataResult:
-        """Extract climate data from ICCP data.
+        """Extract climate data for a location from ICCP data files.
 
-        Not yet implemented - raises NotImplementedError.
+        Args:
+            lon: Longitude (-180 to 180)
+            lat: Latitude (-90 to 90)
+            months: Optional list of month indices (1-12), defaults to all months
 
-        When implemented, will use:
-        - xr.open_dataset() to load data
-        - ds.sel(lat=lat, lon=lon, method='nearest') or ds.interp() for interpolation
-        - Handle 0-360 longitude convention
-        - Post-process units (2t likely in Kelvin)
+        Returns:
+            ClimateDataResult with extracted data from all ICCP files
         """
-        raise NotImplementedError(
-            "ICCP data provider not yet implemented - data files pending. "
-            "When data is ready, implement extraction using xarray .sel() or .interp() "
-            "on the regular lat/lon grid."
+        input_files = self.source_config.get('input_files', {})
+        variable_mapping = self.source_config.get('variable_mapping', {})
+
+        if months is None:
+            months = list(range(1, 13))
+
+        df_list = []
+
+        # Extract data from each file
+        for file_key, meta in input_files.items():
+            file_name = meta.get('file_name', file_key)
+
+            if not os.path.exists(file_name):
+                warnings.warn(f"File '{file_name}' does not exist. Skipping.")
+                continue
+
+            try:
+                # Extract raw data using bilinear interpolation
+                df_raw, df_vars = self._extract_data_regular_grid(
+                    file_name, lon, lat, months, variable_mapping
+                )
+
+                # Apply post-processing (unit conversions, wind calculations)
+                df_processed, df_vars_processed = self._post_process_data(df_raw, df_vars)
+
+                if df_processed is not None and not df_processed.empty:
+                    df_list.append({
+                        'filename': file_key,
+                        'years_of_averaging': meta.get('years_of_averaging', ''),
+                        'description': meta.get('description', ''),
+                        'dataframe': df_processed,
+                        'extracted_vars': df_vars_processed,
+                        'main': meta.get('is_main', False),
+                        'source': meta.get('source', 'ICCP model')
+                    })
+
+            except Exception as e:
+                logger.error(f"Error processing {file_name}: {e}")
+                warnings.warn(f"Skipping {file_name} due to error: {e}")
+                continue
+
+        # Prepare data_agent_response using inherited method
+        data_agent_response = self._prepare_data_agent_response(df_list)
+
+        return ClimateDataResult(
+            df_list=df_list,
+            data_agent_response=data_agent_response,
+            source_name=self.name,
+            source_description=self.description
         )
 
 
@@ -691,78 +875,16 @@ def get_available_providers(config: dict) -> List[str]:
 
 
 def migrate_legacy_config(config: dict) -> dict:
-    """Migrate legacy config format to new format.
+    """Legacy compatibility function - now just returns config as-is.
 
-    Detects old-style config with 'use_high_resolution_climate_model' and
-    converts it to the new 'climate_data_source' / 'climate_data_sources' format.
+    This function is kept for backwards compatibility with existing code
+    that calls it, but no longer performs any migration since legacy
+    config format is no longer supported.
 
     Args:
-        config: Configuration dictionary (possibly in legacy format)
+        config: Configuration dictionary
 
     Returns:
-        Configuration dictionary in new format
+        The same configuration dictionary (unchanged)
     """
-    if 'climate_data_source' in config:
-        # Already in new format
-        return config
-
-    if 'use_high_resolution_climate_model' not in config:
-        # Neither format, return as-is
-        return config
-
-    logger.warning(
-        "Detected legacy config format with 'use_high_resolution_climate_model'. "
-        "Please update to new 'climate_data_source' format."
-    )
-
-    new_config = config.copy()
-
-    # Determine source from legacy flag
-    if config.get('use_high_resolution_climate_model', False):
-        new_config['climate_data_source'] = 'nextGEMS'
-    else:
-        new_config['climate_data_source'] = 'AWI_CM'
-
-    # Build climate_data_sources from existing config
-    new_config['climate_data_sources'] = {
-        'nextGEMS': {
-            'enabled': True,
-            'coordinate_system': 'healpix',
-            'description': 'nextGEMS high-resolution climate simulations',
-            'input_files': config.get('climate_model_input_files', {}),
-            'variable_mapping': config.get('climate_model_variable_mapping', {})
-        },
-        'ICCP': {
-            'enabled': True,
-            'coordinate_system': 'regular',
-            'description': 'ICCP climate reanalysis data',
-            'input_files': {},
-            'variable_mapping': {
-                'Temperature': '2t',
-                'Wind U': '10u',
-                'Wind V': '10v'
-            }
-        },
-        'AWI_CM': {
-            'enabled': True,
-            'coordinate_system': 'regular',
-            'description': 'AWI-CM CMIP6 climate model data',
-            'data_path': config.get('data_settings', {}).get('data_path', './data/'),
-            'historical_pattern': config.get('data_settings', {}).get('historical', 'historical'),
-            'projection_pattern': config.get('data_settings', {}).get('projection', 'ssp585'),
-            'climatemodel_name': config.get('climatemodel_name', 'AWI_CM'),
-            'variable_mapping': config.get('variable_mappings', {
-                'Temperature': 'tas',
-                'Precipitation': 'pr',
-                'u_wind': 'uas',
-                'v_wind': 'vas'
-            }),
-            'dimension_mappings': config.get('dimension_mappings', {
-                'latitude': 'lat',
-                'longitude': 'lon',
-                'time': 'month'
-            })
-        }
-    }
-
-    return new_config
+    return config

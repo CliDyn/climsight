@@ -100,7 +100,6 @@ from extract_climatedata_functions import (
 from climate_data_providers import (
     get_climate_data_provider,
     get_available_providers,
-    migrate_legacy_config,
     ClimateDataResult
 )
 
@@ -449,8 +448,6 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     ##  =================== climate data
     # Get climate data source from config (supports runtime override)
     climate_source = config.get('climate_data_source', None)
-    # Migrate legacy config if needed
-    config = migrate_legacy_config(config)
 
     df_data = {}
     df_list = []

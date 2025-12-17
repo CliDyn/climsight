@@ -21,7 +21,7 @@ from data_container import DataContainer
 from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
-from climate_data_providers import get_available_providers, migrate_legacy_config
+from climate_data_providers import get_available_providers
 
 #ui for saving docs
 from datetime import datetime
@@ -133,20 +133,19 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
 
         # Climate data source selector
-        # Migrate config if needed and get available providers
-        config_migrated = migrate_legacy_config(config)
-        available_sources = get_available_providers(config_migrated)
+        # Get available providers
+        available_sources = get_available_providers(config)
 
         # Default source from config
-        default_source = config_migrated.get('climate_data_source', 'nextGEMS')
+        default_source = config.get('climate_data_source', 'nextGEMS')
         if default_source not in available_sources and available_sources:
             default_source = available_sources[0]
 
         # Source descriptions for the dropdown
         source_descriptions = {
-            'nextGEMS': 'nextGEMS (High-resolution)',
-            'ICCP': 'ICCP (Reanalysis)',
-            'AWI_CM': 'AWI-CM (CMIP6)'
+            'nextGEMS': 'nextGEMS (High resolution)',
+            'ICCP': 'ICCP (AWI-CM3, medium resolution)',
+            'AWI_CM': 'AWI-CM (CMIP6, low resolution)'
         }
 
         col1_src, col2_src = st.columns([1, 1])

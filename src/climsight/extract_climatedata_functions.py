@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 from climate_data_providers import (
     get_climate_data_provider,
     get_available_providers,
-    migrate_legacy_config,
     ClimateDataResult,
     ClimateDataProvider,
     NextGEMSProvider,
@@ -380,13 +379,10 @@ def rename_columns(df, extracted_vars):
 
 def request_climate_data(config, desired_lon, desired_lat, months=[i for i in range(1,13)], source_override=None):
     """
-    Request climate data for a given location.
-
-    This function now supports the new provider system while maintaining
-    backwards compatibility with the legacy config format.
+    Request climate data for a given location using the provider system.
 
     Args:
-        config: Configuration dictionary
+        config: Configuration dictionary with 'climate_data_sources' section
         desired_lon: Longitude of the location
         desired_lat: Latitude of the location
         months: List of months (1-12) to extract data for
@@ -395,39 +391,10 @@ def request_climate_data(config, desired_lon, desired_lat, months=[i for i in ra
     Returns:
         Tuple of (data_agent_response, df_list)
     """
-    # Migrate config if in legacy format
-    config = migrate_legacy_config(config)
-
-    # Check if using new provider system
-    if 'climate_data_source' in config or source_override:
-        # Use new provider system
-        try:
-            provider = get_climate_data_provider(config, source_override)
-            result = provider.extract_data(desired_lon, desired_lat, months)
-            return result.data_agent_response, result.df_list
-        except NotImplementedError as e:
-            logger.warning(f"Provider not implemented: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"Error using provider: {e}")
-            # Fall back to legacy implementation
-            logger.info("Falling back to legacy implementation")
-
-    # Legacy implementation for backwards compatibility
-    # Process all files to extract data
-    df_list = extract_all_data(
-        input_files=config['climate_model_input_files'],
-        desired_lon=desired_lon,
-        desired_lat=desired_lat,
-        months=months,
-        variable_mapping=config['climate_model_variable_mapping']
-    )
-
-    # Prepare data_agent_response from extracted data
-    data_agent_response = prepare_data_agent_response(
-        df_list=df_list,
-    )
-    return data_agent_response, df_list
+    # Use provider system
+    provider = get_climate_data_provider(config, source_override)
+    result = provider.extract_data(desired_lon, desired_lat, months)
+    return result.data_agent_response, result.df_list
 
 
 def request_climate_data_with_provider(config, desired_lon, desired_lat, months=None, source_override=None):
@@ -447,7 +414,6 @@ def request_climate_data_with_provider(config, desired_lon, desired_lat, months=
     Returns:
         ClimateDataResult with unified output format
     """
-    config = migrate_legacy_config(config)
     provider = get_climate_data_provider(config, source_override)
     return provider.extract_data(desired_lon, desired_lat, months)
 

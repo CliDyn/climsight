@@ -1,10 +1,10 @@
 #model_names: gpt-4o, o1-preview, o1-mini
 model_type: "openai" #"openai / local / aitta
-model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
-model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
-model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
-model_name_combine_agent: "gpt-5-mini" #"LumiOpen/Poro" #"gpt-4.1-nano"
-model_name_agents: "gpt-4.1-nano" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
+model_name: "gpt-5-mini" #"LumiOpen/Poro" # used only for  direct_llm_request
+model_name_rag: "gpt-5-mini" #"LumiOpen/Poro" # used only for  rag_request
+model_name_tools: "gpt-5-mini" #"LumiOpen/Poro"
+model_name_combine_agent: "gpt-5.2" #"LumiOpen/Poro" #"gpt-4.1-nano"
+model_name_agents: "gpt-5-mini" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_smart_agent: false
@@ -47,16 +47,62 @@ climate_data_sources:
   ICCP:
     enabled: true
     coordinate_system: "regular"
-    description: "ICCP climate reanalysis data on regular lat/lon grid"
+    description: "ICCP climate data on regular lat/lon grid"
     input_files:
-      # ICCP data files will be added when available
-      # Expected format: regular lat/lon grid (192 x 400)
-      # Variables: 2t (temperature), 10u/10v (wind), tp (precipitation)
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2020x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2020x.nc'
+        years_of_averaging: '2020-2029'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2020-2029 (baseline period)'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+        is_main: true
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2030x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2030x.nc'
+        years_of_averaging: '2030-2039'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2030-2039'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2040x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2040x.nc'
+        years_of_averaging: '2040-2049'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2040-2049'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2050x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2050x.nc'
+        years_of_averaging: '2050-2059'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2050-2059'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2060x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2060x.nc'
+        years_of_averaging: '2060-2069'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2060-2069'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2070x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2070x.nc'
+        years_of_averaging: '2070-2079'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2070-2079'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2080x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2080x.nc'
+        years_of_averaging: '2080-2089'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2080-2089'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
+      ICCP_TCo319-DART-ssp585d-gibbs-charn_2090x.nc:
+        file_name: './data/ICCP/ICCP_TCo319-DART-ssp585d-gibbs-charn_2090x.nc'
+        years_of_averaging: '2090-2099'
+        coordinate_system: 'regular'
+        description: 'ICCP TCo319-DART SSP5-8.5 climate data for 2090-2099'
+        source: 'Model: TCo319-DART with SSP5-8.5 scenario, Gibbs-Charn configuration'
     variable_mapping:
-      Temperature: 2t
-      Wind U: 10u
-      Wind V: 10v
-      # Total Precipitation: tp  # Add when confirmed
+      Temperature: mean2t
+      Total Precipitation: tp
+      Wind U: wind_u
+      Wind V: wind_v
 
   AWI_CM:
     enabled: true

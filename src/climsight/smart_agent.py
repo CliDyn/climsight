@@ -252,10 +252,10 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 }
             elif climate_source == 'ICCP':
                 environmental_mapping = {
-                    "Temperature": "2t",
+                    "Temperature": "mean2t",
                     "Precipitation": "tp",
-                    "u_wind": "10u",
-                    "v_wind": "10v"
+                    "u_wind": "wind_u",
+                    "v_wind": "wind_v"
                 }
             elif climate_source == 'AWI_CM':
                 environmental_mapping = {
@@ -852,18 +852,18 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
     # List of tools
     #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
-    tools = [data_extraction_tool, rag_tool, ecocrop_tool, python_repl_tool]
+    tools = [data_extraction_tool, rag_tool, ecocrop_tool, wikipedia_tool]#python_repl_tool]
 
-    #Append image viewer for openai models
-    if config['model_type'] == "openai":
-        try:
-            image_viewer_tool = create_image_viewer_tool(
-                api_key, 
-                config['model_name_agents']  # Use model from config
-            )
-            tools.append(image_viewer_tool)
-        except Exception as e:
-            pass
+    ##Append image viewer for openai models
+    #if config['model_type'] == "openai":
+    #    try:
+    #        image_viewer_tool = create_image_viewer_tool(
+    #            api_key, 
+    #            config['model_name_agents']  # Use model from config
+    #        )
+    #        tools.append(image_viewer_tool)
+    #    except Exception as e:
+    #        pass
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n
