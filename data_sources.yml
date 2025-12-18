@@ -115,3 +115,9 @@ sources:
     archive_type: 'zip'
     subdir: './'
     citation: Brown, M. J., Redhead, J., Pywell, R., & Price, J. EcoCrop Climatic Crop Suitability Scoring [Computer software]. https://github.com/OpenCLIM/ecocrop
+  
+  - filename: 'ICCP.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/ICCP.zip?temp_url_sig=97b8206f6b9d82e1c5a0e59d201433019415000d&temp_url_expires=2299-10-02T09:27:14Z'
+    archive_type: 'zip'
+    subdir: './'
+    citation:  

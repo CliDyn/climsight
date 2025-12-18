@@ -97,7 +97,7 @@ def main():
     # Parse command-line argument (--source_files)
     parser = argparse.ArgumentParser(description="Download and extract the raw source files of the RAG.")
     parser.add_argument('--source_files', type=bool, default=False, help='Whether to download and extract source files (IPCC text reports).')
-    parser.add_argument('--CMIP_OIFS', type=bool, default=False, help='Whether to download CMIP6 low resolution AWI model data and ECE4/OIFS data.')
+    parser.add_argument('--CMIP_OIFS', type=bool, default=True, help='Whether to download CMIP6 low resolution AWI model data and ECE4/OIFS data.')
     args = parser.parse_args()
 
     # Load the YAML file
