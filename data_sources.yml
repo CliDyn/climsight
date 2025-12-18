@@ -1,11 +1,5 @@
 base_path: './data'
 sources:
-  - filename: 'data_climate_foresight.zip'
-    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/data_climate_foresight.zip?temp_url_sig=5f135f4688dd4366fd7c02895341b72e191ab4e6&temp_url_expires=2032-08-22T09:35:00Z'
-    archive_type: 'zip'
-    subdir: './'
-    citation:     
-
   - filename: 'natural_hazards.zip'
     url: 'https://swift.dkrz.de/v1/dkrz_5c967f69-11af-4eff-bc86-ebddfd95a578/climsight_data/natural_hazards.zip?temp_url_sig=b415d6d7e20721e1fea3c9e42e6238d12c1b32fa&temp_url_expires=2034-04-30T12:43:59Z'
     archive_type: 'zip'
@@ -121,3 +115,9 @@ sources:
     archive_type: 'zip'
     subdir: './'
     citation:  
+
+  - filename: 'awi_cm.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/awi_cm.zip?temp_url_sig=f40cc2f349b24482a6f7247d173ca194fad28950&temp_url_expires=2299-10-02T09:52:13Z'
+    archive_type: 'zip'
+    subdir: './'
+    citation:      
