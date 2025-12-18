@@ -231,43 +231,87 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             return {"error": "No environmental data type specified."}
         if environmental_data not in ["Temperature", "Precipitation", "u_wind", "v_wind"]:
             return {"error": f"Invalid environmental data type: {environmental_data}"}
-       
-        if config['use_high_resolution_climate_model']:
-            df_list = state.df_list
-            response = {}                 
 
-            environmental_mapping = {
-                "Temperature": "mean2t",
-                "Precipitation": "tp",
-                "u_wind": "wind_u",
-                "v_wind": "wind_v"
-            }
+        # Get climate data source from config
+        climate_source = config.get('climate_data_source', 'nextGEMS')
+
+        # Check if we have df_list from the provider (unified approach)
+        df_list = getattr(state, 'df_list', None)
+
+        if df_list:
+            # Use unified df_list from any provider (nextGEMS, ICCP, AWI_CM)
+            response = {}
+
+            # Variable mapping depends on data source
+            if climate_source == 'nextGEMS':
+                environmental_mapping = {
+                    "Temperature": "mean2t",
+                    "Precipitation": "tp",
+                    "u_wind": "wind_u",
+                    "v_wind": "wind_v"
+                }
+            elif climate_source == 'ICCP':
+                environmental_mapping = {
+                    "Temperature": "mean2t",
+                    "Precipitation": "tp",
+                    "u_wind": "wind_u",
+                    "v_wind": "wind_v"
+                }
+            elif climate_source == 'AWI_CM':
+                environmental_mapping = {
+                    "Temperature": "Present Day Temperature",
+                    "Precipitation": "Present Day Precipitation",
+                    "u_wind": "u_wind",
+                    "v_wind": "v_wind"
+                }
+            else:
+                environmental_mapping = {
+                    "Temperature": "mean2t",
+                    "Precipitation": "tp",
+                    "u_wind": "wind_u",
+                    "v_wind": "wind_v"
+                }
 
             if environmental_data not in environmental_mapping:
                 return {"error": f"Invalid environmental data type: {environmental_data}"}
-            
+
             # Filter the DataFrame for the selected months and extract the values
             var_name = environmental_mapping[environmental_data]
-            
+
             if not months:
                 months = [calendar.month_abbr[m] for m in range(1, 13)]
-                
+
             # Create a mapping from abbreviated to full month names
             month_mapping = {calendar.month_abbr[m]: calendar.month_name[m] for m in range(1, 13)}
             selected_months = [month_mapping[abbr] for abbr in months]
 
             for entry in df_list:
                 df = entry.get('dataframe')
-                var_meta = entry.get('extracted_vars').get(var_name)
+                extracted_vars = entry.get('extracted_vars', {})
+
                 if df is None:
                     raise ValueError(f"Entry does not contain a 'dataframe' key.")
-                    
-                data_values = df[df['Month'].isin(selected_months)][var_name].tolist()
-                ext_data = {month: np.round(value,2) for month, value in zip(selected_months, data_values)}
-                ext_exp = f"Monthly mean values of {environmental_data}, {var_meta['units']} for years: " +entry['years_of_averaging']
-                response.update({ext_exp: ext_data})
-            return response    
-        else: #config['use_high_resolution_climate_model']
+
+                # Try to find the variable in the dataframe
+                if var_name in df.columns:
+                    var_meta = extracted_vars.get(var_name, {'units': ''})
+                    data_values = df[df['Month'].isin(selected_months)][var_name].tolist()
+                    ext_data = {month: np.round(value, 2) for month, value in zip(selected_months, data_values)}
+                    ext_exp = f"Monthly mean values of {environmental_data}, {var_meta.get('units', '')} for years: " + entry['years_of_averaging']
+                    response.update({ext_exp: ext_data})
+                else:
+                    # Try to find by full name in columns
+                    matching_cols = [col for col in df.columns if environmental_data.lower() in col.lower()]
+                    if matching_cols:
+                        col_name = matching_cols[0]
+                        data_values = df[df['Month'].isin(selected_months)][col_name].tolist()
+                        ext_data = {month: np.round(value, 2) for month, value in zip(selected_months, data_values)}
+                        ext_exp = f"Monthly mean values of {environmental_data} for years: " + entry['years_of_averaging']
+                        response.update({ext_exp: ext_data})
+
+            return response
+        else:
+            # Legacy fallback for AWI_CM without df_list
             lat = float(state.input_params['lat'])
             lon = float(state.input_params['lon'])
             data_path = config['data_settings']['data_path']
@@ -808,18 +852,18 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
     # List of tools
     #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
-    tools = [data_extraction_tool, rag_tool, ecocrop_tool, python_repl_tool]
+    tools = [data_extraction_tool, rag_tool, ecocrop_tool, wikipedia_tool]#python_repl_tool]
 
-    #Append image viewer for openai models
-    if config['model_type'] == "openai":
-        try:
-            image_viewer_tool = create_image_viewer_tool(
-                api_key, 
-                config['model_name_agents']  # Use model from config
-            )
-            tools.append(image_viewer_tool)
-        except Exception as e:
-            pass
+    ##Append image viewer for openai models
+    #if config['model_type'] == "openai":
+    #    try:
+    #        image_viewer_tool = create_image_viewer_tool(
+    #            api_key, 
+    #            config['model_name_agents']  # Use model from config
+    #        )
+    #        tools.append(image_viewer_tool)
+    #    except Exception as e:
+    #        pass
 
     # Create the agent with the tools and prompt
     prompt += """\nadditional information:\n

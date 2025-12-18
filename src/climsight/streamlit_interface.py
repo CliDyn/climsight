@@ -21,6 +21,7 @@ from data_container import DataContainer
 from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
+from climate_data_providers import get_available_providers
 
 #ui for saving docs
 from datetime import datetime
@@ -124,12 +125,47 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 options,
                 index=default_index
             )            
-        with col1:         
+        with col1:
             show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                     that were taken into account for the analysis as well as some plots.""")
             smart_agent   = st.toggle("Use smart agent feature", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
+
+        # Climate data source selector
+        # Get available providers
+        available_sources = get_available_providers(config)
+
+        # Default source from config
+        default_source = config.get('climate_data_source', 'nextGEMS')
+        if default_source not in available_sources and available_sources:
+            default_source = available_sources[0]
+
+        # Source descriptions for the dropdown
+        source_descriptions = {
+            'nextGEMS': 'nextGEMS (High resolution)',
+            'ICCP': 'ICCP (AWI-CM3, medium resolution)',
+            'AWI_CM': 'AWI-CM (CMIP6, low resolution)'
+        }
+
+        col1_src, col2_src = st.columns([1, 1])
+        with col1_src:
+            if available_sources:
+                display_options = [source_descriptions.get(s, s) for s in available_sources]
+                default_idx = available_sources.index(default_source) if default_source in available_sources else 0
+                selected_display = st.selectbox(
+                    "Climate Data Source:",
+                    display_options,
+                    index=default_idx,
+                    help="Select the climate model data source to use for the analysis."
+                )
+                # Map back to source name
+                selected_source = available_sources[display_options.index(selected_display)]
+                config['climate_data_source'] = selected_source
+            else:
+                st.warning("No climate data sources available.")
+                config['climate_data_source'] = 'nextGEMS'  # fallback
+
             # Include the API key input within the form only if it's not found in the environment
         if (not api_key) and config['model_type'] == "openai":
             api_key_input = st.text_input(
@@ -314,8 +350,30 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 if 'distance_to_coastline' in stored_input_params:  
                     st.markdown(f"**Distance to the shore:** {round(float(stored_input_params['distance_to_coastline']), 2)} m")
                 
-                # Climate Data
-                if (not config.get('use_high_resolution_climate_model', False)) and ('df_data' in data_pocket.df and data_pocket.df['df_data'] is not None):
+                # Climate Data - Unified display for all providers
+                climate_data_displayed = False
+
+                # Try to get climate data from unified 'climate_data' or 'high_res_climate' key
+                try:
+                    climate_data = data_pocket.data.get('climate_data') or data_pocket.data.get('high_res_climate')
+                    if climate_data and 'df_list' in climate_data:
+                        df_list = climate_data['df_list']
+                        climate_source = climate_data.get('source', config.get('climate_data_source', 'unknown'))
+
+                        if df_list:
+                            figs_climate = plot_climate_data(df_list)
+                            st.markdown(f"**Climate data ({climate_source}):**")
+                            for fig_dict in figs_climate:
+                                st.pyplot(fig_dict['fig'])
+
+                            with st.expander("Source"):
+                                st.markdown(figs_climate[0]['source'])
+                            climate_data_displayed = True
+                except Exception as e:
+                    logger.warning(f"Error displaying climate data: {e}")
+
+                # Legacy fallback for AWI_CM df_data format
+                if not climate_data_displayed and ('df_data' in data_pocket.df and data_pocket.df['df_data'] is not None):
                     df_data = data_pocket.df['df_data']
                     st.markdown("**Climate data:**")
                     st.markdown(
@@ -357,22 +415,6 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
 
                     with st.expander("Source"):
                         st.markdown(model_info)
-
-                if config.get('use_high_resolution_climate_model', False):
-                    to_plot = False
-                    try:                             
-                        df_list = data_pocket.data['high_res_climate']['df_list']
-                        to_plot = True
-                    except Exception as e:
-                        logger.warning(f"Error by getting high resolution climate data from data pocket: {e}")
-                    if to_plot:    
-                        figs_climate = plot_climate_data(df_list)
-                        st.markdown("**Climate data:**")
-                        for fig_dict in figs_climate:
-                            st.pyplot(fig_dict['fig'])
-                        
-                        with st.expander("Source"):
-                            st.markdown(figs_climate[0]['source'])
 
                 # Natural Hazards
                 if 'haz_fig' in stored_figs:

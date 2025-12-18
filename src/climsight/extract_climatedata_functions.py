@@ -1,3 +1,13 @@
+"""
+Climate Data Extraction Functions
+
+This module provides backwards-compatible functions for extracting climate data.
+It now uses the climate_data_providers module for the underlying implementation.
+
+For new code, prefer using climate_data_providers directly:
+    from climate_data_providers import get_climate_data_provider, ClimateDataResult
+"""
+
 import streamlit as st
 import xarray as xr
 import numpy as np
@@ -10,6 +20,17 @@ import re
 import calendar
 import logging
 import matplotlib.pyplot as plt
+
+# Import provider system for new unified interface
+from climate_data_providers import (
+    get_climate_data_provider,
+    get_available_providers,
+    ClimateDataResult,
+    ClimateDataProvider,
+    NextGEMSProvider,
+    ICCPProvider,
+    AWICMProvider
+)
 
 
 logger = logging.getLogger(__name__)
@@ -356,22 +377,45 @@ def rename_columns(df, extracted_vars):
     # Rename the DataFrame columns
     return df.rename(columns=rename_mapping)
 
-def request_climate_data(config, desired_lon, desired_lat, months=[i for i in range(1,13)]):
-    
-    # Process all files to extract data
-    df_list = extract_all_data(
-        input_files=config['climate_model_input_files'],
-        desired_lon=desired_lon,
-        desired_lat=desired_lat,
-        months=months,  # Example: Extract data for January, February, March
-        variable_mapping=config['climate_model_variable_mapping']
-    )
-    
-    # Prepare data_agent_response from extracted data
-    data_agent_response = prepare_data_agent_response(
-        df_list=df_list,
-    )
-    return data_agent_response, df_list
+def request_climate_data(config, desired_lon, desired_lat, months=[i for i in range(1,13)], source_override=None):
+    """
+    Request climate data for a given location using the provider system.
+
+    Args:
+        config: Configuration dictionary with 'climate_data_sources' section
+        desired_lon: Longitude of the location
+        desired_lat: Latitude of the location
+        months: List of months (1-12) to extract data for
+        source_override: Optional source name to override config ('nextGEMS', 'ICCP', 'AWI_CM')
+
+    Returns:
+        Tuple of (data_agent_response, df_list)
+    """
+    # Use provider system
+    provider = get_climate_data_provider(config, source_override)
+    result = provider.extract_data(desired_lon, desired_lat, months)
+    return result.data_agent_response, result.df_list
+
+
+def request_climate_data_with_provider(config, desired_lon, desired_lat, months=None, source_override=None):
+    """
+    Request climate data using the new provider system.
+
+    This is the preferred function for new code. It returns a ClimateDataResult
+    object with unified output format regardless of the data source.
+
+    Args:
+        config: Configuration dictionary
+        desired_lon: Longitude of the location
+        desired_lat: Latitude of the location
+        months: List of months (1-12) to extract data for. None means all months.
+        source_override: Optional source name to override config ('nextGEMS', 'ICCP', 'AWI_CM')
+
+    Returns:
+        ClimateDataResult with unified output format
+    """
+    provider = get_climate_data_provider(config, source_override)
+    return provider.extract_data(desired_lon, desired_lat, months)
 
 def plot_climate_data(df_list):
 

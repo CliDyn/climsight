@@ -97,7 +97,7 @@ def main():
     # Parse command-line argument (--source_files)
     parser = argparse.ArgumentParser(description="Download and extract the raw source files of the RAG.")
     parser.add_argument('--source_files', type=bool, default=False, help='Whether to download and extract source files (IPCC text reports).')
-    parser.add_argument('--CMIP_OIFS', type=bool, default=False, help='Whether to download CMIP6 low resolution AWI model data and ECE4/OIFS data.')
+    #parser.add_argument('--CMIP_OIFS', type=bool, default=False, help='Whether to download CMIP6 low resolution AWI model data and ECE4/OIFS data.')
     args = parser.parse_args()
 
     # Load the YAML file
@@ -110,8 +110,8 @@ def main():
     # Skip downloading source files of RAG unless --source_files is set to True
     if not args.source_files: # remove IPCC text reports from the list
         sources = [d for d in sources if d['filename'] != 'ipcc_text_reports.zip']
-    if not args.CMIP_OIFS:
-        sources = [d for d in sources if d['filename'] != 'data_climate_foresight.zip']
+    #if not args.CMIP_OIFS:
+    #    sources = [d for d in sources if d['filename'] != 'data_climate_foresight.zip']
         
     #make subdirs list and clean it
     subdirs = []
