@@ -74,7 +74,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     lat = float(state.input_params['lat'])
     lon = float(state.input_params['lon'])
     temperature = 0
-    if "o1" in config['model_name_tools']:
+    if "o1" in config['llm_smart']['model_name']:
         temperature = 1
 
 
@@ -455,12 +455,12 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         elif config['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
-                model_name=config['model_name_tools'],
+                model_name=config['llm_smart']['model_name'],
                 temperature=temperature
             )
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(
-                config['model_name_tools'], temperature = temperature)
+                config['llm_smart']['model_name'], temperature = temperature)
         # Define your custom prompt template
         template = """
         Read the provided  {wikipage} carefully. Extract and present information related to the following keywords relative to {question}:
@@ -663,19 +663,19 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         if config['model_type'] == "local":
             llm = ChatOpenAI(
                 openai_api_base="http://localhost:8000/v1",
-                model_name=config['model_name_tools'],  # Match the exact model name you used
+                model_name=config['llm_smart']['model_name'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
             )                          
         elif config['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
-                model_name=config['model_name_tools'],
+                model_name=config['llm_smart']['model_name'],
                 temperature=temperature
             )        
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(
-                config['model_name_tools'], temperature = temperature)
+                config['llm_smart']['model_name'], temperature = temperature)
         
         # Create the chain with the prompt and LLM
         chain = prompt | llm
@@ -726,18 +726,18 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         if config['model_type'] == "local":
             llm = ChatOpenAI(
                 openai_api_base="http://localhost:8000/v1",
-                model_name=config['model_name_tools'],  # Match the exact model name you used
+                model_name=config['llm_smart']['model_name'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = 0,
             )                  
         elif config['model_type'] == "openai":        
             llm = ChatOpenAI(
                 openai_api_key=api_key,
-                model_name=config['model_name_tools'],
+                model_name=config['llm_smart']['model_name'],
                 temperature=0.0
             )        
         elif config['model_type'] == "aitta":
-            llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
+            llm = get_aitta_chat_model(config['llm_smart']['model_name'], temperature = 0)
 
         # Create the prompt template
         prompt = ChatPromptTemplate.from_template("""
@@ -848,7 +848,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         )
 
     elif config['model_type'] == "aitta":
-        llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
+        llm = get_aitta_chat_model(config['llm_smart']['model_name'], temperature = 0)
 
     # List of tools
     #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]

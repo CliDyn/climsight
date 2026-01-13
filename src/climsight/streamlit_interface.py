@@ -109,7 +109,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         # Predefined options
         options = ["gpt-5-nano","gpt-5-mini","gpt-5", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
         # Determine the default value and modify the options list if needed
-        default_model = config.get('model_name_combine_agent')
+        default_model = config.get('llm_combine', {}).get('model_name')
         if default_model:
             if default_model not in options:
                 options.insert(0, default_model)
@@ -120,15 +120,19 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             default_index = 1
         col1, col2 = st.columns([1, 1])
         with col2:
-            config['model_name_combine_agent'] = st.selectbox(
+            config['llm_combine']['model_name'] = st.selectbox(
                 "Model for synthesis:",
                 options,
                 index=default_index
-            )            
+            )
+            if 'gpt' in config['llm_combine']['model_name']:
+                config['llm_combine']['model_type'] = "openai"
+            else:
+                config['llm_combine']['model_type'] = "local"            
         with col1:
             show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                     that were taken into account for the analysis as well as some plots.""")
-            smart_agent   = st.toggle("Use smart agent feature", value=False, help="""If this is activated together with Agent mode, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
+            smart_agent   = st.toggle("Use extra search", value=False, help="""If this is activated, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
 

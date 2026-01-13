@@ -35,7 +35,7 @@ if not config:
       raise RuntimeError(f"An error occurred while reading the file: {config_path}") from e
 # preliminary check config file   
 try:
-   model_name = config['model_name']
+   model_name = config['llm_combine']['model_name']
    climatemodel_name = config['climatemodel_name']
    llmModeKey = config['llmModeKey'] 
    data_path = config['data_settings']['data_path']
