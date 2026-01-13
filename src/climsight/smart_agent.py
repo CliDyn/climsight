@@ -31,6 +31,7 @@ from langchain_core.prompts import ChatPromptTemplate
 #Import tools
 from tools.python_repl import create_python_repl_tool
 from tools.image_viewer import create_image_viewer_tool
+from tools.era5_retrieval_tool import era5_retrieval_tool
 
 #import requests
 #from bs4 import BeautifulSoup
@@ -84,17 +85,34 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     # Create working directory
     work_dir = Path("tmp/sandbox") / st.session_state.session_uuid
     work_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Use resolve() to get absolute path for robust tool execution
+    work_dir_str = str(work_dir.resolve()) 
 
     # System prompt
     prompt = f"""
     You are the smart agent of ClimSight. Your task is to retrieve necessary components of the climatic datasets based on the user's request.
-    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search" and "ECOCROP_search" and "python_repl" which you can use to retrieve the necessary environmental data components.
+    You have access to tools called "get_data_components", "wikipedia_search", "RAG_search", "ECOCROP_search", "python_repl" and "retrieve_era5_data" which you can use to retrieve the necessary environmental data components.
+    
     - "get_data_components" will retrieve the necessary data from the climatic datasets at the location of interest (latitude: {lat}, longitude: {lon}). It accepts an 'environmental_data' parameter to specify the type of data, and a 'months' parameter to specify which months to retrieve data for. The 'months' parameter is a list of month names (e.g., ['Jan', 'Feb', 'Mar']). If 'months' is not specified, data for all months will be retrieved.
     <Important> Call "get_data_components" tool multiple times if necessary, but only within one iteration, [chat_completion -> n * "get_data_components" -> chat_completion] after you recieve the necessary data from wikipedia_search and RAG_search. </Important>
+    
     - "wikipedia_search" will help you determine the necessary data to retrieve with the get_data_components tool.
+    
     - "RAG_search" can provide detailed information about environmental conditions for growing corn from your internal knowledge base.
+    
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     <Important> call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
+    
+    - "retrieve_era5_data" allows you to extract actual historical reanalysis data (ERA5) for specific dates.
+    <Important> 
+    Use this tool to compare current or specific past weather conditions (e.g., recent years, specific storms) against the long-term climate projections provided by other tools.
+    These values would be helpful for further comparison over the projections.
+    EFFICIENCY RULE: Only request SHORT time ranges (e.g., 1 to 7 days, or a specific week) to ensure the extraction takes only 1-2 minutes max. 
+    Do NOT request long time series (like full years) with this tool.
+    **PATH RULE: You MUST always pass the argument `work_dir` = '{work_dir_str}' to this tool.**
+    </Important>
+
     - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. 
         <Important> Use this tool when:
         - Creating visualizations (plots, charts, graphs) of climate data
@@ -105,6 +123,15 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         
         The tool has access to pandas, numpy, matplotlib, and xarray.
         
+        **CRITICAL: OUTPUT REQUIREMENTS**
+        To see the result of your code, make sure the last line of your code is the variable or expression you want to inspect (like in a Jupyter notebook).
+        Alternatively, use `print()` explicitly.
+        Example:
+        ```python
+        x = 10 + 5
+        x  # This will be output
+        ```
+        
         **IMPORTANT: Climate data is pre-loaded in the Python environment. To see what's available, run:**
         ```python
         print(DATA_CATALOG)  # Shows all available climate datasets and their descriptions
@@ -113,7 +140,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         The climate data includes historical reference periods and future projections with monthly temperature, 
         precipitation, and wind data for your specific location.
         
-        **CRITICAL: Your working directory is available at `work_dir` = '{str(work_dir)}'**
+        **CRITICAL: Your working directory is available at `work_dir` = '{work_dir_str}'**
         **When saving plots, ALWAYS store the full path in a variable for later use!**
         
         **CORRECT way to save and reference images:**
@@ -147,6 +174,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
            ```python
            plot_path = f'{{{{work_dir}}}}/temperature_plot.png'
            plt.savefig(plot_path)
+           print(plot_path) # PRINT IT TO CONFIRM
            ```
         2. Then use image_viewer with the VARIABLE containing the path:
            ```
@@ -158,7 +186,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         image_viewer('work_dir/plot.png')  # WRONG - this is just a string!
         ```
         
-        **Your actual work_dir path is: {str(work_dir)}**
+        **Your actual work_dir path is: {work_dir_str}**
         **Always use the full path stored in a variable when calling image_viewer!**
         </Important>
     """
@@ -383,7 +411,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             elif environmental_data == "Precipitation":
                 # Convert from kg m-2 s-1 to mm/month
                 days_in_month = np.array([31, 28, 31, 30, 31, 30,
-                                        31, 31, 30, 31, 30, 31])
+                                            31, 31, 30, 31, 30, 31])
                 seconds_in_month = days_in_month * 24 * 3600  # seconds in each month
                 data_hist = data_hist * seconds_in_month
                 data_ssp585 = data_ssp585 * seconds_in_month
@@ -400,7 +428,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
             # List of all month names
             all_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
             # Map month names to indices
             month_indices = {month: idx for idx, month in enumerate(all_months)}
@@ -441,7 +469,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     )
 
     #[2] Wikipedia processing tool
-    def process_wikipedia_article(query: str) -> str:     
+    def process_wikipedia_article(query: str) -> str:      
         stream_handler.update_progress("Searching Wikipedia for related information with a smart agent...")
    
         # Initialize the LLM
@@ -451,7 +479,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_agents'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
-            )                          
+            )                                  
         elif config['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
@@ -666,7 +694,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
-            )                          
+            )                                  
         elif config['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
@@ -729,7 +757,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = 0,
-            )                  
+            )                                  
         elif config['model_type'] == "openai":        
             llm = ChatOpenAI(
                 openai_api_key=api_key,
@@ -852,7 +880,8 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
     # List of tools
     #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
-    tools = [data_extraction_tool, rag_tool, ecocrop_tool, wikipedia_tool]#python_repl_tool]
+    # Added era5_retrieval_tool and ensured python_repl_tool is in the list
+    tools = [data_extraction_tool, rag_tool, ecocrop_tool, wikipedia_tool, era5_retrieval_tool, python_repl_tool]
 
     ##Append image viewer for openai models
     #if config['model_type'] == "openai":
@@ -929,6 +958,12 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 tool_outputs['ECOCROP_search'] = observation
             if any("FAO, IIASA" not in element for element in state.references):    
                 state.references.append("FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en")    
+        elif action.tool == 'retrieve_era5_data':
+            if isinstance(observation, AIMessage):
+                tool_outputs['retrieve_era5_data'] = observation.content
+            else:
+                # Convert dict response to string for storage
+                tool_outputs['retrieve_era5_data'] = str(observation)
         elif action.tool == 'python_repl':            
             if isinstance(observation, AIMessage):
                 tool_outputs['python_repl'] = observation.content
@@ -956,6 +991,8 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         state.ecocrop_search_response = tool_outputs['ECOCROP_search']
     if 'RAG_search' in tool_outputs:
         state.rag_search_response = tool_outputs['RAG_search']
+    if 'retrieve_era5_data' in tool_outputs:
+        state.era5_tool_response = tool_outputs['retrieve_era5_data']
         
     # Also store the agent's final answer
     smart_agent_response = result['output']
@@ -966,5 +1003,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         'wikipedia_tool_response': state.wikipedia_tool_response,
         'ecocrop_search_response': state.ecocrop_search_response,
         'rag_search_response': state.rag_search_response,
+        'era5_tool_response': state.era5_tool_response,
         'references': state.references
     }

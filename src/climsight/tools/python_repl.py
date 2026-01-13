@@ -1,12 +1,20 @@
 # src/climsight/tools/python_repl.py
 """
 Simple Python REPL Tool for Climsight with persistent state.
+Enhanced with AST parsing to ensure expression results are printed automatically.
 """
 
 import sys
 import logging
+import ast
 from io import StringIO
 from typing import Dict, Any
+from pydantic import BaseModel, Field
+
+try:
+    from langchain.tools import StructuredTool
+except ImportError:
+    from langchain_core.tools import StructuredTool
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +43,7 @@ class PersistentPythonREPL:
     def execute(self, code: str) -> str:
         """
         Execute Python code in the persistent environment.
+        Attempts to print the result of the last expression if it exists.
         
         Args:
             code: Python code to execute
@@ -48,13 +57,32 @@ class PersistentPythonREPL:
         sys.stdout = stdout_capture
         
         try:
-            # Try to execute as an expression first (to show return values)
-            try:
-                result = eval(code, self.locals, self.locals)
+            # Parse the code into an abstract syntax tree
+            tree = ast.parse(code)
+            
+            # Check if there is code to execute
+            if not tree.body:
+                return "No code to execute."
+                
+            # Get the last node
+            last_node = tree.body[-1]
+            
+            # If the last node is an expression (not assignment, loop, etc.), we want to print it
+            if isinstance(last_node, ast.Expr):
+                # Compile and exec everything BEFORE the last expression
+                if len(tree.body) > 1:
+                    exec_code = compile(ast.Module(body=tree.body[:-1], type_ignores=[]), "<string>", "exec")
+                    exec(exec_code, self.locals, self.locals)
+                
+                # Compile and eval the LAST expression
+                eval_code = compile(ast.Expression(body=last_node.value), "<string>", "eval")
+                result = eval(eval_code, self.locals, self.locals)
+                
+                # Explicitly print the result so it is captured in stdout
                 if result is not None:
                     print(repr(result))
-            except SyntaxError:
-                # If it's not an expression, execute as statement(s)
+            else:
+                # If the last node is NOT an expression (e.g. a = 10), just exec everything normally
                 exec(code, self.locals, self.locals)
             
             # Get the output
@@ -85,11 +113,6 @@ def create_python_repl_tool():
     Returns:
         StructuredTool configured for Python code execution
     """
-    try:
-        from langchain.tools import StructuredTool
-    except ImportError:
-        from langchain_core.tools import StructuredTool
-    from pydantic import BaseModel, Field
     
     class PythonREPLInput(BaseModel):
         code: str = Field(
@@ -112,7 +135,8 @@ def create_python_repl_tool():
         description=(
             "Execute Python code for data analysis and calculations. "
             "Available: pandas as pd, numpy as np, matplotlib.pyplot as plt, xarray as xr. "
-            "Variables and imports persist between executions like a Jupyter notebook."
+            "Variables and imports persist between executions like a Jupyter notebook. "
+            "The last expression in the code block will be automatically printed."
             + vars_description
         ),
         args_schema=PythonREPLInput

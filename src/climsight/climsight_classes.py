@@ -22,6 +22,7 @@ class AgentState(BaseModel):
     rag_search_response: str = ""
     ipcc_rag_agent_response: str = ""
     general_rag_agent_response: str = ""    
+    era5_tool_response: str = ""
     df_list: list = [] # List of dataframes with climate data
     references: list = [] # List of references
     combine_agent_prompt_text: str = ""
