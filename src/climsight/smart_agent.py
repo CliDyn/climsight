@@ -660,20 +660,20 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         prompt = ChatPromptTemplate.from_template(template)
 
         # Initialize the LLM
-        if config['model_type'] == "local":
+        if config['llm_smart']['model_type'] == "local":
             llm = ChatOpenAI(
                 openai_api_base="http://localhost:8000/v1",
                 model_name=config['llm_smart']['model_name'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
             )                          
-        elif config['model_type'] == "openai":
+        elif config['llm_smart']['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
                 model_name=config['llm_smart']['model_name'],
                 temperature=temperature
             )        
-        elif config['model_type'] == "aitta":
+        elif config['llm_smart']['model_type'] == "aitta":
             llm = get_aitta_chat_model(
                 config['llm_smart']['model_name'], temperature = temperature)
         
