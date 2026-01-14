@@ -171,7 +171,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 config['climate_data_source'] = 'nextGEMS'  # fallback
 
             # Include the API key input within the form only if it's not found in the environment
-        if (not api_key) and config['model_type'] == "openai":
+        #if (not api_key) and config['model_type'] == "openai":
+        if (not api_key) and config['llm_combine']['model_type'] == "openai":
             api_key_input = st.text_input(
                 "OpenAI API key",
                 placeholder="Enter your OpenAI API key here",
@@ -186,7 +187,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     if submit_button and user_message:
         if not api_key:
             api_key = api_key_input
-        if (not api_key) and (not skip_llm_call) and (config['model_type'] == "openai"):
+        if (not api_key) and (not skip_llm_call) and (config['llm_combine']['model_type'] == "openai"):
             st.error("Please provide an OpenAI API key.")
             st.stop()
         # Update config with the selected LLM mode
@@ -198,7 +199,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         if submit_button and user_message:
             if not api_key:
                 api_key = api_key_input
-            if (not api_key) and (not skip_llm_call) and (config['model_type'] == "openai"):
+            if (not api_key) and (not skip_llm_call) and (config['llm_combine']['model_type'] == "openai"):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
             # Update config with the selected LLM mode

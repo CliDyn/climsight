@@ -1,5 +1,5 @@
 #model_names: gpt-4o, o1-preview, o1-mini
-#model_type: "local" #"openai / local / aitta
+#model_type: "openai" #"openai / local / aitta
 llm_rag:
   model_type: "openai" 
   model_name: "gpt-4.1-nano"  # used only for RAGs
