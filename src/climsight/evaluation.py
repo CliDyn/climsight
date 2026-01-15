@@ -268,7 +268,7 @@ def request_answers_from_climsight(question_answers, llm_model_request, series =
         lon = question_answers[series][qa_indx].get('lon', 13.37)
         lat = question_answers[series][qa_indx].get('lat', 52.524)
         #set LLM to be used for the Climsight 
-        config['model_name_combine_agent']=llm_model_request
+        config['llm_combine']['model_name']=llm_model_request
 
         output  = run_terminal(config, 
                             skip_llm_call=False, 

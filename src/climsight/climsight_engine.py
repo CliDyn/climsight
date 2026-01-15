@@ -597,11 +597,11 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
     logger.debug(f"start ChatOpenAI, LLMChain ")                 
     llm = ChatOpenAI(
         openai_api_key=api_key,
-        model_name=config['model_name'],
+        model_name=config['llm_combine']['model_name'],
         streaming=True,
         callbacks=[stream_handler],
     )
-    if "o1" in config['model_name']:
+    if "o1" in config['llm_combine']['model_name']:
         system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
     else:
         system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
@@ -636,46 +636,39 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     lon = float(input_params['lon']) # should be already present in input_params
     
     logger.info(f"start agent_request")
-    if config['model_type'] == "local":
-        llm_intro = ChatOpenAI(
-            openai_api_base="http://localhost:8000/v1",
-            model_name=config['model_name_agents'],  # Match the exact model name you used
-            openai_api_key=api_key_local,
-        )           
+    if config['llm_combine']['model_type'] == "local":
         llm_combine_agent = ChatOpenAI(
             openai_api_base="http://localhost:8000/v1",
-            model_name=config['model_name_combine_agent'],  # Match the exact model name you used
+            model_name=config['llm_combine']['model_name'],  # Match the exact model name you used
             openai_api_key=api_key_local,
             max_tokens=16000,
         )   
-    elif config['model_type'] == "openai":
-        llm_intro = ChatOpenAI(
-            openai_api_key=api_key,
-            model_name=config['model_name_agents'],
-        )    
-        if ("o1" in config['model_name_combine_agent']) or ("o3" in config['model_name_combine_agent']):
+        llm_intro = llm_combine_agent
+    elif config['llm_combine']['model_type'] == "openai":
+        if ("o1" in config['llm_combine']['model_name']) or ("o3" in config['llm_combine']['model_name']):
             llm_combine_agent = ChatOpenAI(
                 openai_api_key=api_key,
-                model_name=config['model_name_combine_agent'],
+                model_name=config['llm_combine']['model_name'],
                 max_tokens=100000,
             )    
-        elif ("3.5" in config['model_name_combine_agent']):
+        elif ("3.5" in config['llm_combine']['model_name']):
             llm_combine_agent = ChatOpenAI(
                 openai_api_key=api_key,
-                model_name=config['model_name_combine_agent'],
+                model_name=config['llm_combine']['model_name'],
             )   
         else:
             llm_combine_agent = ChatOpenAI(
                 openai_api_key=api_key,
-                model_name=config['model_name_combine_agent'],
+                model_name=config['llm_combine']['model_name'],
                 max_tokens=16000,
             )   
-    elif config['model_type'] == 'aitta':
-        llm_intro = get_aitta_chat_model(config['model_name_agents'])
+        llm_intro = llm_combine_agent            
+    elif config['llm_combine']['model_type'] == 'aitta':
         llm_combine_agent = get_aitta_chat_model(
-            config['model_name_combine_agent'],
+            config['llm_combine']['model_name'],
             max_completion_tokens=4096
         )
+        llm_intro = llm_combine_agent        
                
     def zero_rag_agent(state: AgentState, figs = {}):
         logger.debug(f"get_elevation_from_api from: {lat}, {lon}")      
@@ -971,7 +964,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         class routeResponse(BaseModel):
             next: Literal["FINISH", "CONTINUE"]  # Accepts single value only
             final_answer: str = ""  
-        if config['model_type'] == "openai":
+        if config['llm_combine']['model_type'] == "openai":
             structured_llm = llm_intro.with_structured_output(routeResponse, method="function_calling")
             chain = (
                 intro_prompt
@@ -980,7 +973,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             # Pass the dictionary to invoke
             input = {"user_text": state.user}
             response = chain.invoke(input)
-        elif config['model_type'] in ("local", "aitta"):
+        elif config['llm_combine']['model_type'] in ("local", "aitta"):
             prompt_text = intro_prompt.format(user_text=state.user)
             response_raw = llm_intro.invoke(prompt_text)
             import re, json
@@ -1045,10 +1038,10 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
             logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
-        if config['model_type'] in ("local", "aitta"):
+        if config['llm_combine']['model_type'] in ("local", "aitta"):
             system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
-        elif config['model_type'] == "openai":         
-            if "o1" in config['model_name_combine_agent']:
+        elif config['llm_combine']['model_type'] == "openai":         
+            if "o1" in config['llm_combine']['model_name']:
                 system_message_prompt = HumanMessagePromptTemplate.from_template(config['system_role'])
             else:
                 system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])

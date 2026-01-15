@@ -203,7 +203,7 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
             {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
             | RunnableLambda(inspect)
             | custom_rag_prompt
-            | ChatOpenAI(model=config['model_name_rag'], api_key=openai_api_key)
+            | ChatOpenAI(model=config['llm_rag']['model_name'], api_key=openai_api_key)
             | StrOutputParser()
         )
         rag_response = rag_chain.invoke(input_params['user_message'])

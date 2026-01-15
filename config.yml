@@ -1,10 +1,14 @@
 #model_names: gpt-4o, o1-preview, o1-mini
-model_type: "openai" #"openai / local / aitta
-model_name: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  direct_llm_request
-model_name_rag: "gpt-4.1-nano" #"LumiOpen/Poro" # used only for  rag_request
-model_name_tools: "gpt-4.1-nano" #"LumiOpen/Poro"
-model_name_combine_agent: "gpt-5-mini" #"LumiOpen/Poro" #"gpt-4.1-nano" 
-model_name_agents: "gpt-4.1-nano" #"LumiOpen/Poro-34B-chat" #should be gpt-4o
+#model_type: "openai" #"openai / local / aitta
+llm_rag:
+  model_type: "openai" 
+  model_name: "gpt-4.1-nano"  # used only for RAGs
+llm_smart: #used  only in smart_agent
+  model_type: "openai" 
+  model_name: "gpt-4.1-nano" # used only for smart agent
+llm_combine: #used  only in combine_agent and intro
+  model_type: "openai" 
+  model_name: "gpt-4.1-nano" # used only for combine agent ("mkchaou/climsight-calm_ft_Q3_13k")
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_smart_agent: false

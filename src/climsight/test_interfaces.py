@@ -27,7 +27,7 @@ if not config:
       logging.error(f"An error occurred while reading the file: {config_path}")
       raise RuntimeError(f"An error occurred while reading the file: {config_path}") from e
 try:
-   model_name = config['model_name']
+   model_name = config['llm_combine']['model_name']
    climatemodel_name = config['climatemodel_name']
    data_path = config['data_settings']['data_path']
    coastline_shapefile = config['coastline_shapefile']
