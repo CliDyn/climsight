@@ -63,6 +63,8 @@ from climsight_classes import AgentState
 
 # import smart_agent
 from smart_agent import get_aitta_chat_model, smart_agent
+# import data_analysis_agent
+from data_analysis_agent import data_analysis_agent
 
 # import climsight functions
 from geo_functions import (
@@ -1079,24 +1081,22 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         }
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
+        """Route from intro agent to parallel information gathering agents."""
         output = []
         if "FINISH" in state.next:
             return "FINISH"
         else:
+            # Always run these agents in parallel
             output.append("ipcc_rag_agent")
             output.append("general_rag_agent")
             output.append("data_agent")
             output.append("zero_rag_agent")
-            #output.append("smart_agent")
+
+            # Conditionally add smart_agent based on config
+            if config.get('use_smart_agent', False):
+                output.append("smart_agent")
         return output
-    def route_fromdata(state: AgentState) -> Sequence[str]:
-        output = []
-        if config['use_smart_agent']:
-            output.append("smart_agent")
-        else:
-            output.append("combine_agent")
-        return output
-        
+
     workflow = StateGraph(AgentState)
 
     figs = data_pocket.figs
@@ -1108,28 +1108,36 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     workflow.add_node("ipcc_rag_agent", ipcc_rag_agent)
     workflow.add_node("general_rag_agent", general_rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
-    workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
+    workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument
     workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key, api_key_local, stream_handler))
+    workflow.add_node("data_analysis_agent", lambda s: data_analysis_agent(s, config, api_key, api_key_local, stream_handler))
     workflow.add_node("combine_agent", combine_agent)   
 
-    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
-    path_map_data = {'combine_agent':'combine_agent', 'smart_agent':'smart_agent'}    
+    path_map = {
+        'ipcc_rag_agent': 'ipcc_rag_agent',
+        'general_rag_agent': 'general_rag_agent',
+        'data_agent': 'data_agent',
+        'zero_rag_agent': 'zero_rag_agent',
+        'smart_agent': 'smart_agent',
+        'FINISH': END
+    }
 
-    workflow.set_entry_point("intro_agent") # Set the entry point of the graph
-    
+    workflow.set_entry_point("intro_agent")  # Set the entry point of the graph
+
+    # Route from intro_agent to parallel agents (conditionally includes smart_agent)
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
-    workflow.add_conditional_edges("data_agent", route_fromdata, path_map=path_map_data)    
 
-    #if config['use_smart_agent']:
-    #    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
-    #else:
-    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
-        
-    #workflow.add_edge("ipcc_rag_agent", "combine_agent")
-    #workflow.add_edge("general_rag_agent", "combine_agent")
-    #workflow.add_edge("data_agent", "combine_agent")
-    #workflow.add_edge("zero_rag_agent", "combine_agent")
-    #workflow.add_edge("smart_agent", "combine_agent")
+    # All parallel agents (ipcc_rag, general_rag, data, zero_rag) go to data_analysis_agent
+    workflow.add_edge(["ipcc_rag_agent", "general_rag_agent", "data_agent", "zero_rag_agent"], "data_analysis_agent")
+
+    # If smart_agent is enabled, it also goes to data_analysis_agent
+    if config.get('use_smart_agent', False):
+        workflow.add_edge("smart_agent", "data_analysis_agent")
+
+    # Data analysis agent goes to combine agent
+    workflow.add_edge("data_analysis_agent", "combine_agent")
+
+    # Combine agent goes to END
     workflow.add_edge("combine_agent", END)
     # Compile the graph
     app = workflow.compile()

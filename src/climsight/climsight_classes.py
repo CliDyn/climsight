@@ -21,7 +21,8 @@ class AgentState(BaseModel):
     ecocrop_search_response: str = ""
     rag_search_response: str = ""
     ipcc_rag_agent_response: str = ""
-    general_rag_agent_response: str = ""    
+    general_rag_agent_response: str = ""
+    data_analysis_response: str = ""  # Response from data analysis agent
     df_list: list = [] # List of dataframes with climate data
     references: list = [] # List of references
     combine_agent_prompt_text: str = ""

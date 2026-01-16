@@ -288,7 +288,17 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
 
                 # Add a method to update the progress area
                 def update_progress_ui(message):
-                    progress_area.info(message)
+                    try:
+                        progress_area.info(message)
+                    except Exception as e:
+                        # Streamlit context not available (e.g., running in worker thread)
+                        # This is expected when agents run in parallel
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        if "NoSessionContext" in str(type(e).__name__):
+                            logger.debug(f"Progress update (no UI context): {message}")
+                        else:
+                            logger.error(f"Error displaying progress: {e}")
 
                 # Attach this method to your StreamHandler
                 stream_handler.update_progress = update_progress_ui

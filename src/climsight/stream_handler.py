@@ -1,4 +1,7 @@
 from langchain_core.callbacks.base import BaseCallbackHandler
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StreamHandler(BaseCallbackHandler):
     """
@@ -34,7 +37,15 @@ class StreamHandler(BaseCallbackHandler):
         if self.container:
             display_function = getattr(self.container, self.display_method, None)
             if display_function is not None:
-                display_function(self.text)
+                try:
+                    display_function(self.text)
+                except Exception as e:
+                    # Streamlit context not available (e.g., running in worker thread)
+                    # Log the message instead
+                    if "NoSessionContext" in str(type(e).__name__):
+                        logger.debug(f"Streamlit context not available, skipping display: {self.text[:100]}")
+                    else:
+                        logger.error(f"Error displaying text: {e}")
             else:
                 raise ValueError(f"Invalid display_method: {self.display_method}")
                 
@@ -42,7 +53,14 @@ class StreamHandler(BaseCallbackHandler):
         if self.container2:
             display_function = getattr(self.container2, self.display_method, None)
             if display_function is not None:
-                display_function(self.reference_text)
+                try:
+                    display_function(self.reference_text)
+                except Exception as e:
+                    # Streamlit context not available (e.g., running in worker thread)
+                    if "NoSessionContext" in str(type(e).__name__):
+                        logger.debug(f"Streamlit context not available, skipping reference display")
+                    else:
+                        logger.error(f"Error displaying reference text: {e}")
             else:
                 raise ValueError(f"Invalid display_method: {self.display_method}")
 
@@ -50,7 +68,15 @@ class StreamHandler(BaseCallbackHandler):
         if self.container:
             display_function = getattr(self.container, "info", None)
             if display_function is not None:
-                display_function(self.progress_text)
+                try:
+                    display_function(self.progress_text)
+                except Exception as e:
+                    # Streamlit context not available (e.g., running in worker thread)
+                    # This is expected when agents run in parallel
+                    if "NoSessionContext" in str(type(e).__name__):
+                        logger.debug(f"Progress update (no UI context): {self.progress_text}")
+                    else:
+                        logger.error(f"Error displaying progress: {e}")
 
     def get_text(self):
         return self.text
