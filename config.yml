@@ -16,8 +16,13 @@ llm_dataanalysis: #used only in data_analysis_agent
 climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_smart_agent: false
-use_era5_data: false
+use_era5_data: false  # Download ERA5 time series from CDS API (requires credentials)
 use_powerful_data_analysis: false
+
+# ERA5 Climatology Configuration (pre-computed observational baseline)
+era5_climatology:
+  enabled: true  # Always use ERA5 climatology as ground truth baseline
+  path: "data/era5/era5_climatology_2015_2025.zarr"  # Path to pre-computed climatology
 
 # Climate Data Source Configuration
 # Options: "nextGEMS", "ICCP", "AWI_CM"

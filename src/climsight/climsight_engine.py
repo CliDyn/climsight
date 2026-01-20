@@ -1079,8 +1079,29 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         if state.data_analysis_response:
             state.input_params['data_analysis_response'] = state.data_analysis_response
             state.content_message += "\n Data analysis agent response: {data_analysis_response} "
+
+        # Add ERA5 climatology (observational ground truth) to prompt
+        if state.era5_climatology_response and isinstance(state.era5_climatology_response, dict):
+            era5_data = state.era5_climatology_response
+            # Format ERA5 data as structured text for the LLM
+            era5_text = "ERA5 OBSERVATIONAL CLIMATOLOGY (2015-2025 average - GROUND TRUTH):\n"
+            era5_text += f"Source: {era5_data.get('source', 'ERA5 Reanalysis')}\n"
+            era5_text += f"Location: {era5_data.get('extracted_location', {})}\n"
+            if 'variables' in era5_data:
+                for var_name, var_info in era5_data['variables'].items():
+                    era5_text += f"\n{var_info.get('full_name', var_name)} ({var_info.get('units', '')}):\n"
+                    monthly = var_info.get('monthly_values', {})
+                    for month, value in monthly.items():
+                        era5_text += f"  {month}: {value}\n"
+            state.input_params['era5_climatology'] = era5_text
+            state.content_message += "\n ERA5 Observations (ground truth baseline): {era5_climatology} "
+
+        # Add generated plot images to prompt so LLM knows about them
         if state.data_analysis_images:
             state.input_params['data_analysis_images'] = state.data_analysis_images
+            images_list = ", ".join(state.data_analysis_images)
+            state.input_params['data_analysis_images_text'] = images_list
+            state.content_message += "\n Generated visualizations (plot files): {data_analysis_images_text} "
 
         if state.smart_agent_response != {}:
             smart_analysis = state.smart_agent_response.get('output', '')
