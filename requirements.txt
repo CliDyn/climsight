@@ -10,6 +10,7 @@ streamlit-folium
 xarray
 netcdf4
 geopandas
+shapely
 pyproj
 geopy
 osmnx
@@ -32,6 +33,8 @@ langchain-openai
 langchain-chroma
 langchain-core
 langchain-text-splitters
+langchain-experimental
+langchain-anthropic
 langgraph
 openai
 pydantic
@@ -44,6 +47,16 @@ requests-mock
 
 # PDF Generation
 reportlab
+
+# ERA5 + Zarr tooling
+zarr
+gcsfs
+numcodecs
+blosc
+
+# Jupyter-backed Python REPL
+jupyter_client
+ipykernel
 
 # Optional: CSC's AITTA Platform (local/custom AI models)
 # Uncomment if you need CSC AITTA integration

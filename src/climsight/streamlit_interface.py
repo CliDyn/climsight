@@ -22,6 +22,7 @@ from climsight_engine import normalize_longitude, llm_request, forming_request, 
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
 from climate_data_providers import get_available_providers
+from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths
 
 #ui for saving docs
 from datetime import datetime
@@ -42,7 +43,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         - references (dict): References for the data used in the analysis.
     Returns:
         None
-    """     
+    """
+    # Ensure sandbox exists for the current session.
+    thread_id = ensure_thread_id(session_state=st.session_state)
+    sandbox_paths = get_sandbox_paths(thread_id)
+    ensure_sandbox_dirs(sandbox_paths)
   
     # Config
     try:
@@ -133,6 +138,16 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
                                     that were taken into account for the analysis as well as some plots.""")
             smart_agent   = st.toggle("Use extra search", value=False, help="""If this is activated, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
+            use_era5_data = st.toggle(
+                "Enable ERA5 data",
+                value=config.get("use_era5_data", False),
+                help="Allow the data analysis agent to retrieve ERA5 data into the sandbox.",
+            )
+            use_powerful_data_analysis = st.toggle(
+                "Enable Python analysis",
+                value=config.get("use_powerful_data_analysis", False),
+                help="Allow the data analysis agent to use the Python REPL and generate plots.",
+            )
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
 
@@ -194,6 +209,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
         config['show_add_info'] = show_add_info
         config['use_smart_agent'] = smart_agent
+        config['use_era5_data'] = use_era5_data
+        config['use_powerful_data_analysis'] = use_powerful_data_analysis
         
     # RUN submit button 
         if submit_button and user_message:
@@ -206,6 +223,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
             config['show_add_info'] = show_add_info
             config['use_smart_agent'] = smart_agent
+            config['use_era5_data'] = use_era5_data
+            config['use_powerful_data_analysis'] = use_powerful_data_analysis
             
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
@@ -266,6 +285,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     is_on_land = False
                     st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
                 else:
+                    # Pass sandbox paths into the agent state.
+                    input_params['thread_id'] = thread_id
+                    input_params.update(sandbox_paths)
                     # extend input_params with user_message
                     input_params['user_message'] = user_message
                     content_message = "Human request: {user_message} \n " + content_message
@@ -430,6 +452,16 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
 
                     with st.expander("Source"):
                         st.markdown(model_info)
+
+                # Data analysis images (from python_repl)
+                analysis_images = stored_input_params.get('data_analysis_images', [])
+                if analysis_images:
+                    st.markdown("**Data analysis visuals:**")
+                    for image_path in analysis_images:
+                        if os.path.exists(image_path):
+                            st.image(image_path)
+                        else:
+                            st.caption(f"Missing image: {image_path}")
 
                 # Natural Hazards
                 if 'haz_fig' in stored_figs:

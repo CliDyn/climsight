@@ -3,7 +3,14 @@
 Tools for Climsight smart agents.
 """
 
-from .python_repl import create_python_repl_tool
 from .image_viewer import create_image_viewer_tool
+from .python_repl import CustomPythonREPLTool
 
-__all__ = ['create_python_repl_tool', 'create_image_viewer_tool']
+__all__ = ['CustomPythonREPLTool', 'create_image_viewer_tool']
+
+# Backwards-compatible import if older code expects create_python_repl_tool.
+try:
+    from .python_repl import create_python_repl_tool  # type: ignore
+    __all__.append('create_python_repl_tool')
+except Exception:
+    pass

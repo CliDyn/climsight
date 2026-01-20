@@ -17,6 +17,7 @@ from climsight_engine import llm_request, forming_request, location_request
 from data_container import DataContainer
 
 from extract_climatedata_functions import plot_climate_data
+from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,11 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     except KeyError as e:
         logging.error(f"Missing configuration key: {e}")
         raise RuntimeError(f"Missing configuration key: {e}")   
+
+    # Ensure sandbox exists for this CLI session.
+    thread_id = ensure_thread_id()
+    sandbox_paths = get_sandbox_paths(thread_id)
+    ensure_sandbox_dirs(sandbox_paths)
 
     if not isinstance(skip_llm_call, bool):
         logging.error(f"skip_llm_call must be bool")
@@ -192,6 +198,9 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             is_on_land = False
             print_verbose(verbose, f"The selected point is in the ocean. Please choose a location on land.")
         else:
+            # Pass sandbox paths into the agent state.
+            input_params['thread_id'] = thread_id
+            input_params.update(sandbox_paths)
             # extend input_params with user_message
             input_params['user_message'] = user_message
             content_message = "Human request: {user_message} \n " + content_message

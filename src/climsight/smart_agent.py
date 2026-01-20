@@ -107,6 +107,8 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     - Focus on gathering contextual information, NOT on extracting or analyzing specific climate data
     - Do NOT attempt to retrieve climate data values - that will be handled by other agents
     - Your output should be a comprehensive text summary with relevant background context
+    - If you call a tool multiple times, incorporate all results in your summary
+    - Do NOT call wikipedia_search more than 10 times total
     """
     if config['llm_smart']['model_type'] in ("local", "aitta"):
         prompt += f"""
@@ -151,13 +153,20 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     - Do NOT mention what you're going to do or explain your process
     - Focus on presenting the gathered information in a clear, organized format
     - The summary should help subsequent agents understand the context for data analysis
+    - If you have already called wikipedia_search 10 times, proceed without further Wikipedia calls
     </Important>
     """
 
     #[1] get_data_components tool moved to data_analysis_agent.py
 
     #[2] Wikipedia processing tool
-    def process_wikipedia_article(query: str) -> str:     
+    wikipedia_call_state = {"count": 0}
+
+    def process_wikipedia_article(query: str) -> str:
+        if wikipedia_call_state["count"] >= 10:
+            return ""
+        wikipedia_call_state["count"] += 1
+
         stream_handler.update_progress("Searching Wikipedia for related information with a smart agent...")
    
         # Initialize the LLM
@@ -562,48 +571,61 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     result = agent_executor(agent_input)
 
     # Extract the tool outputs
-    tool_outputs = {}
+    wikipedia_results = []
+    rag_results = []
+
+    def _extract_tool_query(action):
+        tool_input = getattr(action, "tool_input", None)
+        if tool_input is None:
+            tool_input = getattr(action, "input", None)
+        if isinstance(tool_input, dict):
+            return tool_input.get("query") or tool_input.get("input") or tool_input
+        return tool_input
+
+    def _normalize_tool_output(observation):
+        if isinstance(observation, AIMessage):
+            return observation.content, None
+        if isinstance(observation, dict):
+            result = observation.get("result")
+            if isinstance(result, AIMessage):
+                result = result.content
+            return result, observation.get("references")
+        return observation, None
+
     for action, observation in result['intermediate_steps']:
-        if action.tool == 'wikipedia_search':
-            if isinstance(observation, AIMessage):
-                tool_outputs['wikipedia_search'] = observation.content
-            else:
-                output = observation
-            # Assuming output_data is a dict now
-            if isinstance(output, dict):
-                tool_outputs['wikipedia_search'] = output.get('result').content
-                state.references.append(output.get('references', []))
-            else:
-                tool_outputs['wikipedia_search'] = output
-        elif action.tool == 'ECOCROP_search':
-            if isinstance(observation, AIMessage):
-                tool_outputs['ECOCROP_search'] = observation.content
-            else:
-                tool_outputs['ECOCROP_search'] = observation
+        tool_name = action.tool
+        tool_query = _extract_tool_query(action)
+
+        if tool_name == 'wikipedia_search':
+            answer_text, references = _normalize_tool_output(observation)
+            if answer_text:
+                wikipedia_results.append({"query": tool_query, "answer": answer_text})
+            if references:
+                if isinstance(references, list):
+                    state.references.extend(references)
+                else:
+                    state.references.append(references)
+        elif tool_name == 'RAG_search':
+            answer_text, references = _normalize_tool_output(observation)
+            if answer_text:
+                rag_results.append({"query": tool_query, "answer": answer_text})
+            if references:
+                if isinstance(references, list):
+                    state.references.extend(references)
+                else:
+                    state.references.append(references)
+        elif tool_name == 'ECOCROP_search':
+            answer_text, _ = _normalize_tool_output(observation)
+            if answer_text:
+                if state.ecocrop_search_response:
+                    state.ecocrop_search_response += "\n" + answer_text
+                else:
+                    state.ecocrop_search_response = answer_text
             if any("FAO, IIASA" not in element for element in state.references):
                 state.references.append("FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en")
-        if action.tool == 'RAG_search':
-            if isinstance(observation, AIMessage):
-                tool_outputs['RAG_search'] = observation.content
-            else:
-                output = observation
-            # Assuming output_data is a dict now
-            if isinstance(output, dict):
-                tool_outputs['RAG_search'] = output.get('result').content
-                # If refs is a list, extend; if it's a string, append.
-                refs = output.get('references', [])
-                if isinstance(refs, list):
-                    state.references.extend(refs)
-                elif isinstance(refs, str):
-                    state.references.append(refs)                
 
-    # Store the response from the wikipedia_search tool into state
-    if 'wikipedia_search' in tool_outputs:
-        state.wikipedia_tool_response = tool_outputs['wikipedia_search']
-    if 'ECOCROP_search' in tool_outputs:
-        state.ecocrop_search_response = tool_outputs['ECOCROP_search']
-    if 'RAG_search' in tool_outputs:
-        state.rag_search_response = tool_outputs['RAG_search']
+    state.wikipedia_tool_response = wikipedia_results
+    state.rag_search_response = rag_results
         
     # Also store the agent's final answer
     smart_agent_response = result['output']

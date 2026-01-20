@@ -13,3 +13,4 @@ rag_articles/
 *.log
 venv311
 venv
+tmp/
