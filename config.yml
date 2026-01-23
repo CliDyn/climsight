@@ -5,7 +5,7 @@ llm_rag:
   model_name: "gpt-5-mini"  # used only for RAGs
 llm_smart: #used  only in smart_agent
   model_type: "openai" 
-  model_name: "gpt-5-mini" # used only for smart agent
+  model_name: "gpt-5.2" # used only for smart agent
 llm_combine: #used  only in combine_agent and intro
   model_type: "openai" 
   model_name: "gpt-5.2" # used only for combine agent ("mkchaou/climsight-calm_ft_Q3_13k")

@@ -296,8 +296,13 @@ class NextGEMSProvider(ClimateDataProvider):
         """
         dataset = xr.open_dataset(nc_file)
 
+        # Normalize longitude to 0-360 range (HEALPix data uses 0-360)
+        query_lon = desired_lon
+        if desired_lon < 0:
+            query_lon = desired_lon + 360
+
         # Query 4 nearest neighbors
-        distances, indices = tree.query([desired_lon, desired_lat], k=4)
+        distances, indices = tree.query([query_lon, desired_lat], k=4)
 
         neighbors_lons = lons[indices]
         neighbors_lats = lats[indices]

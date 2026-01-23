@@ -135,8 +135,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             else:
                 config['llm_combine']['model_type'] = "local"            
         with col1:
-            show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
-                                    that were taken into account for the analysis as well as some plots.""")
+            # Always show additional information (removed toggle per user request)
+            show_add_info = True
             smart_agent   = st.toggle("Use extra search", value=False, help="""If this is activated, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
             use_era5_data = st.toggle(
                 "Enable ERA5 data",
