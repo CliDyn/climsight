@@ -1,12 +1,18 @@
 # src/climsight/tools/python_repl.py
 """
-Simple Python REPL Tool for Climsight with persistent state.
-Enhanced with AST parsing to ensure expression results are printed automatically.
+Simple Python REPL Tool for Climsight.
+Thread-safe implementation that maintains state within a specific agent execution context.
+Includes Matplotlib backend fixes and Markdown sanitization.
 """
 
 import sys
 import logging
 import ast
+import re
+import traceback
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from io import StringIO
 from typing import Dict, Any
 from pydantic import BaseModel, Field
@@ -18,23 +24,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-
 class PersistentPythonREPL:
     """
-    A persistent Python REPL that maintains state between executions.
-    Variables created in one execution persist to the next, like a Jupyter notebook.
+    A Python REPL that maintains state between executions within a single session.
     """
     
     def __init__(self):
         """Initialize with an empty locals dictionary and pre-imported modules."""
-        # Persistent locals dictionary - this is THE KEY FEATURE
         self.locals = {}
         
-        # Pre-import common modules into the persistent namespace
+        # Pre-import common modules into the namespace
         self.locals.update({
             'pd': __import__('pandas'),
             'np': __import__('numpy'),
-            'plt': __import__('matplotlib.pyplot', fromlist=['pyplot']),
+            'plt': plt,
             'xr': __import__('xarray'),
             'os': __import__('os'),
             'Path': __import__('pathlib').Path,
@@ -42,103 +45,96 @@ class PersistentPythonREPL:
         
     def execute(self, code: str) -> str:
         """
-        Execute Python code in the persistent environment.
-        Attempts to print the result of the last expression if it exists.
-        
-        Args:
-            code: Python code to execute
-            
-        Returns:
-            String containing output or error message
+        Execute Python code and capture stdout/stderr.
+        Automatically prints the result of the last expression.
         """
-        # Capture stdout
+        # 1. Sanitize input (remove Markdown code blocks)
+        # This fixes your specific SyntaxError
+        code = re.sub(r"^(\s|`)*(?i:python)?\s*", "", code)
+        code = re.sub(r"(\s|`)*$", "", code)
+
+        # 2. Capture stdout/stderr
         old_stdout = sys.stdout
+        old_stderr = sys.stderr
         stdout_capture = StringIO()
+        stderr_capture = StringIO()
         sys.stdout = stdout_capture
-        
+        sys.stderr = stderr_capture
+
         try:
-            # Parse the code into an abstract syntax tree
+            # 3. Parse the code
             tree = ast.parse(code)
             
-            # Check if there is code to execute
             if not tree.body:
                 return "No code to execute."
-                
-            # Get the last node
+
+            # 4. Execution Logic: Handle last expression printing
             last_node = tree.body[-1]
-            
-            # If the last node is an expression (not assignment, loop, etc.), we want to print it
             if isinstance(last_node, ast.Expr):
-                # Compile and exec everything BEFORE the last expression
+                # Execute everything before the last expression
                 if len(tree.body) > 1:
-                    exec_code = compile(ast.Module(body=tree.body[:-1], type_ignores=[]), "<string>", "exec")
-                    exec(exec_code, self.locals, self.locals)
+                    module = ast.Module(body=tree.body[:-1], type_ignores=[])
+                    exec(compile(module, "<string>", "exec"), self.locals, self.locals)
                 
-                # Compile and eval the LAST expression
-                eval_code = compile(ast.Expression(body=last_node.value), "<string>", "eval")
-                result = eval(eval_code, self.locals, self.locals)
-                
-                # Explicitly print the result so it is captured in stdout
+                # Evaluate the last expression and print result
+                expr = ast.Expression(body=last_node.value)
+                result = eval(compile(expr, "<string>", "eval"), self.locals, self.locals)
                 if result is not None:
                     print(repr(result))
             else:
-                # If the last node is NOT an expression (e.g. a = 10), just exec everything normally
-                exec(code, self.locals, self.locals)
-            
-            # Get the output
+                # Execute the whole block if it doesn't end in an expression
+                exec(compile(tree, "<string>", "exec"), self.locals, self.locals)
+
             output = stdout_capture.getvalue()
+            errors = stderr_capture.getvalue()
             
-            if output:
-                return f"Output:\n{output}"
-            else:
+            # Combine output
+            final_output = output
+            if errors:
+                final_output += f"\n[Stderr]: {errors}"
+                
+            if not final_output.strip():
                 return "Code executed successfully (no output)."
                 
-        except Exception as e:
-            return f"Error: {type(e).__name__}: {str(e)}"
+            return final_output.strip()
+
+        except Exception:
+            # Capture the full traceback for debugging
+            return traceback.format_exc()
             
         finally:
-            # Restore stdout
+            # Restore stdout/stderr
             sys.stdout = old_stdout
+            sys.stderr = old_stderr
 
 
-# Create a global instance for persistence across tool calls
-_repl_instance = PersistentPythonREPL()
-
-
-def create_python_repl_tool():
-
+def create_python_repl_tool() -> StructuredTool:
     """
-    Create a Python REPL tool for LangChain agents with persistent state.
+    Create a NEW Python REPL tool instance.
     
-    Returns:
-        StructuredTool configured for Python code execution
+    CRITICAL CHANGE: This creates a NEW PersistentPythonREPL() every time it is called.
+    This ensures that User A's variables do not leak into User B's session in Streamlit.
     """
     
+    # Instantiate a fresh REPL for this specific tool instance
+    repl_instance = PersistentPythonREPL()
+
     class PythonREPLInput(BaseModel):
         code: str = Field(
-            description="Python code to execute. Has access to pandas (pd), numpy (np), matplotlib.pyplot (plt), and xarray (xr). Variables persist between executions."
+            description="Python code to execute. Pre-loaded: pandas(pd), numpy(np), matplotlib.pyplot(plt), xarray(xr)."
         )
-    # Get available variables info
-    available_vars = []
-    if hasattr(_repl_instance, 'locals'):
-        for key, value in _repl_instance.locals.items():
-            if not key.startswith('__'):
-                available_vars.append(f"{key} ({type(value).__name__})")
-    
-    vars_description = ""
-    if available_vars:
-        vars_description = f"\nPre-loaded variables: {', '.join(available_vars[:10])}..."
-    
+
+    # Bind the execute method of THIS specific instance
     tool = StructuredTool.from_function(
-        func=_repl_instance.execute,
+        func=repl_instance.execute,
         name="python_repl",
         description=(
-            "Execute Python code for data analysis and calculations. "
-            "Available: pandas as pd, numpy as np, matplotlib.pyplot as plt, xarray as xr. "
-            "Variables and imports persist between executions like a Jupyter notebook. "
-            "The last expression in the code block will be automatically printed."
-            + vars_description
+            "Execute Python code for data analysis and visualization. "
+            "State persists between calls within this session. "
+            "The last line expression is automatically printed. "
+            "Plots must be saved to 'work_dir' using plt.savefig()."
         ),
         args_schema=PythonREPLInput
     )
+    
     return tool

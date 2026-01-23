@@ -114,14 +114,31 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     - "ECOCROP_search" will help you determine the specific environmental requirements for the crop of interest from ecocrop database.
     <Important> call "ECOCROP_search" ONLY and ONLY if you sure that the user question is related to the crop of interest.
     
-    - "retrieve_era5_data" allows you to extract actual historical reanalysis data (ERA5) for specific dates.
-    <Important> 
-    Use this tool to compare current or specific past weather conditions (e.g., recent years, specific storms) against the long-term climate projections provided by other tools.
-    These values would be helpful for further comparison over the projections.
-    EFFICIENCY RULE: Only request SHORT time ranges (e.g., 1 to 7 days, or a specific week) to ensure the extraction takes only 1-2 minutes max. 
-    Do NOT request long time series (like full years) with this tool.
-    **PATH RULE: You MUST always pass the argument `work_dir` = '{work_dir_str}' to this tool.**
-    </Important>
+    - "retrieve_era5_data" allows you to extract ERA5 Surface climate data from Earthmover (Arraylake).
+        <Important>
+        Use this tool to retrieve **historical weather/climate context (Time Series)**.
+        
+        **DATA SOURCE:** Earthmover (Arraylake), hardcoded to "temporal" mode.
+        **VARIABLE CODES:** Use short codes: 't2' (Temp), 'u10'/'v10' (Wind), 'mslp' (Pressure), 'tp' (Precip).
+        **PATH RULE:** You MUST always pass the argument `work_dir` = '{work_dir_str}' to this tool.
+        
+        **OUTPUT USAGE:** 
+        The tool returns a path to a Zarr store. 
+        **CRITICAL:** If you requested a specific point, the data is likely already reduced to that point (nearest neighbor).
+        
+        How to load in python_repl:
+        ```python
+        import xarray as xr
+        # Use chunks={{{{}}}} to open Zarr efficiently
+        ds = xr.open_dataset(path_from_tool_response, engine='zarr', chunks={{{{}}}})
+        
+        # If lat/lon are scalar (0 dimensions), access directly:
+        # data = ds['t2'].to_series()
+        
+        # If lat/lon are still dimensions (e.g. size 1), average them first to be safe:
+        # if 'latitude' in ds.dims: ds = ds.mean(dim=['latitude', 'longitude'])
+        ```
+        </Important>
 
     - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations. 
         <Important> Use this tool when:
@@ -214,6 +231,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     4. **Iterate**: If a plot is not clear, refine the code and plot it again.
 
     **DO NOT BE LAZY.** Perform the code execution, generate the graphs, and provide a detailed, evidence-based answer based on your Python analysis.
+    **YOU HAVE JUST 10 STEPS TO COMPETE THE ANALYSIS, SO TAKE STEPS WISELY**
     """
     if config['model_type'] in ("local", "aitta"):
         prompt += f"""
@@ -916,7 +934,8 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     # List of tools
     #tools = [data_extraction_tool, rag_tool, wikipedia_tool, ecocrop_tool, python_repl_tool]
     # Added era5_retrieval_tool and ensured python_repl_tool is in the list
-    tools = [data_extraction_tool, rag_tool, ecocrop_tool, wikipedia_tool, era5_retrieval_tool, python_repl_tool]
+    #tools = [data_extraction_tool, rag_tool, ecocrop_tool, wikipedia_tool, era5_retrieval_tool, python_repl_tool]
+    tools = [data_extraction_tool, rag_tool, ecocrop_tool, era5_retrieval_tool, python_repl_tool]
 
     ##Append image viewer for openai models
     #if config['model_type'] == "openai":
@@ -940,7 +959,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         prompt=ChatPromptTemplate.from_messages(
             [
                 ("system", prompt),
-                ("user", state.user),
+                ("user", "{input}"),  # Use placeholder instead of state.user directly
                 MessagesPlaceholder(variable_name="chat_history"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
             ]
@@ -955,17 +974,16 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     )
 
     # Prepare input for the agent
+    # Only include variables that are used as template placeholders
     agent_input = {
         "input": state.user,
         "chat_history": state.messages,
-        "lat": lat,
-        "lon": lon,
         "location_str": state.input_params['location_str']
     }
 
 
     # Run the agent
-    result = agent_executor(agent_input)
+    result = agent_executor.invoke(agent_input)
 
     # Extract the tool outputs
     tool_outputs = {}
