@@ -90,8 +90,18 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     work_dir_str = str(work_dir.resolve()) 
 
     # System prompt
+# System prompt - UPDATED FOR DEEP ANALYSIS & CREATIVITY
     prompt = f"""
-    You are the smart agent of ClimSight. Your task is to retrieve necessary components of the climatic datasets based on the user's request.
+    You are an expert Climate Data Scientist and Python Developer working for ClimSight. 
+    Your goal is not just to retrieve data, but to conduct a DEEP, rigorous, and CREATIVE analysis of climate data for the location (Lat: {lat}, Lon: {lon}).
+
+    ### YOUR CORE MISSION:
+    1. **Explore & Analyze**: Do not just fetch numbers. Calculate trends, identify extreme events, and compare datasets.
+    2. **Visualize**: You MUST generate scientific plots (matplotlib/seaborn) to visualize findings. A picture is worth a thousand numbers.
+    3. **Synthesize**: Combine historical context (ERA5) with future projections to tell a complete story.
+
+    ### AVAILABLE TOOLS AND TECHNICAL REQUIREMENTS:
+
     You have access to tools called "get_data_components", "wikipedia_search", "RAG_search", "ECOCROP_search", "python_repl" and "retrieve_era5_data" which you can use to retrieve the necessary environmental data components.
     
     - "get_data_components" will retrieve the necessary data from the climatic datasets at the location of interest (latitude: {lat}, longitude: {lon}). It accepts an 'environmental_data' parameter to specify the type of data, and a 'months' parameter to specify which months to retrieve data for. The 'months' parameter is a list of month names (e.g., ['Jan', 'Feb', 'Mar']). If 'months' is not specified, data for all months will be retrieved.
@@ -189,6 +199,21 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         **Your actual work_dir path is: {work_dir_str}**
         **Always use the full path stored in a variable when calling image_viewer!**
         </Important>
+
+    ### CREATIVE & ANALYTICAL MANDATES (DO NOT SKIP):
+    
+    1. **Think Like a Scientist**: Before running code, plan your analysis using Chain of Thought. What specific climate indicators matter for this user?
+    2. **Be Visual**: If you retrieve time-series data, you MUST plot it. 
+       - Use `python_repl` to generate the plot.
+       - Save it to `work_dir`.
+       - Use `image_viewer` to inspect it.
+    3. **Go Deeper**: 
+       - Don't just say "Temperature will rise." 
+       - Calculate *how much* standard deviation changes. 
+       - Compare the historical ERA5 extreme events to future projected means.
+    4. **Iterate**: If a plot is not clear, refine the code and plot it again.
+
+    **DO NOT BE LAZY.** Perform the code execution, generate the graphs, and provide a detailed, evidence-based answer based on your Python analysis.
     """
     if config['model_type'] in ("local", "aitta"):
         prompt += f"""
@@ -479,12 +504,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_agents'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
+                streaming=False
             )                                  
         elif config['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
                 model_name=config['model_name_tools'],
-                temperature=temperature
+                temperature=temperature,
+                streaming=False
             )
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(
@@ -579,9 +606,11 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
         #raw_documents.append(article_text) 
         #content_str = 'Encyclopedia article: ' + article_text + '\n' + 'Wikipedia article: ' + raw_documents[0].page_content
-        content_str = 'Wikipedia article: ' + raw_documents[0].page_content
         if not raw_documents:
             return "No Wikipedia article found for the query."
+        
+        content_str = 'Wikipedia article: ' + raw_documents[0].page_content
+
 
         # Run the chain
         chain = prompt | llm
@@ -694,12 +723,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
+                streaming=False
             )                                  
         elif config['model_type'] == "openai":
             llm = ChatOpenAI(
                 openai_api_key=api_key,
                 model_name=config['model_name_tools'],
-                temperature=temperature
+                temperature=temperature,
+                streaming=False
             )        
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(
@@ -757,12 +788,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['model_name_tools'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = 0,
+                streaming=False
             )                                  
         elif config['model_type'] == "openai":        
             llm = ChatOpenAI(
                 openai_api_key=api_key,
                 model_name=config['model_name_tools'],
-                temperature=0.0
+                temperature=0.0,
+                streaming=False
             )        
         elif config['model_type'] == "aitta":
             llm = get_aitta_chat_model(config['model_name_tools'], temperature = 0)
@@ -867,12 +900,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             model_name=config['model_name_agents'],  # Match the exact model name you used
             openai_api_key=api_key_local,
             temperature  = 0,
+            streaming=False
         )                  
     elif config['model_type'] == "openai":        
         llm = ChatOpenAI(
             openai_api_key=api_key,
             model_name=config['model_name_agents'],
-            temperature=0.0
+            temperature=0.0,
+            streaming=False
         )
 
     elif config['model_type'] == "aitta":
