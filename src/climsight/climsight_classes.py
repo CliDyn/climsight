@@ -34,4 +34,5 @@ class AgentState(BaseModel):
     climate_data_dir: str = ""  # Saved climatology directory
     era5_data_dir: str = ""  # ERA5 output directory
     era5_climatology_response: dict = {}  # ERA5 observed climatology (ground truth)
+    era5_tool_response: str = ""
     # stream_handler: StreamHandler  # Uncomment if needed

@@ -23,6 +23,7 @@ from tools.get_data_components import create_get_data_components_tool
 from tools.era5_climatology_tool import create_era5_climatology_tool
 from tools.era5_retrieval_tool import era5_retrieval_tool
 from tools.python_repl import CustomPythonREPLTool
+from tools.image_viewer import create_image_viewer_tool
 from tools.reflection_tools import reflect_tool
 from tools.visualization_tools import (
     list_plotting_data_files_tool,
@@ -145,11 +146,28 @@ Your job is to provide quantitative climate analysis with visualizations.
 
     # TOOL #3: ERA5 time series download (optional, for detailed analysis)
     if has_era5_download:
+        work_dir_str = sandbox_paths.get("uuid_main_dir", "") if "sandbox_paths" in dir() else ""
         prompt += f"""
-{tool_num}. **retrieve_era5_data** - Download detailed ERA5 time series (OPTIONAL)
-   - Use ONLY if you need year-by-year data beyond the climatology
-   - For most analyses, get_era5_climatology is sufficient
-   - Specify start_date, end_date (YYYY-MM-DD), and lat/lon bounds
+{tool_num}. **retrieve_era5_data** - Retrieve ERA5 Surface climate data from Earthmover (Arraylake)
+   <Important>
+   Use this tool to retrieve **historical weather/climate context (Time Series)**.
+
+   **DATA SOURCE:** Earthmover (Arraylake), hardcoded to "temporal" mode.
+   **VARIABLE CODES:** Use short codes: 't2' (Temp), 'u10'/'v10' (Wind), 'mslp' (Pressure), 'tp' (Precip).
+   **PATH RULE:** You MUST always pass `work_dir` to this tool.
+
+   **OUTPUT USAGE:**
+   The tool returns a path to a Zarr store.
+   **CRITICAL:** If you requested a specific point, the data is likely already reduced to that point (nearest neighbor).
+
+   How to load result in Python_REPL:
+   ```python
+   import xarray as xr
+   ds = xr.open_dataset(path_from_tool_response, engine='zarr', chunks={{}})
+   # If lat/lon are scalar, access directly:
+   data = ds['t2'].to_series()
+   ```
+   </Important>
 """
         tool_num += 1
 
@@ -209,6 +227,17 @@ Your job is to provide quantitative climate analysis with visualizations.
 {tool_num}. **list_plotting_data_files** - List files in sandbox directories
 """
     tool_num += 1
+
+    # image_viewer only available with Python REPL
+    if has_repl:
+        prompt += f"""
+{tool_num}. **image_viewer** - View generated plots to verify quality
+   <Important>
+   Pass the EXACT path printed by Python_REPL after saving a plot.
+   Use this to verify your visualizations before finalizing.
+   </Important>
+"""
+        tool_num += 1
 
     # reflect_on_image and wise_agent only available with Python REPL
     if has_repl:
@@ -481,7 +510,12 @@ Required analysis:
     # 5. Helper tools
     tools.append(list_plotting_data_files_tool)
 
-    # 6. Image reflection and wise_agent - ONLY when Python REPL is enabled
+    # 6. Image viewer - ONLY when Python REPL is enabled
+    if has_python_repl:
+        image_viewer_tool = create_image_viewer_tool()
+        tools.append(image_viewer_tool)
+
+    # 7. Image reflection and wise_agent - ONLY when Python REPL is enabled
     #    (these tools are for evaluating/creating visualizations)
     if has_python_repl:
         tools.append(reflect_tool)
@@ -529,10 +563,17 @@ Required analysis:
             if isinstance(obs, dict):
                 plot_images.extend(obs.get("plot_images", []))
         if action.tool == "retrieve_era5_data":
-            # Keep ERA5 time series outputs in state only (no raw text in summary).
-            state.input_params.setdefault("era5_results", []).append(
-                _normalize_tool_observation(observation)
-            )
+            # Handle ERA5 retrieval tool output
+            obs = _normalize_tool_observation(observation)
+            if isinstance(obs, dict):
+                era5_output = str(obs)
+            elif hasattr(obs, 'content'):
+                era5_output = obs.content
+            else:
+                era5_output = str(obs)
+            # Store in state
+            state.era5_tool_response = era5_output
+            state.input_params.setdefault("era5_results", []).append(obs)
 
     analysis_text = result.get("output", "")
 
@@ -564,4 +605,5 @@ Required analysis:
         "data_analysis_images": plot_images,
         "data_analysis_prompt_text": analysis_brief,
         "era5_climatology_response": state.era5_climatology_response,
+        "era5_tool_response": getattr(state, 'era5_tool_response', None),
     }

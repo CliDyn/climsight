@@ -4,18 +4,14 @@ Tools for Climsight smart agents.
 """
 
 from .image_viewer import create_image_viewer_tool
-from .python_repl import CustomPythonREPLTool
+from .python_repl import CustomPythonREPLTool, create_python_repl_tool
 from .era5_climatology_tool import create_era5_climatology_tool
+from .era5_retrieval_tool import era5_retrieval_tool
 
 __all__ = [
     'CustomPythonREPLTool',
+    'create_python_repl_tool',
     'create_image_viewer_tool',
     'create_era5_climatology_tool',
+    'era5_retrieval_tool',
 ]
-
-# Backwards-compatible import if older code expects create_python_repl_tool.
-try:
-    from .python_repl import create_python_repl_tool  # type: ignore
-    __all__.append('create_python_repl_tool')
-except Exception:
-    pass

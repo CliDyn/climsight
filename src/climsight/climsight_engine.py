@@ -985,6 +985,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         - **No Keywords Required:** Do not look for specific words like "climate" or "weather".
         - **Accept Fragments:** "Bridge", "Data Center", "Tomatoes", "Here", "My car" are all **VALID**.
         - **Accept Statements:** "I am worried about the heat", "Building a shed" are **VALID**.
+        - **Accept Technical Constraints:** Requests specifying years, models, or datasets (e.g., "Use 1980-2000 baseline") are **VALID**.
 
         Based on the conversation, decide on one of the following responses:
         - "next": either "FINISH" or "CONTINUE"
