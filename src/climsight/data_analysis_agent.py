@@ -163,7 +163,7 @@ Your job is to provide quantitative climate analysis with visualizations.
    How to load result in Python_REPL:
    ```python
    import xarray as xr
-   ds = xr.open_dataset(path_from_tool_response, engine='zarr', chunks={{}})
+   ds = xr.open_dataset(path_from_tool_response, engine='zarr', chunks={{{{}}}})
    # If lat/lon are scalar, access directly:
    data = ds['t2'].to_series()
    ```
