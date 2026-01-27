@@ -512,7 +512,11 @@ Required analysis:
 
     # 6. Image viewer - ONLY when Python REPL is enabled
     if has_python_repl:
-        image_viewer_tool = create_image_viewer_tool()
+        # Extract model name from config or default to gpt-4o
+        vision_model = config.get("llm_combine", {}).get("model_name", "gpt-4o")
+        
+        # FIX: Pass the required api_key and model_name
+        image_viewer_tool = create_image_viewer_tool(api_key, vision_model)
         tools.append(image_viewer_tool)
 
     # 7. Image reflection and wise_agent - ONLY when Python REPL is enabled
