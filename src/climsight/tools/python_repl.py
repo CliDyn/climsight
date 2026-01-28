@@ -274,19 +274,21 @@ class CustomPythonREPLTool(PythonREPLTool):
                 "import json"
             ]
             
-            # Safe path injection using repr() (handles Windows backslashes/quotes)
+            # Safe path injection using repr()
             if self._results_dir:
-                init_code.append(f"results_dir = {repr(self._results_dir)}")
+                # FIX: Since the kernel CWD is already the sandbox root, 
+                init_code.append(f"results_dir = 'results'") 
                 init_code.append("os.makedirs(results_dir, exist_ok=True)")
             
             if "climate_data_dir" in self._datasets:
-                cd_dir = self._datasets["climate_data_dir"]
-                init_code.append(f"climate_data_dir = {repr(cd_dir)}")
+                # FIX: Set simple relative path because Kernel CWD is already the sandbox root
+                init_code.append(f"climate_data_dir = 'climate_data'")
                 # Auto-load main data if exists
                 init_code.append(f"try:\n    if os.path.exists(f'{{climate_data_dir}}/data.csv'):\n        df = pd.read_csv(f'{{climate_data_dir}}/data.csv')\n        print('Loaded df from data.csv')\nexcept Exception as e: print(f'Auto-load failed: {{e}}')")
 
             if "era5_data_dir" in self._datasets:
-                 init_code.append(f"era5_data_dir = {repr(self._datasets['era5_data_dir'])}")
+                # FIX: Set simple relative path because Kernel CWD is already the sandbox root
+                init_code.append(f"era5_data_dir = 'era5_data'")
 
             # Execute and check status
             init_res = repl.run("\n".join(init_code))

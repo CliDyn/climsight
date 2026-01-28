@@ -150,7 +150,12 @@ def retrieve_era5_data(
             main_dir = os.path.join("tmp", "sandbox", "era5_earthmover")
 
         os.makedirs(main_dir, exist_ok=True)
-        era5_dir = os.path.join(main_dir, "era5_data")
+
+        # FIX: Prevent double nesting if work_dir already ends with 'era5_data'
+        if os.path.basename(main_dir.rstrip(os.sep)) == "era5_data":
+            era5_dir = main_dir
+        else:
+            era5_dir = os.path.join(main_dir, "era5_data")
         os.makedirs(era5_dir, exist_ok=True)
 
         # Check Cache

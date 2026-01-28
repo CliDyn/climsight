@@ -56,27 +56,32 @@ def _build_climate_data_summary(df_list: List[Dict[str, Any]]) -> str:
 
 
 def _build_datasets_text(state) -> str:
-    """Build simple dataset paths text for prompt injection."""
+    """Build simple dataset paths text for prompt injection.
+
+    IMPORTANT: The Python REPL kernel CWD is already set to the sandbox root,
+    so we tell the agent to use RELATIVE paths (not full tmp/sandbox/... paths).
+    """
     lines = [
-        "## Sandbox Paths (use these exact paths in your code)",
-        f"- Main directory: {state.uuid_main_dir}",
-        f"- Results directory (save plots here): {state.results_dir}",
-        f"- Climate data: {state.climate_data_dir}",
+        "## Sandbox Paths (Python REPL is ALREADY inside the sandbox directory)",
+        "**CRITICAL: Use RELATIVE paths in your Python code, NOT full paths starting with 'tmp/sandbox/...'**",
+        f"- Current Working Directory: '.' (which is {state.uuid_main_dir})",
+        f"- Results directory: 'results' (save all plots here)",
+        f"- Climate data: 'climate_data'",
     ]
 
     if state.era5_data_dir:
-        lines.append(f"- ERA5 data: {state.era5_data_dir}")
+        lines.append(f"- ERA5 data: 'era5_data'")
 
     # List available climate data files
     if state.climate_data_dir and os.path.exists(state.climate_data_dir):
         try:
             files = os.listdir(state.climate_data_dir)
             if files:
-                lines.append(f"\n## Climate Data Files Available")
-                lines.append(f"Files in climate_data/: {', '.join(files)}")
+                lines.append(f"\n## Climate Data Files Available (in 'climate_data/' folder)")
+                lines.append(f"Files: {', '.join(files)}")
                 # Highlight the main data.csv file
                 if "data.csv" in files:
-                    lines.append("Note: 'data.csv' contains the main climatology dataset")
+                    lines.append("Note: Load with `pd.read_csv('climate_data/data.csv')`")
         except Exception as e:
             logger.warning(f"Could not list climate data files: {e}")
 
@@ -146,7 +151,6 @@ Your job is to provide quantitative climate analysis with visualizations.
 
     # TOOL #3: ERA5 time series download (optional, for detailed analysis)
     if has_era5_download:
-        work_dir_str = sandbox_paths.get("uuid_main_dir", "") if "sandbox_paths" in dir() else ""
         prompt += f"""
 {tool_num}. **retrieve_era5_data** - Retrieve ERA5 Surface climate data from Earthmover (Arraylake)
    <Important>
@@ -154,17 +158,22 @@ Your job is to provide quantitative climate analysis with visualizations.
 
    **DATA SOURCE:** Earthmover (Arraylake), hardcoded to "temporal" mode.
    **VARIABLE CODES:** Use short codes: 't2' (Temp), 'u10'/'v10' (Wind), 'mslp' (Pressure), 'tp' (Precip).
-   **PATH RULE:** You MUST always pass `work_dir` to this tool.
+   **WORK_DIR:** Pass work_dir='.' to save in current sandbox.
 
-   **OUTPUT USAGE:**
-   The tool returns a path to a Zarr store.
-   **CRITICAL:** If you requested a specific point, the data is likely already reduced to that point (nearest neighbor).
+   **OUTPUT & LOADING:**
+   The tool returns an absolute path to a Zarr store (saved in 'era5_data/' folder).
+   **CRITICAL:** In Python_REPL, use RELATIVE paths to load the data since CWD is already the sandbox:
 
-   How to load result in Python_REPL:
    ```python
    import xarray as xr
-   ds = xr.open_dataset(path_from_tool_response, engine='zarr', chunks={{{{}}}})
-   # If lat/lon are scalar, access directly:
+   import glob
+
+   # List available ERA5 Zarr files (RELATIVE path)
+   era5_files = glob.glob('era5_data/*.zarr')
+   print(era5_files)
+
+   # Load using RELATIVE path (NOT the absolute path from tool response)
+   ds = xr.open_dataset('era5_data/era5_t2_temporal_....zarr', engine='zarr', chunks={{{{}}}})
    data = ds['t2'].to_series()
    ```
    </Important>
@@ -176,8 +185,13 @@ Your job is to provide quantitative climate analysis with visualizations.
         prompt += f"""
 {tool_num}. **Python_REPL** - Execute Python code for data analysis and visualizations
    - Pre-loaded: pandas (pd), numpy (np), matplotlib.pyplot (plt), xarray (xr)
-   - Working directory is the sandbox root
+   - Working directory is ALREADY the sandbox root
    - ALWAYS save plots to results/ directory
+
+   **CRITICAL PATH RULE:**
+   ❌ WRONG: `base='tmp/sandbox/uuid...'` then `f'{{{{base}}}}/era5_data/...'`
+   ✓ CORRECT: Use relative paths directly: `'era5_data/...'`, `'climate_data/...'`, `'results/...'`
+   The kernel CWD is already inside the sandbox, so DO NOT prepend 'tmp/sandbox/...'!
 
    **Climate Model Data** (climate_data/data.csv):
    - Monthly climatology from climate models (MODEL projections, not observations)

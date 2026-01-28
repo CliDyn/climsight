@@ -82,7 +82,7 @@ Provide a concise but thorough scientific analysis focused on extracting actiona
                     ]
                 }
             ],
-            max_tokens=5000
+            max_completion_tokens=5000
         )
         
         return response.choices[0].message.content

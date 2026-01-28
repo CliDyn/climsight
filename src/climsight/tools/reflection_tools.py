@@ -117,7 +117,7 @@ Please provide a structured review addressing each of these points. Conclude wit
                 ]
             }
         ],
-        max_tokens=1000
+        max_completion_tokens=1000
     )
 
     return response.choices[0].message.content

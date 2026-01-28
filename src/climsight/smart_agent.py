@@ -101,21 +101,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
       <Important> ONLY use this tool if the user's question is clearly about agriculture or crops.
       Do NOT use it for general climate queries. </Important>
 
-    - "python_repl" allows you to execute Python code for data analysis, visualization, and calculations.
-         <Important> Use this tool when:
-        - Creating visualizations (plots, charts, graphs) of climate data
-
-        **CRITICAL: Your working directory is available at `work_dir` = '{work_dir_str}'**
-        **When saving plots, ALWAYS store the full path in a variable for later use!**
-
-        **CORRECT way to save and reference images:**
-           ```python
-           plot_path = f'{{{{work_dir}}}}/temperature_plot.png'
-           plt.savefig(plot_path)
-           print(plot_path) # PRINT IT TO CONFIRM
-           ```
-        </Important>
-
     **Your goal**: Gather comprehensive background information and compile it into a well-structured
     summary that will be used by subsequent agents for data analysis.
 
@@ -529,7 +514,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
 
     # Create python_repl tool
-    python_repl_tool = create_python_repl_tool()
+    #python_repl_tool = create_python_repl_tool()
 
     # Initialize the LLM
     if config['llm_smart']['model_type'] == "local":
@@ -550,7 +535,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         llm = get_aitta_chat_model(config['llm_smart']['model_name'], temperature = 0)
 
     # List of tools
-    tools = [rag_tool, ecocrop_tool, wikipedia_tool, python_repl_tool]
+    tools = [rag_tool, ecocrop_tool, wikipedia_tool]
 
     prompt += """\nadditional information:\n
     question is related to this location: {location_str} \n
