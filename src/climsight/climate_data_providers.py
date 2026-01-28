@@ -530,8 +530,13 @@ class ICCPProvider(ClimateDataProvider):
             # Open NetCDF file
             ds = xr.open_dataset(file_path)
 
+            # Normalize longitude to 0-360 range if dataset uses that convention
+            query_lon = lon
+            if lon < 0 and ds.lon.min() >= 0:
+                query_lon = lon + 360
+
             # Use bilinear interpolation to get data at the exact point
-            ds_interpolated = ds.interp(lat=lat, lon=lon, method='linear')
+            ds_interpolated = ds.interp(lat=lat, lon=query_lon, method='linear')
 
             # Extract variables for all 12 months
             month_names = [calendar.month_name[i] for i in range(1, 13)]

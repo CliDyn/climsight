@@ -63,10 +63,16 @@ def load_data(config):
 def select_data(dataset, variable, dimensions, lat, lon):
     """
     Selects data for a given variable at specified latitude and longitude.
+    Handles longitude normalization for datasets using 0-360 range.
     """
+    # Normalize longitude if dataset uses 0-360 range and input is negative
+    lon_dim = dimensions['longitude']
+    if lon < 0 and dataset[lon_dim].min() >= 0:
+        lon = lon + 360
+
     return dataset[variable].sel(**{
         dimensions['latitude']: lat,
-        dimensions['longitude']: lon},
+        lon_dim: lon},
         method="nearest") 
 
 def verify_shape(hist_units, future_units, variable):
