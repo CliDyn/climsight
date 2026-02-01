@@ -130,24 +130,31 @@ def retrieve_era5_data(
         logging.info(f"🌍 Earthmover ERA5 Retrieval ({query_type}): {short_var} | {start_date} to {end_date}")
 
         # --- 1. Sandbox / Path Logic ---
+        # Priority: 1) CLIMSIGHT_THREAD_ID env var, 2) Streamlit session, 3) work_dir, 4) default
         main_dir = None
-        if work_dir and os.path.exists(work_dir):
-            main_dir = work_dir
-        # Fallback logic for streamlit session if work_dir not provided
+        thread_id = os.environ.get("CLIMSIGHT_THREAD_ID")
+
+        if thread_id:
+            # Use sandbox path based on thread_id (set by sandbox_utils)
+            main_dir = os.path.join("tmp", "sandbox", thread_id)
         elif "streamlit" in sys.modules and st is not None and hasattr(st, 'session_state'):
             try:
                 session_uuid = getattr(st.session_state, "session_uuid", None)
                 if session_uuid:
                     main_dir = os.path.join("tmp", "sandbox", session_uuid)
                 else:
-                    thread_id = st.session_state.get("thread_id")
-                    if thread_id:
-                        main_dir = os.path.join("tmp", "sandbox", thread_id)
+                    st_thread_id = st.session_state.get("thread_id")
+                    if st_thread_id:
+                        main_dir = os.path.join("tmp", "sandbox", st_thread_id)
             except:
                 pass
 
+        # Fallback to work_dir if no sandbox available
+        if not main_dir and work_dir:
+            main_dir = work_dir
+
         if not main_dir:
-            main_dir = os.path.join("tmp", "sandbox", "era5_earthmover")
+            main_dir = os.path.join("tmp", "sandbox", "era5_default")
 
         os.makedirs(main_dir, exist_ok=True)
 

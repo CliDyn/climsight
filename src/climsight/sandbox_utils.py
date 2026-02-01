@@ -28,7 +28,8 @@ def ensure_thread_id(session_state=None, existing_thread_id: str = "") -> str:
         session_state["thread_id"] = thread_id
 
     # Expose to non-Streamlit tools (CLI, background workers).
-    os.environ.setdefault("CLIMSIGHT_THREAD_ID", thread_id)
+    # CRITICAL: Always update (not setdefault) to ensure all tools use the same thread_id
+    os.environ["CLIMSIGHT_THREAD_ID"] = thread_id
 
     return thread_id
 

@@ -187,16 +187,18 @@ Your job is to provide quantitative climate analysis with visualizations.
    - Pre-loaded: pandas (pd), numpy (np), matplotlib.pyplot (plt), xarray (xr)
    - Working directory is ALREADY the sandbox root
    - ALWAYS save plots to results/ directory
-
    **CRITICAL PATH RULE:**
    ❌ WRONG: `base='tmp/sandbox/uuid...'` then `f'{{{{base}}}}/era5_data/...'`
    ✓ CORRECT: Use relative paths directly: `'era5_data/...'`, `'climate_data/...'`, `'results/...'`
    The kernel CWD is already inside the sandbox, so DO NOT prepend 'tmp/sandbox/...'!
 
-   **Climate Model Data** (climate_data/data.csv):
-   - Monthly climatology from climate models (MODEL projections, not observations)
-   - Columns: Month, mean2t (temperature °C), tp (precipitation), wind_u, wind_v
-   - Contains historical period AND future projections
+   **Climate Model Data** (climate_data/ directory):
+   - `climate_data_manifest.json` - READ THIS FIRST to see all available simulations
+   - `simulation_1.csv`, `simulation_2.csv`, ... - Data for different time periods
+   - `simulation_N_meta.json` - Metadata (years, description) for each simulation
+   - `data.csv` - Main/baseline simulation only (for quick access)
+   - Columns: Month, mean2t (temperature °C), tp (precipitation mm/month), wind_u, wind_v, wind_speed, wind_direction
+   - Use list_plotting_data_files tool to discover all available files
 
    **ERA5 Climatology** (era5_climatology.json):
    - After calling get_era5_climatology, results are saved here
@@ -209,30 +211,35 @@ Your job is to provide quantitative climate analysis with visualizations.
    import json
    import matplotlib.pyplot as plt
 
-   # Load ERA5 observations (ground truth)
+   # 1. Load manifest to see all available simulations
+   manifest = json.load(open('climate_data/climate_data_manifest.json'))
+   print(f"Data source: {{{{manifest['source']}}}}")
+   for entry in manifest['entries']:
+       print(f"  {{{{entry['csv']}}}} : {{{{entry['years_of_averaging']}}}}")
+
+   # 2. Load ERA5 observations (ground truth)
    era5 = json.load(open('era5_climatology.json'))
    era5_temp = era5['variables']['t2m']['monthly_values']
 
-   # Load climate model projections
-   df = pd.read_csv('climate_data/data.csv')
+   # 3. Load multiple climate model simulations
+   simulations = []
+   for entry in manifest['entries']:
+       df = pd.read_csv(f"climate_data/{{{{entry['csv']}}}}")
+       simulations.append({{{{'df': df, 'years': entry['years_of_averaging'], 'main': entry['main']}}}}))
 
-   # Compare: ERA5 observations vs climate model
+   # 4. Plot comparison
    months = list(era5_temp.keys())
-   era5_values = list(era5_temp.values())
-   model_values = df['mean2t'].tolist()[:12]  # historical period
-
-   plt.figure(figsize=(10, 6))
-   plt.plot(months, era5_values, 'b-o', label='ERA5 Observations (2015-2025)')
-   plt.plot(months, model_values, 'r--s', label='Climate Model')
+   plt.figure(figsize=(12, 6))
+   plt.plot(months, list(era5_temp.values()), 'k-o', linewidth=2, label='ERA5 Observations')
+   for sim in simulations:
+       style = '-' if sim['main'] else '--'
+       plt.plot(months, sim['df']['mean2t'].tolist(), style, label=f"Model {{{{sim['years']}}}}")
    plt.xlabel('Month')
    plt.ylabel('Temperature (°C)')
-   plt.title('Observed vs Modeled Temperature')
    plt.legend()
-   plt.xticks(rotation=45)
    plt.tight_layout()
-   plt.savefig('results/era5_vs_model.png', dpi=150)
+   plt.savefig('results/temperature_comparison.png', dpi=150)
    plt.close()
-   print('Plot saved to results/era5_vs_model.png')
    ```
 """
         tool_num += 1
@@ -271,23 +278,43 @@ Call get_era5_climatology FIRST to get the observed climate baseline.
 - Extract at minimum: temperature (t2m), precipitation (tp)
 - This is what the climate ACTUALLY IS at this location (2015-2025 average)
 """
+        # Add ERA5 time series download and analysis steps if available
+        if has_era5_download and has_repl:
+            prompt += """
+**STEP 2 - DOWNLOAD ERA5 TIME SERIES (RECOMMENDED):**
+Call retrieve_era5_data to get detailed historical time series for deeper analysis.
+- Download temperature (t2) and precipitation (tp) for 2015-2024
+- This provides year-by-year data, not just climatological averages
+- Data saved to era5_data/ as .zarr files for Python analysis
+- Enables trend analysis, extreme event detection, interannual variability
+
+**STEP 3 - ANALYZE ERA5 TIME SERIES:**
+Use Python_REPL to analyze the downloaded ERA5 time series:
+```python
+import xarray as xr
+ds = xr.open_zarr('era5_data/era5_t2_temporal_YYYYMMDD_YYYYMMDD.zarr')
+# Compute trends, identify extreme years, plot interannual variability
+```
+"""
 
         if has_repl:
-            prompt += """
-**STEP 2 - LOAD MODEL DATA:**
+            # step_offset accounts for ERA5 download (step 2) and analysis (step 3) when enabled
+            step_offset = 2 if has_era5_download else 0
+            prompt += f"""
+**STEP {2 + step_offset} - LOAD MODEL DATA:**
 Use Python_REPL to read climate_data/data.csv (model projections)
 
-**STEP 3 - COMPARE OBSERVATIONS vs MODEL:**
+**STEP {3 + step_offset} - COMPARE OBSERVATIONS vs MODEL:**
 - ERA5 = ground truth (what we observe NOW)
 - Model historical = what the model simulates for recent past
 - Difference = MODEL BIAS (critical for interpreting future projections)
 
-**STEP 4 - ANALYZE FUTURE WITH CONTEXT:**
+**STEP {4 + step_offset} - ANALYZE FUTURE WITH CONTEXT:**
 - Show future projections from climate model
 - Explain how model bias affects confidence
 - Future change = (Model future) - (ERA5 baseline)
 
-**STEP 5 - CREATE VISUALIZATIONS (MANDATORY):**
+**STEP {5 + step_offset} - CREATE VISUALIZATIONS (MANDATORY):**
 - Plot 1: ERA5 observations vs model (shows model bias)
 - Plot 2: Future projections with ERA5 baseline
 - Save ALL plots to results/ directory
@@ -361,7 +388,7 @@ Your final response should include:
 """
 
     prompt += """
-Limit total tool calls to 20.
+Limit total tool calls to 50.
 """
     return prompt
 
