@@ -31,6 +31,9 @@ conda activate climsight
 
 # Download required data
 python download_data.py
+
+# Optional: download DestinE data (large ~12 GB, not downloaded by default)
+python download_data.py DestinE
 ```
 
 ### Alternative: Using pip from source
@@ -49,6 +52,9 @@ pip install -r requirements.txt
 
 # Download required data
 python download_data.py
+
+# Optional: download DestinE data (large ~12 GB, not downloaded by default)
+python download_data.py DestinE
 ```
 
 ### Running with Docker (Stable Release v1.0.0)
