@@ -560,8 +560,12 @@ Required analysis:
         # Extract model name from config or default to gpt-4o
         vision_model = config.get("llm_combine", {}).get("model_name", "gpt-4o")
         
-        # FIX: Pass the required api_key and model_name
-        image_viewer_tool = create_image_viewer_tool(api_key, vision_model)
+        # Pass sandbox_path so relative paths from the agent can be resolved
+        image_viewer_tool = create_image_viewer_tool(
+            openai_api_key=api_key,
+            model_name=vision_model,
+            sandbox_path=state.uuid_main_dir
+        )
         tools.append(image_viewer_tool)
 
     # 7. Image reflection and wise_agent - ONLY when Python REPL is enabled
