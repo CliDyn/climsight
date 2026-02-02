@@ -1,10 +1,10 @@
 # ClimSight Dependencies
-# Generated from pyproject.toml
 # Install with: pip install -r requirements.txt
 
 # Web Framework
 streamlit
 streamlit-folium
+folium
 
 # Climate & Geospatial Data Processing
 xarray
@@ -14,7 +14,6 @@ shapely
 pyproj
 geopy
 osmnx
-folium
 
 # Data Science & Numerical Computing
 pandas
@@ -50,6 +49,7 @@ reportlab
 
 # ERA5 + Zarr tooling
 zarr
+arraylake
 gcsfs
 numcodecs
 blosc
@@ -58,13 +58,13 @@ blosc
 jupyter_client
 ipykernel
 
-# Optional: CSC's AITTA Platform (local/custom AI models)
-# Uncomment if you need CSC AITTA integration
-# aitta-client
+# Configuration & Utilities
+pyyaml
+python-dotenv
 
 # Development & Testing
 pytest
-pyyaml
 
-# Package Management
-pip
+# Optional: CSC's AITTA Platform (local/custom AI models)
+# Uncomment if you need CSC AITTA integration
+# aitta-client
