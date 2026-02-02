@@ -252,7 +252,7 @@ def retrieve_era5_data(
         if subset.sizes.get('time', 0) == 0:
             return {"success": False, "error": "Empty time slice.", "message": "No data found for the requested dates."}
 
-        # --- 4. Save to Zarr ---
+        # --- 4. Save to Zarr (Atomic Write) ---
         logging.info(f"Downloading data to {local_zarr_path}...")
 
         ds_out = subset.to_dataset(name=short_var)
@@ -261,11 +261,26 @@ def retrieve_era5_data(
         for var in ds_out.variables:
             ds_out[var].encoding = {}
 
-        if os.path.exists(local_zarr_path):
-            shutil.rmtree(local_zarr_path)
+        # Atomic write: write to temp dir first, then rename on success
+        temp_zarr_path = local_zarr_path + ".tmp"
+        
+        # Clean up any previous failed temp directory
+        if os.path.exists(temp_zarr_path):
+            shutil.rmtree(temp_zarr_path)
 
-        ds_out.to_zarr(local_zarr_path, mode="w", consolidated=True, compute=True)
-        logging.info("✅ Download complete.")
+        try:
+            ds_out.to_zarr(temp_zarr_path, mode="w", consolidated=True, compute=True)
+            
+            # Atomic replace: remove old cache (if exists) and rename temp to final
+            if os.path.exists(local_zarr_path):
+                shutil.rmtree(local_zarr_path)
+            os.rename(temp_zarr_path, local_zarr_path)
+            logging.info("✅ Download complete.")
+        except Exception as write_error:
+            # Clean up failed temp directory
+            if os.path.exists(temp_zarr_path):
+                shutil.rmtree(temp_zarr_path, ignore_errors=True)
+            raise write_error
 
         return {
             "success": True,

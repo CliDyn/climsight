@@ -136,8 +136,9 @@ class JupyterKernelExecutor:
             # 2. Check Kernel Vitality
             if not self.km.is_alive():
                 result["status"] = "error"
-                result["error"] = "Kernel died unexpectedly."
+                result["error"] = "Kernel died unexpectedly. Session was restarted - please retry your command."
                 self.restart_kernel()
+                self.is_initialized = False  # Force re-initialization on next run
                 break
 
             # 3. Get Message
@@ -184,7 +185,7 @@ class JupyterKernelExecutor:
         code = code.strip()
         if code.startswith("```"):
              # Remove leading ```python or ``` (case insensitive)
-             code = re.sub(r"^```(?:python)?\s*\n", "", code, flags=re.IGNORECASE)
+             code = re.sub(r"^\s*```(?:python)?\s*\n", "", code, flags=re.IGNORECASE)
              # Remove trailing ```
              code = re.sub(r"\n\s*```\s*$", "", code)
         
