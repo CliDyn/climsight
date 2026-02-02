@@ -830,6 +830,285 @@ class AWICMProvider(ClimateDataProvider):
         )
 
 
+class DestinEProvider(ClimateDataProvider):
+    """Provider for DestinE IFS-FESOM high-resolution climate data.
+
+    This provider handles unstructured grid data (similar to HEALPix) using
+    cKDTree for efficient spatial lookups. Unlike NextGEMS, DestinE stores
+    each variable in separate files that must be combined.
+
+    Data characteristics:
+    - Coordinate system: Unstructured grid (12.5M points)
+    - Variables: avg_2t (temp), avg_tprate (precip), avg_10u/avg_10v (wind)
+    - Time periods: 1990-2014 (hist), 2015-2019, 2020-2029, 2040-2049 (SSP3-7.0)
+    - Units: Temperature in K, precipitation in kg m⁻² s⁻¹, wind in m/s
+    """
+
+    # Days in each month for precipitation conversion (using 28.25 for Feb to account for leap years)
+    DAYS_IN_MONTH = [31, 28.25, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    SECONDS_PER_DAY = 86400
+
+    def __init__(self, source_config: dict, global_config: dict = None):
+        super().__init__(source_config, global_config)
+        self._spatial_indices = {}  # Cache for cKDTree per file
+        self._data_path = source_config.get('data_path', './data/DestinE/')
+
+    @property
+    def name(self) -> str:
+        return "DestinE"
+
+    @property
+    def coordinate_system(self) -> str:
+        return "unstructured"
+
+    def is_available(self) -> bool:
+        """Check if at least one complete time period exists."""
+        time_periods = self.source_config.get('time_periods', {})
+        var_suffixes = self.source_config.get('variable_suffixes', {})
+
+        if not time_periods or not var_suffixes:
+            return False
+
+        for period_key, period_meta in time_periods.items():
+            pattern = period_meta.get('pattern', '')
+            if not pattern:
+                continue
+
+            # Check if all variable files exist for this period
+            all_exist = True
+            for var_name, suffix in var_suffixes.items():
+                file_path = os.path.join(self._data_path, f"{pattern}{suffix}")
+                if not os.path.exists(file_path):
+                    all_exist = False
+                    break
+            if all_exist:
+                return True
+        return False
+
+    def _build_spatial_index(self, nc_file: str) -> Tuple[cKDTree, np.ndarray, np.ndarray]:
+        """Build cKDTree spatial index from a NetCDF file."""
+        if nc_file in self._spatial_indices:
+            return self._spatial_indices[nc_file]
+
+        ds = xr.open_dataset(nc_file)
+        lons = ds['longitude'].values
+        lats = ds['latitude'].values
+        ds.close()
+
+        points = np.column_stack((lons, lats))
+        tree = cKDTree(points)
+
+        self._spatial_indices[nc_file] = (tree, lons, lats)
+        return tree, lons, lats
+
+    def _extract_point_data(
+        self,
+        ds: xr.Dataset,
+        var_name: str,
+        indices: np.ndarray,
+        weights: np.ndarray,
+        use_exact: bool,
+        exact_idx: int = 0
+    ) -> np.ndarray:
+        """Extract interpolated values for all months at a point."""
+        interpolated = []
+        for month_idx in range(12):
+            data_values = ds[var_name][month_idx, indices].values
+            if use_exact:
+                value = data_values[exact_idx]
+            else:
+                value = np.dot(weights, data_values)
+            interpolated.append(value)
+        return np.array(interpolated)
+
+    def _convert_precip_rate(self, values: np.ndarray) -> np.ndarray:
+        """Convert precipitation from kg m⁻² s⁻¹ to mm/month.
+
+        1 kg/m² water = 1 mm depth (by definition of water density)
+        So: kg m⁻² s⁻¹ = mm/s
+        mm/month = mm/s × days_in_month × 86400 s/day
+        """
+        converted = np.array([
+            values[i] * self.DAYS_IN_MONTH[i] * self.SECONDS_PER_DAY
+            for i in range(len(values))
+        ])
+        return converted
+
+    def _post_process_data(
+        self,
+        df: pd.DataFrame,
+        df_vars: Dict
+    ) -> Tuple[pd.DataFrame, Dict]:
+        """Apply unit conversions and calculate wind speed/direction."""
+        df_processed = df.copy()
+        df_vars_processed = df_vars.copy()
+
+        # Temperature: K to °C
+        if 'avg_2t' in df_processed.columns:
+            df_processed['avg_2t'] = df_processed['avg_2t'] - 273.15
+            df_vars_processed['avg_2t']['units'] = '°C'
+
+        # Precipitation: kg m⁻² s⁻¹ to mm/month
+        if 'avg_tprate' in df_processed.columns:
+            df_processed['avg_tprate'] = self._convert_precip_rate(
+                df_processed['avg_tprate'].values
+            )
+            df_vars_processed['avg_tprate']['units'] = 'mm/month'
+
+        # Calculate wind speed and direction
+        if 'avg_10u' in df_processed.columns and 'avg_10v' in df_processed.columns:
+            wind_speed = np.sqrt(
+                df_processed['avg_10u']**2 + df_processed['avg_10v']**2
+            )
+            wind_direction = (180.0 + np.degrees(
+                np.arctan2(df_processed['avg_10u'], df_processed['avg_10v'])
+            )) % 360
+
+            df_processed['wind_speed'] = wind_speed.round(2)
+            df_processed['wind_direction'] = wind_direction.round(2)
+
+            df_vars_processed['wind_speed'] = {
+                'name': 'wind_speed', 'units': 'm/s',
+                'full_name': 'Wind Speed', 'long_name': 'Wind Speed'
+            }
+            df_vars_processed['wind_direction'] = {
+                'name': 'wind_direction', 'units': '°',
+                'full_name': 'Wind Direction', 'long_name': 'Wind Direction'
+            }
+
+        # Round numeric columns
+        for var in df_processed.columns:
+            if var != 'Month' and pd.api.types.is_numeric_dtype(df_processed[var]):
+                df_processed[var] = df_processed[var].round(2)
+
+        return df_processed, df_vars_processed
+
+    def extract_data(
+        self,
+        lon: float,
+        lat: float,
+        months: Optional[List[int]] = None
+    ) -> ClimateDataResult:
+        """Extract climate data for a location from DestinE data."""
+        time_periods = self.source_config.get('time_periods', {})
+        var_mapping = self.source_config.get('variable_mapping', {})
+        var_suffixes = self.source_config.get('variable_suffixes', {})
+
+        if months is None:
+            months = list(range(1, 13))
+
+        df_list = []
+        tree = None
+        lons = None
+        lats = None
+        indices = None
+        weights = None
+        use_exact = False
+        exact_idx = 0
+
+        # Process each time period
+        for period_key, period_meta in time_periods.items():
+            pattern = period_meta.get('pattern', '')
+            if not pattern:
+                continue
+
+            # Build paths for all variable files
+            var_files = {}
+            all_exist = True
+            for nc_var, suffix in var_suffixes.items():
+                file_path = os.path.join(self._data_path, f"{pattern}{suffix}")
+                if os.path.exists(file_path):
+                    var_files[nc_var] = file_path
+                else:
+                    all_exist = False
+                    logger.debug(f"Missing DestinE file: {file_path}")
+                    break
+
+            if not all_exist:
+                continue
+
+            # Build spatial index from first variable file (coordinates are same in all files)
+            first_file = list(var_files.values())[0]
+            if tree is None:
+                tree, lons, lats = self._build_spatial_index(first_file)
+
+                # Normalize longitude to 0-360 if data uses that convention
+                query_lon = lon
+                if lon < 0 and lons.min() >= 0:
+                    query_lon = lon + 360
+
+                # Query 4 nearest neighbors
+                distances, indices = tree.query([query_lon, lat], k=4)
+
+                # Project and compute inverse distance weights
+                pste = pyproj.Proj(
+                    proj="stere", errcheck=True, ellps='WGS84',
+                    lat_0=lat, lon_0=lon
+                )
+                neighbors_lons = lons[indices]
+                neighbors_lats = lats[indices]
+                neighbors_x, neighbors_y = pste(neighbors_lons, neighbors_lats)
+                desired_x, desired_y = pste(lon, lat)
+
+                dx = neighbors_x - desired_x
+                dy = neighbors_y - desired_y
+                distances_proj = np.hypot(dx, dy)
+
+                if np.any(distances_proj == 0):
+                    exact_idx = np.where(distances_proj == 0)[0][0]
+                    use_exact = True
+                else:
+                    inv_distances = 1.0 / distances_proj
+                    weights = inv_distances / inv_distances.sum()
+
+            # Extract data from all variable files
+            df_data = {'Month': [calendar.month_name[m] for m in months]}
+            df_vars = {}
+
+            for display_name, nc_var in var_mapping.items():
+                if nc_var not in var_files:
+                    continue
+
+                ds = xr.open_dataset(var_files[nc_var])
+
+                values = self._extract_point_data(
+                    ds, nc_var, indices, weights, use_exact, exact_idx
+                )
+
+                df_data[nc_var] = values
+                df_vars[nc_var] = {
+                    'name': nc_var,
+                    'units': ds[nc_var].attrs.get('units', ''),
+                    'full_name': display_name,
+                    'long_name': ds[nc_var].attrs.get('long_name', '')
+                }
+
+                ds.close()
+
+            df = pd.DataFrame(df_data)
+            df_processed, df_vars_processed = self._post_process_data(df, df_vars)
+
+            df_list.append({
+                'filename': pattern,
+                'years_of_averaging': period_meta.get('years_of_averaging', ''),
+                'description': period_meta.get('description', ''),
+                'dataframe': df_processed,
+                'extracted_vars': df_vars_processed,
+                'main': period_meta.get('is_main', False),
+                'source': period_meta.get('source', 'DestinE IFS-FESOM')
+            })
+
+        # Prepare data_agent_response
+        data_agent_response = self._prepare_data_agent_response(df_list)
+
+        return ClimateDataResult(
+            df_list=df_list,
+            data_agent_response=data_agent_response,
+            source_name=self.name,
+            source_description=self.description
+        )
+
+
 # Factory functions
 
 def get_climate_data_provider(
@@ -857,6 +1136,8 @@ def get_climate_data_provider(
         return ICCPProvider(sources_config.get('ICCP', {}), config)
     elif source == 'AWI_CM':
         return AWICMProvider(sources_config.get('AWI_CM', {}), config)
+    elif source == 'DestinE':
+        return DestinEProvider(sources_config.get('DestinE', {}), config)
     else:
         raise ValueError(f"Unknown climate data source: {source}")
 
@@ -874,7 +1155,7 @@ def get_available_providers(config: dict) -> List[str]:
         List of provider names that are available
     """
     available = []
-    for source in ['nextGEMS', 'ICCP', 'AWI_CM']:
+    for source in ['nextGEMS', 'ICCP', 'AWI_CM', 'DestinE']:
         try:
             provider = get_climate_data_provider(config, source)
             if provider.is_available():

@@ -71,7 +71,10 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     api_key_local = os.environ.get("OPENAI_API_KEY_LOCAL")
     if not api_key_local:
         api_key_local = ""
-        
+
+    # Check for Arraylake API key (for ERA5 data retrieval)
+    arraylake_api_key = os.environ.get("ARRAYLAKE_API_KEY", "")
+
     #read data while loading here 
     ##### like hist, future = load_data(config)
 
@@ -164,7 +167,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         source_descriptions = {
             'nextGEMS': 'nextGEMS (High resolution)',
             'ICCP': 'ICCP (AWI-CM3, medium resolution)',
-            'AWI_CM': 'AWI-CM (CMIP6, low resolution)'
+            'AWI_CM': 'AWI-CM (CMIP6, low resolution)',
+            'DestinE': 'DestinE IFS-FESOM (High resolution, SSP3-7.0)'
         }
 
         col1_src, col2_src = st.columns([1, 1])
@@ -194,7 +198,16 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 type="password",
             )
 
-       
+        # Include Arraylake API key input if ERA5 data is enabled and key not in environment
+        arraylake_api_key_input = ""
+        if use_era5_data and not arraylake_api_key:
+            arraylake_api_key_input = st.text_input(
+                "Arraylake API key (for ERA5 data)",
+                placeholder="Enter your Arraylake API key here",
+                type="password",
+                help="Required for downloading ERA5 time series data from Earthmover/Arraylake.",
+            )
+
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
         
@@ -205,22 +218,44 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         if (not api_key) and (not skip_llm_call) and (config['llm_combine']['model_type'] == "openai"):
             st.error("Please provide an OpenAI API key.")
             st.stop()
+
+        # Handle Arraylake API key for ERA5 data
+        if use_era5_data:
+            if not arraylake_api_key:
+                arraylake_api_key = arraylake_api_key_input
+            if not arraylake_api_key:
+                st.error("Please provide an Arraylake API key to use ERA5 data retrieval.")
+                st.stop()
+            # Store in config so data_analysis_agent can pass it to the tool
+            config["arraylake_api_key"] = arraylake_api_key
+
         # Update config with the selected LLM mode
-        #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+        #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
         config['show_add_info'] = show_add_info
         config['use_smart_agent'] = smart_agent
         config['use_era5_data'] = use_era5_data
         config['use_powerful_data_analysis'] = use_powerful_data_analysis
-        
-    # RUN submit button 
+
+    # RUN submit button
         if submit_button and user_message:
             if not api_key:
                 api_key = api_key_input
             if (not api_key) and (not skip_llm_call) and (config['llm_combine']['model_type'] == "openai"):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
+
+            # Handle Arraylake API key for ERA5 data (in nested block too)
+            if use_era5_data:
+                if not arraylake_api_key:
+                    arraylake_api_key = arraylake_api_key_input
+                if not arraylake_api_key:
+                    st.error("Please provide an Arraylake API key to use ERA5 data retrieval.")
+                    st.stop()
+                # Store in config so data_analysis_agent can pass it to the tool
+                config["arraylake_api_key"] = arraylake_api_key
+
             # Update config with the selected LLM mode
-            #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
             config['show_add_info'] = show_add_info
             config['use_smart_agent'] = smart_agent
             config['use_era5_data'] = use_era5_data

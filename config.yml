@@ -137,6 +137,50 @@ climate_data_sources:
       longitude: "lon"
       time: "month"
 
+  DestinE:
+    enabled: true
+    coordinate_system: "unstructured"
+    description: "DestinE IFS-FESOM high-resolution climate simulations (SSP3-7.0)"
+    data_path: "./data/DestinE/"
+    # Time periods configuration
+    time_periods:
+      historical:
+        pattern: "ifs-fesom_baseline_hist_sfc_high_monthly_1990_2014_mean"
+        years_of_averaging: "1990-2014"
+        description: "DestinE IFS-FESOM historical baseline simulation"
+        is_main: true
+        source: "Destination Earth Climate DT, IFS-FESOM coupled model"
+      2015_2019:
+        pattern: "ifs-fesom_projections_ssp3-7.0_sfc_high_monthly_2015_2019_mean"
+        years_of_averaging: "2015-2019"
+        description: "DestinE IFS-FESOM SSP3-7.0 near-term projection"
+        is_main: false
+        source: "Destination Earth Climate DT, IFS-FESOM coupled model, SSP3-7.0"
+      2020_2029:
+        pattern: "ifs-fesom_projections_ssp3-7.0_sfc_high_monthly_2020_2029_mean"
+        years_of_averaging: "2020-2029"
+        description: "DestinE IFS-FESOM SSP3-7.0 mid-term projection"
+        is_main: false
+        source: "Destination Earth Climate DT, IFS-FESOM coupled model, SSP3-7.0"
+      2040_2049:
+        pattern: "ifs-fesom_projections_ssp3-7.0_sfc_high_monthly_2040_2049_mean"
+        years_of_averaging: "2040-2049"
+        description: "DestinE IFS-FESOM SSP3-7.0 far-term projection"
+        is_main: false
+        source: "Destination Earth Climate DT, IFS-FESOM coupled model, SSP3-7.0"
+    # Variable mapping: display_name -> netcdf_variable
+    variable_mapping:
+      Temperature: avg_2t
+      Total Precipitation: avg_tprate
+      Wind U: avg_10u
+      Wind V: avg_10v
+    # Variable file suffixes (to construct full filenames)
+    variable_suffixes:
+      avg_2t: "_avg_2t.nc"
+      avg_tprate: "_avg_tprate.nc"
+      avg_10u: "_avg_10u.nc"
+      avg_10v: "_avg_10v.nc"
+
 # Legacy settings (kept for backwards compatibility, will be migrated automatically)
 data_settings:
     data_path: "./data/"

@@ -21,7 +21,7 @@ from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_pat
 from agent_helpers import create_standard_agent_executor
 from tools.get_data_components import create_get_data_components_tool
 from tools.era5_climatology_tool import create_era5_climatology_tool
-from tools.era5_retrieval_tool import era5_retrieval_tool
+from tools.era5_retrieval_tool import create_era5_retrieval_tool
 from tools.python_repl import CustomPythonREPLTool
 from tools.image_viewer import create_image_viewer_tool
 from tools.reflection_tools import reflect_tool
@@ -537,7 +537,11 @@ Required analysis:
 
     # 3. ERA5 time series retrieval (if enabled - for detailed year-by-year analysis)
     if config.get("use_era5_data", False):
-        tools.append(era5_retrieval_tool)
+        arraylake_api_key = config.get("arraylake_api_key", "")
+        if arraylake_api_key:
+            tools.append(create_era5_retrieval_tool(arraylake_api_key))
+        else:
+            logger.warning("ERA5 data enabled but no arraylake_api_key in config. ERA5 retrieval tool not added.")
 
     # 4. Python REPL for analysis/visualization (if enabled)
     if has_python_repl:

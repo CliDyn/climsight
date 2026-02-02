@@ -99,30 +99,35 @@ def _generate_descriptive_filename(variable_id: str, query_type: str, start_date
     return f"era5_{clean_var}_{query_type}_{clean_start}_{clean_end}.zarr"
 
 def retrieve_era5_data(
-    variable_id: str, 
-    start_date: str, 
+    variable_id: str,
+    start_date: str,
     end_date: str,
-    min_latitude: float = -90.0, 
+    min_latitude: float = -90.0,
     max_latitude: float = 90.0,
-    min_longitude: float = 0.0, 
+    min_longitude: float = 0.0,
     max_longitude: float = 359.75,
     work_dir: Optional[str] = None,
+    arraylake_api_key: Optional[str] = None,
     **kwargs # Catch-all for unused args
 ) -> dict:
     """
     Retrieves ERA5 Surface data from Earthmover (Arraylake).
     Hardcoded to use 'temporal' (Time-series) queries.
     Uses Nearest Neighbor selection for points to avoid empty slices.
+
+    Args:
+        arraylake_api_key: Arraylake API key. If not provided, falls back to
+                          ARRAYLAKE_API_KEY environment variable.
     """
     ds = None
     local_zarr_path = None
     query_type = "temporal" # Hardcoded for Climsight point-data focus
 
-    # Get API Key from environment
-    ARRAYLAKE_API_KEY = os.environ.get("ARRAYLAKE_API_KEY")
+    # Get API Key - prefer passed parameter, fall back to environment
+    ARRAYLAKE_API_KEY = arraylake_api_key or os.environ.get("ARRAYLAKE_API_KEY")
 
-    if not ARRAYLAKE_API_KEY: 
-        return {"success": False, "error": "Missing Arraylake API Key", "message": "Please set ARRAYLAKE_API_KEY environment variable."}
+    if not ARRAYLAKE_API_KEY:
+        return {"success": False, "error": "Missing Arraylake API Key", "message": "Please provide arraylake_api_key parameter or set ARRAYLAKE_API_KEY environment variable."}
 
     try:
         # Map Variable Name
@@ -280,6 +285,53 @@ def retrieve_era5_data(
         if ds is not None:
             ds.close()
 
+def create_era5_retrieval_tool(arraylake_api_key: str):
+    """
+    Create the ERA5 retrieval tool with the API key bound.
+
+    Args:
+        arraylake_api_key: Arraylake API key for accessing Earthmover data
+
+    Returns:
+        StructuredTool configured for ERA5 data retrieval
+    """
+    def retrieve_era5_wrapper(
+        variable_id: str,
+        start_date: str,
+        end_date: str,
+        min_latitude: float = -90.0,
+        max_latitude: float = 90.0,
+        min_longitude: float = 0.0,
+        max_longitude: float = 359.75,
+        work_dir: Optional[str] = None,
+    ) -> dict:
+        return retrieve_era5_data(
+            variable_id=variable_id,
+            start_date=start_date,
+            end_date=end_date,
+            min_latitude=min_latitude,
+            max_latitude=max_latitude,
+            min_longitude=min_longitude,
+            max_longitude=max_longitude,
+            work_dir=work_dir,
+            arraylake_api_key=arraylake_api_key,
+        )
+
+    return StructuredTool.from_function(
+        func=retrieve_era5_wrapper,
+        name="retrieve_era5_data",
+        description=(
+            "Retrieves ERA5 Surface climate data from Earthmover (Arraylake). "
+            "Optimized for TEMPORAL time-series extraction at specific locations. "
+            "Automatically snaps to nearest grid point to ensure data is returned. "
+            "Returns a Zarr directory path. "
+            "Available vars: t2 (temp), sst, u10/v10 (wind), mslp (pressure), tp (precip)."
+        ),
+        args_schema=ERA5RetrievalArgs
+    )
+
+
+# Keep backward-compatible module-level tool that uses environment variable
 era5_retrieval_tool = StructuredTool.from_function(
     func=retrieve_era5_data,
     name="retrieve_era5_data",
