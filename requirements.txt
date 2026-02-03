@@ -1,19 +1,19 @@
 # ClimSight Dependencies
-# Generated from pyproject.toml
 # Install with: pip install -r requirements.txt
 
 # Web Framework
 streamlit
 streamlit-folium
+folium
 
 # Climate & Geospatial Data Processing
 xarray
 netcdf4
 geopandas
+shapely
 pyproj
 geopy
 osmnx
-folium
 
 # Data Science & Numerical Computing
 pandas
@@ -32,6 +32,8 @@ langchain-openai
 langchain-chroma
 langchain-core
 langchain-text-splitters
+langchain-experimental
+langchain-anthropic
 langgraph
 openai
 pydantic
@@ -45,13 +47,24 @@ requests-mock
 # PDF Generation
 reportlab
 
-# Optional: CSC's AITTA Platform (local/custom AI models)
-# Uncomment if you need CSC AITTA integration
-# aitta-client
+# ERA5 + Zarr tooling
+zarr
+arraylake
+gcsfs
+numcodecs
+blosc
+
+# Jupyter-backed Python REPL
+jupyter_client
+ipykernel
+
+# Configuration & Utilities
+pyyaml
+python-dotenv
 
 # Development & Testing
 pytest
-pyyaml
 
-# Package Management
-pip
+# Optional: CSC's AITTA Platform (local/custom AI models)
+# Uncomment if you need CSC AITTA integration
+# aitta-client

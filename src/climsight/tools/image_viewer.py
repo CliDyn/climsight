@@ -82,7 +82,7 @@ Provide a concise but thorough scientific analysis focused on extracting actiona
                     ]
                 }
             ],
-            max_tokens=5000
+            max_completion_tokens=5000
         )
         
         return response.choices[0].message.content
@@ -101,19 +101,29 @@ class ImageViewerArgs(BaseModel):
     )
 
 
-def create_image_viewer_tool(openai_api_key: str, model_name: str):
+def create_image_viewer_tool(openai_api_key: str, model_name: str, sandbox_path: Optional[str] = None):
     """
     Create the image viewer tool with the API key and model bound.
     
     Args:
         openai_api_key: OpenAI API key
         model_name: Model name to use
+        sandbox_path: Optional sandbox directory path for resolving relative paths
         
     Returns:
         StructuredTool configured for image analysis
     """
     def view_image_wrapper(image_path: str) -> str:
-        return view_and_analyze_image(image_path, openai_api_key, model_name)
+        resolved_path = image_path
+        # If path is relative and sandbox_path is provided, resolve it
+        if sandbox_path and not os.path.isabs(image_path):
+            resolved_path = os.path.join(sandbox_path, image_path)
+        # Fallback: if still not found and sandbox_path exists, try it anyway
+        if not os.path.exists(resolved_path) and sandbox_path:
+            alt_path = os.path.join(sandbox_path, image_path)
+            if os.path.exists(alt_path):
+                resolved_path = alt_path
+        return view_and_analyze_image(resolved_path, openai_api_key, model_name)
     
     return StructuredTool.from_function(
         func=view_image_wrapper,
@@ -122,7 +132,7 @@ def create_image_viewer_tool(openai_api_key: str, model_name: str):
             "Analyze climate-related visualizations to extract scientific insights. "
             "Use this tool after generating plots with python_repl to understand "
             "the patterns and trends shown in the visualization. "
-            "Provide the full path to the saved image file."
+            "Provide the path to the saved image file (can be relative to the sandbox)."
         ),
         args_schema=ImageViewerArgs
     )

@@ -2,8 +2,7 @@
 
 ClimSight is an advanced tool that integrates Large Language Models (LLMs) with climate data to provide localized climate insights for decision-making. ClimSight transforms complex climate data into actionable insights for agriculture, urban planning, disaster management, and policy development.
 
-The target audience includes researchers, providers of climate services, policymakers, agricultural planners, urban developers, and other stakeholders who require detailed climate information to support decision-making. ClimSight is designed to democratize access to climate 
-data, empowering users with insights relevant to their specific contexts.
+The target audience includes researchers, providers of climate services, policymakers, agricultural planners, urban developers, and other stakeholders who require detailed climate information to support decision-making. ClimSight is designed to democratize access to climate data, empowering users with insights relevant to their specific contexts.
 
 ![Image](https://github.com/user-attachments/assets/f9f89735-ef08-4c91-bc03-112c8e4c0896)
 
@@ -15,61 +14,11 @@ ClimSight distinguishes itself through several key advancements:
 - **Real-World Applications**: ClimSight is validated through practical examples, such as assessing climate risks for specific agricultural activities and urban planning scenarios.
 
 
-## Installation Options
+## Installation
 
-You can use ClimSight in three ways:
-1. Run a pre-built Docker container (simplest approach)
-2. Build and run a Docker container from source
-3. Install the Python package (via pip or conda/mamba)
+### Recommended: Building from source with conda/mamba
 
-Using ClimSight requires an OpenAI API key unless using the `skipLLMCall` mode for testing. The API key is only needed when running the application, not during installation.
-
-## Batch Processing
-
-For batch processing of climate questions, the `sequential` directory contains specialized tools for generating, validating, and processing questions in bulk. These tools are particularly useful for research and analysis requiring multiple climate queries. See the [sequential/README.md](sequential/README.md) for detailed usage instructions.
-
-## 1. Running with Docker (Pre-built Container)
-
-The simplest way to get started is with our pre-built Docker container:
-
-```bash
-# Make sure your OpenAI API key is set as an environment variable
-export OPENAI_API_KEY="your-api-key-here"
-
-# Pull and run the container
-docker pull koldunovn/climsight:stable
-docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY koldunovn/climsight:stable
-```
-
-Then open `http://localhost:8501/` in your browser.
-
-## 2. Building and Running from Source with Docker
-
-If you prefer to build from the latest source:
-
-```bash
-# Clone the repository
-git clone https://github.com/CliDyn/climsight.git
-cd climsight
-
-# Download required data
-python download_data.py
-
-# Build and run the container
-docker build -t climsight .
-docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY climsight
-```
-
-Visit `http://localhost:8501/` in your browser once the container is running.
-
-For testing without OpenAI API calls:
-```bash
-docker run -p 8501:8501 -e STREAMLIT_ARGS="skipLLMCall" climsight
-```
-
-## 3. Python Package Installation
-
-### Option A: Building from source with conda/mamba
+This is the recommended installation method to get the latest features and updates.
 
 ```bash
 # Clone the repository
@@ -82,13 +31,15 @@ conda activate climsight
 
 # Download required data
 python download_data.py
+
+# Optional: download DestinE data (large ~12 GB, not downloaded by default)
+python download_data.py DestinE
 ```
 
-### Option B: Using pip
+### Alternative: Using pip from source
 
-It's recommended to create a virtual environment to avoid dependency conflicts:
 ```bash
-# Option 1: Install from source
+# Clone the repository
 git clone https://github.com/CliDyn/climsight.git
 cd climsight
 
@@ -96,33 +47,37 @@ cd climsight
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install ClimSight
-pip install -e .
+# Install dependencies
+pip install -r requirements.txt
+
+# Download required data
 python download_data.py
+
+# Optional: download DestinE data (large ~12 GB, not downloaded by default)
+python download_data.py DestinE
 ```
 
-Or if you prefer to set up without cloning the repository:
+### Running with Docker (Stable Release v1.0.0)
+
+The Docker container provides a stable release (v1.0.0) of ClimSight. For the latest features, please install from source as described above.
 
 ```bash
-# Option 2: Install from PyPI
-# Create and activate a virtual environment
-python -m venv climsight_env
-source climsight_env/bin/activate  # On Windows: climsight_env\Scripts\activate
+# Make sure your OpenAI API key is set as an environment variable
+export OPENAI_API_KEY="your-api-key-here"
 
-# Install the package
+# Pull and run the container
+docker pull koldunovn/climsight:stable
+docker run -p 8501:8501 -e OPENAI_API_KEY=$OPENAI_API_KEY koldunovn/climsight:stable
+```
+
+Then open `http://localhost:8501/` in your browser.
+
+### Using pip from PyPI (Stable Release v1.0.0)
+
+The PyPI package provides a stable release (v1.0.0) of ClimSight. For the latest features, please install from source as described above.
+
+```bash
 pip install climsight
-
-# Create a directory for data
-mkdir -p climsight
-cd climsight
-
-# Download necessary configuration files
-wget https://raw.githubusercontent.com/CliDyn/climsight/main/data_sources.yml
-wget https://raw.githubusercontent.com/CliDyn/climsight/main/download_data.py
-wget https://raw.githubusercontent.com/CliDyn/climsight/main/config.yml
-
-# Download the required data (about 8 GB)
-python download_data.py
 ```
 
 ## Configuration
@@ -131,50 +86,54 @@ ClimSight will automatically use a `config.yml` file from the current directory.
 
 ```yaml
 # Key settings you can modify in config.yml:
-# - LLM model (gpt-4, ...)
+# - LLM model (gpt-4, gpt-5, ...)
 # - Climate data sources
 # - RAG database configuration
 # - Agent parameters
+# - ERA5 data retrieval settings
 ```
-## Running ClimSight
 
-### If installed with conda/mamba from source:
+## API Keys
+
+### OpenAI API Key
+
+ClimSight requires an OpenAI API key for LLM functionality. You can set it as an environment variable:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+Alternatively, you can enter your API key directly in the browser interface when prompted.
+
+### Arraylake API Key (Optional - for ERA5 Data)
+
+If you want to use ERA5 time series data retrieval (enabled via the "Enable ERA5 data" toggle in the UI), you need an Arraylake API key from [Earthmover](https://earthmover.io/). This allows downloading ERA5 reanalysis data for detailed historical climate analysis.
+
+```bash
+export ARRAYLAKE_API_KEY="your-arraylake-api-key-here"
+```
+
+You can also enter the Arraylake API key in the browser interface when the ERA5 data option is enabled.
+
+## Running ClimSight
 
 ```bash
 # Run from the repository root
 streamlit run src/climsight/climsight.py
 ```
 
-### If installed with pip:
-
-```bash
-# Make sure you're in the directory with your data and config
-climsight
-```
-
-You can optionally set your OpenAI API key as an environment variable:
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
-
-Otherwise, you can enter your API key directly in the browser interface when prompted.
-
-### Testing without an OpenAI API key:
-
-```bash
-# From source:
-streamlit run src/climsight/climsight.py skipLLMCall
-
-# Or if installed with pip:
-climsight skipLLMCall
-```
-
 The application will open in your browser automatically. Just type your climate-related questions and press "Generate" to get insights.
 
 <img width="800" alt="ClimSight Interface" src="https://github.com/koldunovn/climsight/assets/3407313/569a4c38-a601-4014-b10d-bd34c59b91bb">
 
+## Batch Processing
+
+For batch processing of climate questions, the `sequential` directory contains specialized tools for generating, validating, and processing questions in bulk. These tools are particularly useful for research and analysis requiring multiple climate queries. See the [sequential/README.md](sequential/README.md) for detailed usage instructions.
+
 ## Citation
 
 If you use or refer to ClimSight in your work, please cite:
+
+Kuznetsov, I., Jost, A.A., Pantiukhin, D. et al. Transforming climate services with LLMs and multi-source data integration. _npj Clim. Action_ **4**, 97 (2025). https://doi.org/10.1038/s44168-025-00300-y
 
 Koldunov, N., Jung, T. Local climate services for all, courtesy of large language models. _Commun Earth Environ_ **5**, 13 (2024). https://doi.org/10.1038/s43247-023-01199-1

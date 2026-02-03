@@ -4,36 +4,72 @@ channels:
     - defaults
 dependencies:
     - python=3.11
+
+    # Web Framework
     - streamlit
-    - xarray
-    - geopy
-    - geopandas
-    - pyproj
-    - requests
-    - requests-mock      
-    - pandas
-    - folium
-    - openai
-    - langchain
     - streamlit-folium
+    - folium
+
+    # Climate & Geospatial Data Processing
+    - xarray
     - netcdf4
+    - geopandas
+    - shapely
+    - pyproj
+    - geopy
+    - osmnx
+
+    # Data Science & Numerical Computing
+    - pandas
+    - numpy
+    - scipy
     - dask
-    - pip
-    - langchain-community 
+    - matplotlib
+
+    # LangChain & LLM Framework (conda-forge packages)
+    - langchain
+    - langchain-community
     - langchain-openai
     - langchain-chroma
     - langchain-core
-    - osmnx
-    - matplotlib
-    - pydantic
+    - langchain-text-splitters
+    - langchain-experimental
     - langgraph
-    - chardet
+    - openai
+    - pydantic
+
+    # Web Scraping & Data Retrieval
     - bs4
     - wikipedia
-    - scipy
-    - pyproj
+    - requests
+    - requests-mock
+
+    # ERA5 & Zarr tooling
+    - zarr
+    - gcsfs
+    - numcodecs
+    - blosc
+
+    # Jupyter-backed Python REPL
+    - jupyter_client
+    - ipykernel
+
+    # PDF Generation
     - reportlab
-  # pip-only packages must go under this section:
+
+    # Configuration & Utilities
+    - pyyaml
+    - python-dotenv
+
+    # Testing
+    - pytest
+
+    # Package Management
+    - pip
+
+    # pip-only packages (not available on conda-forge)
     - pip:
-      - aitta-client
-      - langchain_classic
+        - langchain-classic
+        - langchain-anthropic
+        - arraylake
+        - aitta-client

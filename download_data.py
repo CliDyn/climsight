@@ -97,6 +97,11 @@ def main():
     # Parse command-line argument (--source_files)
     parser = argparse.ArgumentParser(description="Download and extract the raw source files of the RAG.")
     parser.add_argument('--source_files', type=bool, default=False, help='Whether to download and extract source files (IPCC text reports).')
+    parser.add_argument(
+        'datasets',
+        nargs='*',
+        help="Optional extra datasets to include (e.g. DestinE).",
+    )
     #parser.add_argument('--CMIP_OIFS', type=bool, default=False, help='Whether to download CMIP6 low resolution AWI model data and ECE4/OIFS data.')
     args = parser.parse_args()
 
@@ -112,6 +117,11 @@ def main():
         sources = [d for d in sources if d['filename'] != 'ipcc_text_reports.zip']
     #if not args.CMIP_OIFS:
     #    sources = [d for d in sources if d['filename'] != 'data_climate_foresight.zip']
+
+    # Skip DestinE unless explicitly requested (large dataset).
+    requested = {name.strip().lower() for name in args.datasets}
+    if 'destine' not in requested:
+        sources = [d for d in sources if d['filename'] != 'DestinE.zip']
         
     #make subdirs list and clean it
     subdirs = []
@@ -135,6 +145,12 @@ def main():
         file = entry['filename']
         url  = entry['url']
         subdir = os.path.join(base_path, entry['subdir'])
+
+        if not url:
+            files_skiped.append(file)
+            urls_skiped.append(url)
+            subdirs_skiped.append(subdir)
+            continue
 
         if download_file(url, file):
             extract_arch(file, subdir)

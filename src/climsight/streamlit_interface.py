@@ -22,6 +22,7 @@ from climsight_engine import normalize_longitude, llm_request, forming_request, 
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
 from climate_data_providers import get_available_providers
+from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths
 
 #ui for saving docs
 from datetime import datetime
@@ -42,7 +43,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         - references (dict): References for the data used in the analysis.
     Returns:
         None
-    """     
+    """
+    # Ensure sandbox exists for the current session.
+    thread_id = ensure_thread_id(session_state=st.session_state)
+    sandbox_paths = get_sandbox_paths(thread_id)
+    ensure_sandbox_dirs(sandbox_paths)
   
     # Config
     try:
@@ -66,7 +71,10 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     api_key_local = os.environ.get("OPENAI_API_KEY_LOCAL")
     if not api_key_local:
         api_key_local = ""
-        
+
+    # Check for Arraylake API key (for ERA5 data retrieval)
+    arraylake_api_key = os.environ.get("ARRAYLAKE_API_KEY", "")
+
     #read data while loading here 
     ##### like hist, future = load_data(config)
 
@@ -130,9 +138,19 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             else:
                 config['llm_combine']['model_type'] = "local"            
         with col1:
-            show_add_info = st.toggle("Provide additional information", value=False, help="""If this is activated you will see all the variables
-                                    that were taken into account for the analysis as well as some plots.""")
+            # Always show additional information (removed toggle per user request)
+            show_add_info = True
             smart_agent   = st.toggle("Use extra search", value=False, help="""If this is activated, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
+            use_era5_data = st.toggle(
+                "Enable ERA5 data",
+                value=config.get("use_era5_data", False),
+                help="Allow the data analysis agent to retrieve ERA5 data into the sandbox.",
+            )
+            use_powerful_data_analysis = st.toggle(
+                "Enable Python analysis",
+                value=config.get("use_powerful_data_analysis", False),
+                help="Allow the data analysis agent to use the Python REPL and generate plots.",
+            )
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
 
@@ -149,7 +167,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         source_descriptions = {
             'nextGEMS': 'nextGEMS (High resolution)',
             'ICCP': 'ICCP (AWI-CM3, medium resolution)',
-            'AWI_CM': 'AWI-CM (CMIP6, low resolution)'
+            'AWI_CM': 'AWI-CM (CMIP6, low resolution)',
+            'DestinE': 'DestinE IFS-FESOM (High resolution, SSP3-7.0)'
         }
 
         col1_src, col2_src = st.columns([1, 1])
@@ -179,7 +198,16 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 type="password",
             )
 
-       
+        # Include Arraylake API key input if ERA5 data is enabled and key not in environment
+        arraylake_api_key_input = ""
+        if use_era5_data and not arraylake_api_key:
+            arraylake_api_key_input = st.text_input(
+                "Arraylake API key (for ERA5 data)",
+                placeholder="Enter your Arraylake API key here",
+                type="password",
+                help="Required for downloading ERA5 time series data from Earthmover/Arraylake.",
+            )
+
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
         
@@ -190,22 +218,48 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         if (not api_key) and (not skip_llm_call) and (config['llm_combine']['model_type'] == "openai"):
             st.error("Please provide an OpenAI API key.")
             st.stop()
+
+        # Handle Arraylake API key for ERA5 data
+        if use_era5_data:
+            if not arraylake_api_key:
+                arraylake_api_key = arraylake_api_key_input
+            if not arraylake_api_key:
+                st.error("Please provide an Arraylake API key to use ERA5 data retrieval.")
+                st.stop()
+            # Store in config so data_analysis_agent can pass it to the tool
+            config["arraylake_api_key"] = arraylake_api_key
+
         # Update config with the selected LLM mode
-        #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+        #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
         config['show_add_info'] = show_add_info
         config['use_smart_agent'] = smart_agent
-        
-    # RUN submit button 
+        config['use_era5_data'] = use_era5_data
+        config['use_powerful_data_analysis'] = use_powerful_data_analysis
+
+    # RUN submit button
         if submit_button and user_message:
             if not api_key:
                 api_key = api_key_input
             if (not api_key) and (not skip_llm_call) and (config['llm_combine']['model_type'] == "openai"):
                 st.error("Please provide an OpenAI API key.")
                 st.stop()
+
+            # Handle Arraylake API key for ERA5 data (in nested block too)
+            if use_era5_data:
+                if not arraylake_api_key:
+                    arraylake_api_key = arraylake_api_key_input
+                if not arraylake_api_key:
+                    st.error("Please provide an Arraylake API key to use ERA5 data retrieval.")
+                    st.stop()
+                # Store in config so data_analysis_agent can pass it to the tool
+                config["arraylake_api_key"] = arraylake_api_key
+
             # Update config with the selected LLM mode
-            #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"    
+            #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
             config['show_add_info'] = show_add_info
             config['use_smart_agent'] = smart_agent
+            config['use_era5_data'] = use_era5_data
+            config['use_powerful_data_analysis'] = use_powerful_data_analysis
             
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
@@ -266,6 +320,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     is_on_land = False
                     st.markdown(f"The selected point is in the ocean.\n Please choose a location on land.")
                 else:
+                    # Pass sandbox paths into the agent state.
+                    input_params['thread_id'] = thread_id
+                    input_params.update(sandbox_paths)
                     # extend input_params with user_message
                     input_params['user_message'] = user_message
                     content_message = "Human request: {user_message} \n " + content_message
@@ -288,7 +345,17 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
 
                 # Add a method to update the progress area
                 def update_progress_ui(message):
-                    progress_area.info(message)
+                    try:
+                        progress_area.info(message)
+                    except Exception as e:
+                        # Streamlit context not available (e.g., running in worker thread)
+                        # This is expected when agents run in parallel
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        if "NoSessionContext" in str(type(e).__name__):
+                            logger.debug(f"Progress update (no UI context): {message}")
+                        else:
+                            logger.error(f"Error displaying progress: {e}")
 
                 # Attach this method to your StreamHandler
                 stream_handler.update_progress = update_progress_ui
@@ -420,6 +487,16 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
 
                     with st.expander("Source"):
                         st.markdown(model_info)
+
+                # Data analysis images (from python_repl)
+                analysis_images = stored_input_params.get('data_analysis_images', [])
+                if analysis_images:
+                    st.markdown("**Data analysis visuals:**")
+                    for image_path in analysis_images:
+                        if os.path.exists(image_path):
+                            st.image(image_path)
+                        else:
+                            st.caption(f"Missing image: {image_path}")
 
                 # Natural Hazards
                 if 'haz_fig' in stored_figs:

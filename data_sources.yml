@@ -121,3 +121,9 @@ sources:
     archive_type: 'zip'
     subdir: './'
     citation:      
+
+  - filename: 'DestinE.zip'
+    url: 'https://swift.dkrz.de/v1/dkrz_035d8f6ff058403bb42f8302e6badfbc/climsight/DestinE.zip?temp_url_sig=f60ad2be0bf65479f489611255c066148dc4741c&temp_url_expires=2053-06-19T11:20:40Z'
+    archive_type: 'zip'
+    subdir: './'
+    citation:      

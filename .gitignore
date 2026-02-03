@@ -2,7 +2,7 @@ data_climate_foresight.tar
 data/ 
 *.ipynb
 __pycache__
-climsight.log
+climsight.logwhe
 climsight_evaluation.log
 cache/
 evaluation/evaluation_report.txt
@@ -13,3 +13,4 @@ rag_articles/
 *.log
 venv311
 venv
+tmp/

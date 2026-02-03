@@ -11,39 +11,72 @@ authors = [
     {name = "boryasbora"}
 ]
 license = {text = "BSD-3-Clause"}
-keywords = ["climate", "llm", "climate-assessment", "rag", "decision-support"]                                                                               
+keywords = ["climate", "llm", "climate-assessment", "rag", "decision-support"]
+requires-python = ">=3.11"
 dependencies = [
+    # Web Framework
     "streamlit",
-    "xarray",
-    "geopy",
-    "geopandas",
-    "pyproj",
-    "requests",
-    "requests-mock",
-    "pandas",
-    "folium",
-    "langchain",
     "streamlit-folium",
+    "folium",
+
+    # Climate & Geospatial Data Processing
+    "xarray",
     "netcdf4",
-    "dask",
-    "pip",
+    "geopandas",
+    "shapely",
+    "pyproj",
+    "geopy",
     "osmnx",
+
+    # Data Science & Numerical Computing
+    "pandas",
+    "numpy",
+    "scipy",
+    "dask",
     "matplotlib",
-    "openai",
+
+    # LangChain & LLM Framework
+    "langchain",
+    "langchain-classic",
     "langchain-community",
     "langchain-openai",
     "langchain-chroma",
     "langchain-core",
-    "pydantic",
+    "langchain-text-splitters",
+    "langchain-experimental",
+    "langchain-anthropic",
     "langgraph",
+    "openai",
+    "pydantic",
+
+    # Web Scraping & Data Retrieval
     "bs4",
     "wikipedia",
-    "scipy",
-    "pyproj",
+    "requests",
+    "requests-mock",
+
+    # PDF Generation
     "reportlab",
-    "aitta-client"
+
+    # ERA5 & Zarr tooling
+    "zarr",
+    "arraylake",
+    "gcsfs",
+    "numcodecs",
+    "blosc",
+
+    # Jupyter-backed Python REPL
+    "jupyter_client",
+    "ipykernel",
+
+    # Configuration & Utilities
+    "pyyaml",
+    "python-dotenv",
 ]
 
+[project.optional-dependencies]
+aitta = ["aitta-client"]
+dev = ["pytest", "flake8"]
 
 [build-system]
 requires = ["setuptools"]
@@ -54,8 +87,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-#find = {}  # Scan the project directory with the default parameters
-
 
 [project.scripts]
 climsight = "climsight.launch:launch_streamlit"

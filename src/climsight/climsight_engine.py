@@ -61,8 +61,17 @@ from typing import Optional, Literal, Union, List
 # import climsight classes
 from climsight_classes import AgentState
 
+# sandbox helpers
+from sandbox_utils import (
+    ensure_thread_id,
+    ensure_sandbox_dirs,
+    get_sandbox_paths,
+    write_climate_data_manifest,
+)
 # import smart_agent
 from smart_agent import get_aitta_chat_model, smart_agent
+# import data_analysis_agent
+from data_analysis_agent import data_analysis_agent
 
 # import climsight functions
 from geo_functions import (
@@ -631,6 +640,13 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     if not isinstance(stream_handler, StreamHandler):
         logging.error(f"stream_handler must be an instance of StreamHandler")
         raise TypeError("stream_handler must be an instance of StreamHandler")
+
+    # Ensure sandbox paths for this session (Streamlit or CLI).
+    thread_id = ensure_thread_id(existing_thread_id=input_params.get("thread_id", ""))
+    sandbox_paths = get_sandbox_paths(thread_id)
+    ensure_sandbox_dirs(sandbox_paths)
+    input_params.update(sandbox_paths)
+    input_params["thread_id"] = thread_id
     
     lat = float(input_params['lat']) # should be already present in input_params
     lon = float(input_params['lon']) # should be already present in input_params
@@ -669,6 +685,31 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             max_completion_tokens=4096
         )
         llm_intro = llm_combine_agent        
+
+    # Data analysis LLM (separate from combine step).
+    llm_dataanalysis_cfg = config.get("llm_dataanalysis")
+    if not llm_dataanalysis_cfg:
+        raise RuntimeError("Missing llm_dataanalysis configuration.")
+    if llm_dataanalysis_cfg.get("model_type") == "local":
+        llm_dataanalysis_agent = ChatOpenAI(
+            openai_api_base="http://localhost:8000/v1",
+            model_name=llm_dataanalysis_cfg.get("model_name"),
+            openai_api_key=api_key_local,
+            max_tokens=16000,
+        )
+    elif llm_dataanalysis_cfg.get("model_type") == "openai":
+        llm_dataanalysis_agent = ChatOpenAI(
+            openai_api_key=api_key,
+            model_name=llm_dataanalysis_cfg.get("model_name"),
+            max_tokens=16000,
+        )
+    elif llm_dataanalysis_cfg.get("model_type") == "aitta":
+        llm_dataanalysis_agent = get_aitta_chat_model(
+            llm_dataanalysis_cfg.get("model_name"),
+            max_completion_tokens=4096
+        )
+    else:
+        llm_dataanalysis_agent = llm_combine_agent
                
     def zero_rag_agent(state: AgentState, figs = {}):
         logger.debug(f"get_elevation_from_api from: {lat}, {lon}")      
@@ -841,6 +882,20 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             data['high_res_climate'] = data['climate_data']
             state.df_list = df_list
 
+            # Persist climatology into the sandbox for cross-agent access.
+            if state.thread_id:
+                sandbox_paths = get_sandbox_paths(state.thread_id)
+                ensure_sandbox_dirs(sandbox_paths)
+                manifest_path, _ = write_climate_data_manifest(
+                    df_list, sandbox_paths["climate_data_dir"], climate_source
+                )
+                state.uuid_main_dir = sandbox_paths["uuid_main_dir"]
+                state.results_dir = sandbox_paths["results_dir"]
+                state.climate_data_dir = sandbox_paths["climate_data_dir"]
+                state.era5_data_dir = sandbox_paths["era5_data_dir"]
+                state.input_params.update(sandbox_paths)
+                state.input_params["climate_data_manifest"] = manifest_path
+
             # Add appropriate references based on data source
             ref_key_map = {
                 'nextGEMS': 'high_resolution_climate_model',
@@ -930,6 +985,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         - **No Keywords Required:** Do not look for specific words like "climate" or "weather".
         - **Accept Fragments:** "Bridge", "Data Center", "Tomatoes", "Here", "My car" are all **VALID**.
         - **Accept Statements:** "I am worried about the heat", "Building a shed" are **VALID**.
+        - **Accept Technical Constraints:** Requests specifying years, models, or datasets (e.g., "Use 1980-2000 baseline") are **VALID**.
 
         Based on the conversation, decide on one of the following responses:
         - "next": either "FINISH" or "CONTINUE"
@@ -1020,6 +1076,34 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             state.content_message += state.data_agent_response['content_message']
             state.input_params.update(state.data_agent_response['input_params']) 
 
+        #add data_analysis_agent response to content_message and input_params
+        if state.data_analysis_response:
+            state.input_params['data_analysis_response'] = state.data_analysis_response
+            state.content_message += "\n Data analysis agent response: {data_analysis_response} "
+
+        # Add ERA5 climatology (observational ground truth) to prompt
+        if state.era5_climatology_response and isinstance(state.era5_climatology_response, dict):
+            era5_data = state.era5_climatology_response
+            # Format ERA5 data as structured text for the LLM
+            era5_text = "ERA5 OBSERVATIONAL CLIMATOLOGY (2015-2025 average - GROUND TRUTH):\n"
+            era5_text += f"Source: {era5_data.get('source', 'ERA5 Reanalysis')}\n"
+            era5_text += f"Location: {era5_data.get('extracted_location', {})}\n"
+            if 'variables' in era5_data:
+                for var_name, var_info in era5_data['variables'].items():
+                    era5_text += f"\n{var_info.get('full_name', var_name)} ({var_info.get('units', '')}):\n"
+                    monthly = var_info.get('monthly_values', {})
+                    for month, value in monthly.items():
+                        era5_text += f"  {month}: {value}\n"
+            state.input_params['era5_climatology'] = era5_text
+            state.content_message += "\n ERA5 Observations (ground truth baseline): {era5_climatology} "
+
+        # Add generated plot images to prompt so LLM knows about them
+        if state.data_analysis_images:
+            state.input_params['data_analysis_images'] = state.data_analysis_images
+            images_list = ", ".join(state.data_analysis_images)
+            state.input_params['data_analysis_images_text'] = images_list
+            state.content_message += "\n Generated visualizations (plot files): {data_analysis_images_text} "
+
         if state.smart_agent_response != {}:
             smart_analysis = state.smart_agent_response.get('output', '')
             state.input_params['smart_agent_analysis'] = smart_analysis
@@ -1027,12 +1111,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             logger.info(f"smart_agent_response: {state.smart_agent_response}")
 
             # Add Wikipedia tool response
-        if state.wikipedia_tool_response != {}:
-            wiki_response = state.wikipedia_tool_response
-            state.input_params['wikipedia_tool_response'] = wiki_response
-            state.content_message += "\n Wikipedia Search Response: {wikipedia_tool_response} "
-            logger.info(f"Wikipedia_tool_reponse: {state.wikipedia_tool_response}")
-        if state.ecocrop_search_response != {}:
+        if state.ecocrop_search_response:
             ecocrop_response = state.ecocrop_search_response
             state.input_params['ecocrop_search_response'] = ecocrop_response
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
@@ -1079,24 +1158,22 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         }
     
     def route_fromintro(state: AgentState) -> Sequence[str]:
+        """Route from intro agent to parallel information gathering agents."""
         output = []
         if "FINISH" in state.next:
             return "FINISH"
         else:
+            # Always run these agents in parallel
             output.append("ipcc_rag_agent")
             output.append("general_rag_agent")
             output.append("data_agent")
             output.append("zero_rag_agent")
-            #output.append("smart_agent")
+
+            # Conditionally add smart_agent based on config
+            if config.get('use_smart_agent', False):
+                output.append("smart_agent")
         return output
-    def route_fromdata(state: AgentState) -> Sequence[str]:
-        output = []
-        if config['use_smart_agent']:
-            output.append("smart_agent")
-        else:
-            output.append("combine_agent")
-        return output
-        
+
     workflow = StateGraph(AgentState)
 
     figs = data_pocket.figs
@@ -1108,28 +1185,38 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     workflow.add_node("ipcc_rag_agent", ipcc_rag_agent)
     workflow.add_node("general_rag_agent", general_rag_agent)
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
-    workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument    
+    workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument
     workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key, api_key_local, stream_handler))
+    workflow.add_node("data_analysis_agent", lambda s: data_analysis_agent(
+        s, config, api_key, api_key_local, stream_handler, llm_dataanalysis_agent
+    ))
     workflow.add_node("combine_agent", combine_agent)   
 
-    path_map = {'ipcc_rag_agent':'ipcc_rag_agent', 'general_rag_agent':'general_rag_agent', 'data_agent':'data_agent','zero_rag_agent':'zero_rag_agent','FINISH':END}
-    path_map_data = {'combine_agent':'combine_agent', 'smart_agent':'smart_agent'}    
+    path_map = {
+        'ipcc_rag_agent': 'ipcc_rag_agent',
+        'general_rag_agent': 'general_rag_agent',
+        'data_agent': 'data_agent',
+        'zero_rag_agent': 'zero_rag_agent',
+        'smart_agent': 'smart_agent',
+        'FINISH': END
+    }
 
-    workflow.set_entry_point("intro_agent") # Set the entry point of the graph
-    
+    workflow.set_entry_point("intro_agent")  # Set the entry point of the graph
+
+    # Route from intro_agent to parallel agents (conditionally includes smart_agent)
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
-    workflow.add_conditional_edges("data_agent", route_fromdata, path_map=path_map_data)    
 
-    #if config['use_smart_agent']:
-    #    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","data_agent","zero_rag_agent"], "combine_agent")
-    #else:
-    workflow.add_edge(["ipcc_rag_agent","general_rag_agent","smart_agent","zero_rag_agent"], "combine_agent")
-        
-    #workflow.add_edge("ipcc_rag_agent", "combine_agent")
-    #workflow.add_edge("general_rag_agent", "combine_agent")
-    #workflow.add_edge("data_agent", "combine_agent")
-    #workflow.add_edge("zero_rag_agent", "combine_agent")
-    #workflow.add_edge("smart_agent", "combine_agent")
+    # All parallel agents (ipcc_rag, general_rag, data, zero_rag) go to data_analysis_agent
+    workflow.add_edge(["ipcc_rag_agent", "general_rag_agent", "data_agent", "zero_rag_agent"], "data_analysis_agent")
+
+    # If smart_agent is enabled, it also goes to data_analysis_agent
+    if config.get('use_smart_agent', False):
+        workflow.add_edge("smart_agent", "data_analysis_agent")
+
+    # Data analysis agent goes to combine agent
+    workflow.add_edge("data_analysis_agent", "combine_agent")
+
+    # Combine agent goes to END
     workflow.add_edge("combine_agent", END)
     # Compile the graph
     app = workflow.compile()
@@ -1140,7 +1227,18 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     # with open(graph_image_path, 'wb') as f:
     #     f.write(graph_img)  # Write the image bytes to the file
     
-    state = AgentState(messages=[], input_params=input_params, user=input_params['user_message'], content_message=content_message, references=[])
+    state = AgentState(
+        messages=[],
+        input_params=input_params,
+        user=input_params['user_message'],
+        content_message=content_message,
+        references=[],
+        thread_id=input_params.get("thread_id", ""),
+        uuid_main_dir=input_params.get("uuid_main_dir", ""),
+        results_dir=input_params.get("results_dir", ""),
+        climate_data_dir=input_params.get("climate_data_dir", ""),
+        era5_data_dir=input_params.get("era5_data_dir", ""),
+    )
     
     stream_handler.update_progress("Starting workflow...")
     output = app.invoke(state)

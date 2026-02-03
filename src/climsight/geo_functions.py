@@ -46,7 +46,7 @@ def get_location(lat, lon):
         "User-Agent": "climsight",
         "accept-language": "en"
     }
-    response = requests.get(url, params=params, headers=headers, timeout=5)
+    response = requests.get(url, params=params, headers=headers, timeout=10)
     location = response.json()
 
     # Wait before making the next request (according to terms of use)
@@ -347,7 +347,7 @@ def get_elevation_from_api(lat, lon):
     float: The elevation of the location in meters.
     """
     url = f"https://api.opentopodata.org/v1/etopo1?locations={lat},{lon}"
-    response = requests.get(url, timeout=3)
+    response = requests.get(url, timeout=10)
     data = response.json()
     return data["results"][0]["elevation"]
 
@@ -370,7 +370,7 @@ def fetch_land_use(lon, lat):
     area.a["landuse"];
     out tags;
     """
-    response = requests.get(overpass_url, params={"data": overpass_query}, timeout=3)
+    response = requests.get(overpass_url, params={"data": overpass_query}, timeout=10)
     data = response.json()
     return data
 
@@ -388,7 +388,7 @@ def get_soil_from_api(lat, lon):
     """
     try:
         url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
-        response = requests.get(url, timeout=3)  # Set timeout to 2 seconds
+        response = requests.get(url, timeout=10)  # Set timeout to 2 seconds
         data = response.json()
         return data["wrb_class_name"]
     except Timeout:
