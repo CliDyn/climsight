@@ -163,9 +163,11 @@ def create_get_data_components_tool(state, config, stream_handler=None):
                 selected_months.append(month)
 
         response = {}
+        references = set()  # Collect unique references from data sources
         for entry in df_list:
             df = entry.get("dataframe")
             extracted_vars = entry.get("extracted_vars", {})
+            source = entry.get("source", "")
 
             if df is None:
                 continue
@@ -181,6 +183,8 @@ def create_get_data_components_tool(state, config, stream_handler=None):
                     f"for years: {entry.get('years_of_averaging', '')}"
                 )
                 response.update({ext_exp: ext_data})
+                if source:
+                    references.add(source)
             else:
                 matching_cols = [col for col in df.columns if environmental_data.lower() in col.lower()]
                 if matching_cols:
@@ -192,9 +196,25 @@ def create_get_data_components_tool(state, config, stream_handler=None):
                         f"for years: {entry.get('years_of_averaging', '')}"
                     )
                     response.update({ext_exp: ext_data})
+                    if source:
+                        references.add(source)
 
         if not response:
             return {"error": f"Variable '{environmental_data}' not found in climatology."}
+
+        # Add reference based on climate source
+        if references:
+            response["references"] = list(references)
+        else:
+            # Fallback reference based on climate source
+            source_references = {
+                "nextGEMS": "Moon, J.-Y., et al. (2024). Earth's Future Climate and Its Variability Simulated at 9 Km Global Resolution. https://doi.org/10.5194/egusphere-2024-249",
+                "ICCP": "AWI-CM3 ICCP climate projections for past and future climate scenarios.",
+                "AWI_CM": "AWI-CM (CMIP6): Climate model data covering past (1985-2004) and future (2070-2100) climate scenarios.",
+                "DestinE": "Destination Earth Climate Digital Twin: IFS-FESOM coupled high-resolution climate simulations (SSP3-7.0 scenario). https://destine.ecmwf.int/",
+            }
+            if climate_source in source_references:
+                response["reference"] = source_references[climate_source]
 
         return response
 

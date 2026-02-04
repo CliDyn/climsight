@@ -61,18 +61,16 @@ except KeyError as e:
    logging.error(f"Missing configuration key: {e}")
    raise RuntimeError(f"Missing configuration key: {e}")
 
-references = {'references': {}, 'used': []}
 # reading references file
-if not references:
-   references_path = 'references.yml'
-   logger.info(f"reading references from: {references_path}")
-   try:
-      with open(references_path, 'r') as file:
-            references = yaml.safe_load(file)
-            references['used'] = []
-   except Exception as e:
-      logging.error(f"An error occurred while reading the file: {references_path}")
-      raise RuntimeError(f"An error occurred while reading the file: {references_path}") from e
+references_path = 'references.yml'
+logger.info(f"reading references from: {references_path}")
+try:
+   with open(references_path, 'r') as file:
+         references = yaml.safe_load(file)
+         references['used'] = []
+except Exception as e:
+   logging.error(f"An error occurred while reading the file: {references_path}")
+   raise RuntimeError(f"An error occurred while reading the file: {references_path}") from e
 if not terminal_call:
    run_streamlit(config, skip_llm_call=skip_llm_call, rag_activated=rag_activated, references=references)
 else:   

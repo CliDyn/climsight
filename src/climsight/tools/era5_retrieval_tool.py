@@ -183,7 +183,8 @@ def retrieve_era5_data(
                 "full_path": absolute_zarr_path,
                 "variable": short_var,
                 "query_type": query_type,
-                "message": f"Cached ERA5 data found at {absolute_zarr_path}"
+                "message": f"Cached ERA5 data found at {absolute_zarr_path}",
+                "reference": "Copernicus Climate Change Service (C3S): ERA5 hourly data on single levels from 1940 to present. https://doi.org/10.24381/cds.adbb2d47"
             }
 
         # --- 2. Connect to Earthmover ---
@@ -288,7 +289,8 @@ def retrieve_era5_data(
             "full_path": absolute_zarr_path,
             "variable": short_var,
             "query_type": query_type,
-            "message": f"ERA5 data ({query_type} optimized) retrieved and saved to {absolute_zarr_path}"
+            "message": f"ERA5 data ({query_type} optimized) retrieved and saved to {absolute_zarr_path}",
+            "reference": "Copernicus Climate Change Service (C3S): ERA5 hourly data on single levels from 1940 to present. https://doi.org/10.24381/cds.adbb2d47"
         }
 
     except Exception as e:

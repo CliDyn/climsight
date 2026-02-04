@@ -3,7 +3,7 @@ references:
     - "Open Topo Data. https://www.opentopodata.org"
     - "Amante, C., Eakins, B.W.: ETOPO1 1 Arc-Minute Global Relief Model: Procedures, Data Sources and Analysis. Noaa technical memorandum nesdis ngdc-24, National Geophysical Data Center, NOAA (2009)."
   fetch_land_use:
-    - "OpenStreetMap contributors. “Cite Overpass”. Overpass API (OpenStreetMap). "
+    - 'OpenStreetMap contributors. "Cite Overpass". Overpass API (OpenStreetMap).'
   get_soil_from_api:
     - "ISRIC: ISRIC SoilGrids API: Soil Classification Query. https://rest.isric.org/soilgrids/v2.0/classification/query"
     - "Poggio, L., de Sousa, L. M., Batjes, N. H., Heuvelink, G. B. M., Kempen, B., Ribeiro, E., Rossiter, D.: SoilGrids 2.0: Producing soil information for the globe with quantified spatial uncertainty. SOIL, 7(1), 217-240 (2021). https://doi.org/10.5194/soil-7-217-2021."
@@ -17,38 +17,49 @@ references:
   x_year_mean_population:
     - "United Nations, Department of Economic and Social Affairs, Population Division: World Population Prospects 2024, Online Edition (2024). https://population.un.org/"
   high_resolution_climate_model:
-    - "Moon, J.-Y., Streffing, J., Lee, S.-S., Semmler, T., Andr'es-Mart'inez, M., Chen,J., Cho, E.-B., Chu, J.-E., Franzke, C., G¨artner, J.P., Ghosh, R., Hegewald, J., Hong, S., Koldunov, N., Lee, J.-Y., Lin, Z., Liu, C., Loza, S., Park, W., Roh, W., Sein, D.V., Sharma, S., Sidorenko, D., Son, J.-H., Stuecker, M.F., Wang, Q., Yi, G., Zapponini, M., Jung, T., Timmermann, A.: Earth’s Future Climate and Its Variability Simulated at 9 Km Global Resolution. https://doi.org/10.5194/egusphere-2024-249"
+    - "Moon, J.-Y., Streffing, J., Lee, S.-S., Semmler, T., Andr'es-Mart'inez, M., Chen,J., Cho, E.-B., Chu, J.-E., Franzke, C., G¨artner, J.P., Ghosh, R., Hegewald, J., Hong, S., Koldunov, N., Lee, J.-Y., Lin, Z., Liu, C., Loza, S., Park, W., Roh, W., Sein, D.V., Sharma, S., Sidorenko, D., Son, J.-H., Stuecker, M.F., Wang, Q., Yi, G., Zapponini, M., Jung, T., Timmermann, A.: Earth's Future Climate and Its Variability Simulated at 9 Km Global Resolution. https://doi.org/10.5194/egusphere-2024-249"
     - "Rackow, T., Pedruzo-Bagazgoitia, X., Becker, T., Milinski, S., Sandu, I., Aguridan, R., Bechtold, P., Beyer, S., Bidlot, J., Boussetta, S., Diamantakis, M., Dueben, P., Dutra, E., Forbes, R., Goessling, H.F., Hadade, I., Hegewald, J., Keeley, S., Kluft, L., Koldunov, N., Koldunov, A., K¨olling, T., Kousal, J., Mogensen, K., Quintino, T., Polichtchouk, I., S´arm´any, D., Sidorenko, D., Streffing, J., S¨utzl, B., Takasuka, D., Tietsche, S., Valentini, M., Vanni`ere, B., Wedi, N., Zampieri, L., Ziemen, F.: Multi-year simulations at kilometre scale with the integrated forecasting system coupled to fesom2.5/nemov3.4. EGUsphere 2024, 1–59 (2024) https://doi.org/10.5194/egusphere-2024-913"
   cmip6_awi_cm:
     - "AWI-CM (CMIP6): Climate model data covering past (1985-2004) and future (2070-2100) climate scenarios."
   ipcc_rag:
     - "IPCC, 2023: Climate Change 2023: Synthesis Report. Contribution of Working Groups I, II and III to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Core Writing Team, H. Lee and J. Romero (eds.)]. IPCC, Geneva, Switzerland, pp. 35-115, doi: 10.59327/IPCC/AR6-9789291691647."
-  reports_rag:    
-  - "Adrian, G., Dietrich, M., Esser, B., Hensel, A., Isermeyer, F., Messner, D., et al. (2023). Together we can counter the effects of climate change. https://doi.org/10.25646/11399  "
-  - "Bharadwaj, R., Karthikeyan, N., & Pichandi, K. (2024). *Comprehensive Climate Impact Quantification (C-CIQ): an approach to co-developing policy and programmatic responses for climate risk management*. London: IIED. Retrieved from https://www.iied.org/22491iied  "
-  - "Bolte, G., Dandolo, L., Gepp, S., Hornberg, C., & Lumbi, S. L. (2023). Climate change and health equity: A public health perspective on climate justice. https://doi.org/10.25646/11772  "
-  - "Copernicus Climate Change Service (C3S). (2024). *European State of the Climate 2023*. Copernicus Climate Change Service (C3S). https://doi.org/10.24381/BS9V-8C66  "
-  - "Health Effects Institute. (2024). *State of Global Air 2024* (Special Report). Boston, MA: Health Effects Institute.  "
-  - "NOAA National Centers for Environmental Information. (2024a). Global Drought Narrative for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/global-drought/202409  "
-  - "NOAA National Centers for Environmental Information. (2024b). Monthly Global Climate Report for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/global/202409  "
-  - "NOAA National Centers for Environmental Information. (2024c). Monthly Global Snow and Ice Report for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/global-snow/202409  "
-  - "NOAA National Centers for Environmental Information. (2024d). Monthly Tropical Cyclones Report for August 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/tropical-cyclones/202408  "
-  - "NOAA National Centers for Environmental Information. (2024e). Monthly Upper Air Report for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/upper-air/202409  "
-  - "United Nations Environment Programme. (2023a). *Adaptation Gap Report 2023: Underfinanced. Underprepared. Inadequate investment and planning on climate adaptation leaves world exposed*. United Nations Environment Programme. https://doi.org/10.59117/20.500.11822/43796  "
-  - "United Nations Environment Programme. (2023b). *Emissions Gap Report 2023: Broken Record – Temperatures hit new highs, yet world fails to cut emissions (again)*. United Nations Environment Programme. https://doi.org/10.59117/20.500.11822/43922  "
-  - "United Nations Environment Programme, & International Methane Emissions Observatory. (2023). An Eye on Methane: The road to radical transparency - International Methane Emissions Observatory 2023 Report. Retrieved from https://wedocs.unep.org/20.500.11822/44129  "
-  - "United Nations Environment Programme, & International Resource Panel. (2024). Global Resources Outlook 2024 - Bend the trend: Pathways to a Liveable Planet as Resource Use Spikes. Retrieved from https://wedocs.unep.org/20.500.11822/44901  "
-  - "United Nations Environment Programme, & International Solid Waste Association. (2024). Global Waste Management Outlook 2024 - Beyond an age of waste: Turning Rubbish into a Resource. Retrieved from https://wedocs.unep.org/20.500.11822/44939  "
-  - "United Nations University - Institute for Environment and Human Security (UNU-EHS), Eberle, C., O’Connor, J., UNU-EHS, Narvaez, L., UNU-EHS, et al. (2023). *Interconnected Disaster Risks 2023: Risk Tipping Points*. Bonn: UNU-EHS. https://doi.org/10.53324/wtwn2495  "
-  - "U.S. Global Change Research Program, Wuebbles, D. J., Fahey, D. W., Hibbard, K. A., Dokken, D. J., Stewart, B. C., & Maycock, T. K. (2017). *Climate Science Special Report: Fourth National Climate Assessment, Volume I*. Washington, DC: USGCRP. https://doi.org/10.7930/j0j964j6  "
-  - "Winklmayer, C., Matthies-Wiesler, F., Muthers, S., Buchien, S., Kuch, B., An Der Heiden, M., & Mücke, H.-G. (2023). Heat in Germany: Health risks and preventive measures. https://doi.org/10.25646/11651  "
-  - "World Meteorological Organization. (2023a). *The Global Climate 2011-2020: A Decade of Accelerating Climate Change*. United Nations.  "
-  - "World Meteorological Organization. (2023b). The State of Greenhouse Gases in the Atmosphere Based on Global Observations through 2022. *WMO Greenhouse Gas Bulletin*, *19*, 11.  "
-  - "World Meteorological Organization. (2024a). *Hydromet Gap Report 2024*. Alliance for Hydromet Development.  "
-  - "World Meteorological Organization. (2024b). *State of the Climate in Africa 2023*. United Nations.  "
-  - "World Meteorological Organization. (2024c). *State of the Climate in Asia 2023*. United Nations.  "
-  - "World Meteorological Organization. (2024d). *State of the Climate in Latin America and the Caribbean 2023*. United Nations.  "
-  - "World Meteorological Organization. (2024e). *State of the Global Climate 2023*. United Nations.  "
-  - "World Meteorological Organization. (2024f). *WMO Air Quality and Climate Bulletin*, *4*, 12. " 
-ecocrop:
-  - "FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en"
+    - "IPCC, 2021: Climate Change 2021: The Physical Science Basis. Contribution of Working Group I to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [Masson-Delmotte, V., et al. (eds.)]. Cambridge University Press. doi:10.1017/9781009157896"
+    - "IPCC, 2022: Climate Change 2022: Impacts, Adaptation and Vulnerability. Contribution of Working Group II to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [H.-O. Pörtner, et al. (eds.)]. Cambridge University Press. doi:10.1017/9781009325844"
+    - "IPCC, 2022: Climate Change 2022: Mitigation of Climate Change. Contribution of Working Group III to the Sixth Assessment Report of the Intergovernmental Panel on Climate Change [P.R. Shukla, et al. (eds.)]. Cambridge University Press. doi:10.1017/9781009157926"
+  reports_rag:
+    - "Adrian, G., Dietrich, M., Esser, B., Hensel, A., Isermeyer, F., Messner, D., et al. (2023). Together we can counter the effects of climate change. https://doi.org/10.25646/11399"
+    - "Bharadwaj, R., Karthikeyan, N., & Pichandi, K. (2024). *Comprehensive Climate Impact Quantification (C-CIQ): an approach to co-developing policy and programmatic responses for climate risk management*. London: IIED. Retrieved from https://www.iied.org/22491iied"
+    - "Bolte, G., Dandolo, L., Gepp, S., Hornberg, C., & Lumbi, S. L. (2023). Climate change and health equity: A public health perspective on climate justice. https://doi.org/10.25646/11772"
+    - "Copernicus Climate Change Service (C3S). (2024). *European State of the Climate 2023*. Copernicus Climate Change Service (C3S). https://doi.org/10.24381/BS9V-8C66"
+    - "Health Effects Institute. (2024). *State of Global Air 2024* (Special Report). Boston, MA: Health Effects Institute."
+    - "NOAA National Centers for Environmental Information. (2024a). Global Drought Narrative for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/global-drought/202409"
+    - "NOAA National Centers for Environmental Information. (2024b). Monthly Global Climate Report for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/global/202409"
+    - "NOAA National Centers for Environmental Information. (2024c). Monthly Global Snow and Ice Report for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/global-snow/202409"
+    - "NOAA National Centers for Environmental Information. (2024d). Monthly Tropical Cyclones Report for August 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/tropical-cyclones/202408"
+    - "NOAA National Centers for Environmental Information. (2024e). Monthly Upper Air Report for September 2024. Retrieved from https://www.ncei.noaa.gov/access/monitoring/monthly-report/upper-air/202409"
+    - "United Nations Environment Programme. (2023a). *Adaptation Gap Report 2023: Underfinanced. Underprepared. Inadequate investment and planning on climate adaptation leaves world exposed*. United Nations Environment Programme. https://doi.org/10.59117/20.500.11822/43796"
+    - "United Nations Environment Programme. (2023b). *Emissions Gap Report 2023: Broken Record – Temperatures hit new highs, yet world fails to cut emissions (again)*. United Nations Environment Programme. https://doi.org/10.59117/20.500.11822/43922"
+    - "United Nations Environment Programme, & International Methane Emissions Observatory. (2023). An Eye on Methane: The road to radical transparency - International Methane Emissions Observatory 2023 Report. Retrieved from https://wedocs.unep.org/20.500.11822/44129"
+    - "United Nations Environment Programme, & International Resource Panel. (2024). Global Resources Outlook 2024 - Bend the trend: Pathways to a Liveable Planet as Resource Use Spikes. Retrieved from https://wedocs.unep.org/20.500.11822/44901"
+    - "United Nations Environment Programme, & International Solid Waste Association. (2024). Global Waste Management Outlook 2024 - Beyond an age of waste: Turning Rubbish into a Resource. Retrieved from https://wedocs.unep.org/20.500.11822/44939"
+    - "United Nations University - Institute for Environment and Human Security (UNU-EHS), Eberle, C., O'Connor, J., UNU-EHS, Narvaez, L., UNU-EHS, et al. (2023). *Interconnected Disaster Risks 2023: Risk Tipping Points*. Bonn: UNU-EHS. https://doi.org/10.53324/wtwn2495"
+    - "U.S. Global Change Research Program, Wuebbles, D. J., Fahey, D. W., Hibbard, K. A., Dokken, D. J., Stewart, B. C., & Maycock, T. K. (2017). *Climate Science Special Report: Fourth National Climate Assessment, Volume I*. Washington, DC: USGCRP. https://doi.org/10.7930/j0j964j6"
+    - "Winklmayer, C., Matthies-Wiesler, F., Muthers, S., Buchien, S., Kuch, B., An Der Heiden, M., & Mücke, H.-G. (2023). Heat in Germany: Health risks and preventive measures. https://doi.org/10.25646/11651"
+    - "World Meteorological Organization. (2023a). *The Global Climate 2011-2020: A Decade of Accelerating Climate Change*. United Nations."
+    - "World Meteorological Organization. (2023b). The State of Greenhouse Gases in the Atmosphere Based on Global Observations through 2022. *WMO Greenhouse Gas Bulletin*, *19*, 11."
+    - "World Meteorological Organization. (2024a). *Hydromet Gap Report 2024*. Alliance for Hydromet Development."
+    - "World Meteorological Organization. (2024b). *State of the Climate in Africa 2023*. United Nations."
+    - "World Meteorological Organization. (2024c). *State of the Climate in Asia 2023*. United Nations."
+    - "World Meteorological Organization. (2024d). *State of the Climate in Latin America and the Caribbean 2023*. United Nations."
+    - "World Meteorological Organization. (2024e). *State of the Global Climate 2023*. United Nations."
+    - "World Meteorological Organization. (2024f). *WMO Air Quality and Climate Bulletin*, *4*, 12."
+  era5_climatology:
+    - "Hersbach, H., Bell, B., Berrisford, P., et al. (2020). The ERA5 global reanalysis. Q.J.R. Meteorol. Soc., 146, 1999-2049. https://doi.org/10.1002/qj.3803"
+  era5_retrieval:
+    - "Copernicus Climate Change Service (C3S): ERA5 hourly data on single levels from 1940 to present. https://doi.org/10.24381/cds.adbb2d47"
+  destine_climate_model:
+    - "Destination Earth Climate Digital Twin: IFS-FESOM coupled high-resolution climate simulations (SSP3-7.0 scenario). https://destine.ecmwf.int/"
+  iccp_climate_model:
+    - "AWI-CM3 ICCP climate projections for past and future climate scenarios."
+  ecocrop:
+    - "FAO, IIASA: Global Agro-Ecological Zones (GAEZ V4) - Data Portal User's Guide, 1st edn. FAO and IIASA, Rome, Italy (2021). https://doi.org/10.4060/cb5167en"

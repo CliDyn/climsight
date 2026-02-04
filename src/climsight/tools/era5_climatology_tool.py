@@ -284,7 +284,8 @@ def create_era5_climatology_tool(state, config, stream_handler=None):
                     "comparison": "Compare ERA5 values with climate model historical period to assess model bias",
                     "baseline": "Use ERA5 as the 'current climate' baseline (what we observe NOW)",
                     "interpretation": "ERA5 represents actual observed conditions, climate models are projections"
-                }
+                },
+                "reference": "Hersbach, H., Bell, B., Berrisford, P., et al. (2020). The ERA5 global reanalysis. Q.J.R. Meteorol. Soc., 146, 1999-2049. https://doi.org/10.1002/qj.3803"
             }
 
             # Save to sandbox if available

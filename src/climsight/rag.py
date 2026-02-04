@@ -149,11 +149,12 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
     - rag_db (Chroma or None): The loaded RAG database object.
 
     Returns:
-    - str or None: The response from the RAG query, or None if the query fails.
+    - tuple: (response_text, sources_list) where response_text is the RAG response string
+             and sources_list is a list of source filenames used. Returns (None, []) if query fails.
     """
     if not rag_ready:
         logger.warning("RAG database is not ready or loaded. Skipping RAG query.")
-        return None
+        return None, []
     try:
         retriever = rag_db.as_retriever()
         if retriever is None:
@@ -173,34 +174,20 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
             """Print the state passed between Runnables in a langchain and pass it on"""
             logger.info(f"Chunks returned from RAG: {state}")
             return state
-        
-        
-        # # Retrieve documents based on the user's message
-        #docs = list(retriever.get_documents(input_params['user_message']))
-        #docs = list(retriever.get_relevant_documents(input_params['user_message']))
-        # # Extract sources from the documents
-        #sources_list = extract_sources(docs)
-        # # Format the document content into a single string
-        # context = format_docs(docs)
-        # Build chain input as a dictionary.
-        # # Note: In this chain, we only pass the context, location, and question to the prompt.
-        # # The sources are kept separately.
-        # chain_input = {
-        #     "context": context,
-        #     "location": get_loci(None),
-        #     "question": input_params['user_message']
-        # }
-        
-        # # Build the chain
-        # rag_chain = (
-        #     chain_input
-        #     | RunnableLambda(inspect)
-        #     | custom_rag_prompt
-        #     | ChatOpenAI(model=config['model_name'], api_key=openai_api_key)
-        #     | StrOutputParser()
-        # )   
+
+        # First, retrieve documents to get sources
+        docs = retriever.get_relevant_documents(input_params['user_message'])
+        sources_list = extract_sources(docs)
+        # Get unique sources (filenames)
+        unique_sources = list(set(sources_list))
+        logger.info(f"RAG sources used: {unique_sources}")
+
+        # Format documents for context
+        context = format_docs(docs)
+
+        # Build the chain with pre-retrieved context
         rag_chain = (
-            {"context": retriever | format_docs, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
+            {"context": lambda _: context, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
             | RunnableLambda(inspect)
             | custom_rag_prompt
             | ChatOpenAI(model=config['llm_rag']['model_name'], api_key=openai_api_key)
@@ -209,8 +196,8 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
         rag_response = rag_chain.invoke(input_params['user_message'])
         logging.info(f"Rendered RAG response: {rag_response}")
 
-        return rag_response
+        return rag_response, unique_sources
 
     except Exception as e:
         logger.error(f"Failed to perform RAG query: {e}")
-        return None
+        return None, []
