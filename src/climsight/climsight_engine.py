@@ -575,13 +575,15 @@ def direct_llm_request(content_message, input_params, config, api_key, stream_ha
         raise TypeError("stream_handler must be an instance of StreamHandler")    
     
     ##  ===================  start with LLM =========================
-    logging.info(f"Generating...")    
+    logging.info(f"Generating...")
 
     ## === RAG integration === ##
-    ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
-    general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
-    logger.debug(f"IPCC RAG is:", ipcc_rag_response)
-    logger.debug(f"General RAG is:", general_rag_response)
+    ipcc_rag_response, ipcc_sources = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
+    general_rag_response, general_sources = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
+    logger.debug(f"IPCC RAG is: {ipcc_rag_response}")
+    logger.debug(f"General RAG is: {general_rag_response}")
+    logger.info(f"IPCC RAG sources: {ipcc_sources}")
+    logger.info(f"General RAG sources: {general_sources}")
 
     # Combine RAG responses with source labels
     rag_response_parts = []
@@ -774,8 +776,8 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         logger.debug(f"filter_events_within_square for: {lat, lon}")              
         try:
             filtered_events_square, promt_hazard_data = filter_events_within_square(lat, lon, config['haz_path'], config['distance_from_event'])
-            if 'filtered_events_square' in references['references']:
-                for ref in references['references']['filtered_events_square']:
+            if 'filter_events_within_square' in references['references']:
+                for ref in references['references']['filter_events_within_square']:
                     references['used'].append(ref)
         except Exception as e:
             promt_hazard_data = None
@@ -899,8 +901,9 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             # Add appropriate references based on data source
             ref_key_map = {
                 'nextGEMS': 'high_resolution_climate_model',
-                'ICCP': 'iccp_climate_data',
-                'AWI_CM': 'cmip6_awi_cm'
+                'ICCP': 'iccp_climate_model',
+                'AWI_CM': 'cmip6_awi_cm',
+                'DestinE': 'destine_climate_model',
             }
             ref_key = ref_key_map.get(climate_source, 'high_resolution_climate_model')
             if ref_key in references['references']:
@@ -926,14 +929,19 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         ## === RAG integration === ##
         logger.info(f"IPCC RAG agent in work.")
         #ik stream_handler.update_progress("Searching IPCC reports for relevant climate information...")
-        ipcc_rag_response = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
+        ipcc_rag_response, ipcc_sources = query_rag(input_params, config, api_key, ipcc_rag_ready, ipcc_rag_db)
         if ipcc_rag_response:
-            if 'ipcc_rag' in references['references']:
-                for ref in references['references']['ipcc_rag']:
-                    references['used'].append(ref)
+            # Add only the general IPCC reference (the main synthesis report covers all)
+            # since we can't map individual source files to specific citations
+            if 'ipcc_rag' in references['references'] and references['references']['ipcc_rag']:
+                # Add just the first (main) IPCC reference when any IPCC content is used
+                main_ref = references['references']['ipcc_rag'][0]
+                if main_ref not in references['used']:
+                    references['used'].append(main_ref)
+            logger.info(f"IPCC RAG sources used: {ipcc_sources}")
         else:
-            ipcc_rag_agent_response = "None"
-                    
+            ipcc_rag_response = "None"
+
         # logger.info(f"IPCC RAG says: {ipcc_rag_response}")
         logger.info(f"ipcc_rag_agent_response: {ipcc_rag_response}")
         return {'ipcc_rag_agent_response': ipcc_rag_response}
@@ -941,14 +949,25 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     def general_rag_agent(state: AgentState):
         ## === RAG integration === ##
         logger.info(f"General RAG agent in work.")
-        #ik stream_handler.update_progress("Searching general knowledge base for relevant information...")        
-        general_rag_response = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
+        #ik stream_handler.update_progress("Searching general knowledge base for relevant information...")
+        general_rag_response, general_sources = query_rag(input_params, config, api_key, general_rag_ready, general_rag_db)
         if general_rag_response:
+            # Match source filenames to references where possible
             if 'reports_rag' in references['references']:
-                for ref in references['references']['reports_rag']:
-                    references['used'].append(ref)
+                for source_file in general_sources:
+                    # Try to find a matching reference by checking if source filename appears in reference
+                    source_basename = source_file.split('/')[-1].replace('.pdf', '').replace('_', ' ').lower()
+                    for ref in references['references']['reports_rag']:
+                        # Check if any significant part of the source matches the reference
+                        ref_lower = ref.lower()
+                        # Match by year or key terms from filename
+                        if source_basename[:20] in ref_lower or any(term in ref_lower for term in source_basename.split()[:3] if len(term) > 4):
+                            if ref not in references['used']:
+                                references['used'].append(ref)
+                                break
+            logger.info(f"General RAG sources used: {general_sources}")
         else:
-            general_rag_agent_response = "None"
+            general_rag_response = "None"
         # logger.info(f"General RAG says: {general_rag_response}")
         logger.info(f"general_rag_agent_response: {general_rag_response}")
         return {'general_rag_agent_response': general_rag_response}
@@ -1252,10 +1271,13 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     stream_handler.send_text(output['final_answer'])
 
     for ref in references['used']:
-        stream_handler.send_reference_text('- '+ref+'  \n')     
+        stream_handler.send_reference_text('- '+ref+'  \n')
 
+    # Add agent-collected references to the main references list (deduplicate)
     for ref in output['references']:
-        stream_handler.send_reference_text('- '+ref+'  \n')     
-                
-    
+        stream_handler.send_reference_text('- '+ref+'  \n')
+        if ref and ref not in references['used']:
+            references['used'].append(ref)
+
+
     return output['final_answer'], input_params, content_message, combine_agent_prompt_text

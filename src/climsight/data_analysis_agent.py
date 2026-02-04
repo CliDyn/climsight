@@ -602,6 +602,7 @@ Required analysis:
     data_components_outputs = []
     plot_images: List[str] = []
     era5_climatology_output = None
+    collected_references: List[str] = []  # Collect references from tools
 
     for action, observation in result.get("intermediate_steps", []):
         if action.tool == "get_era5_climatology":
@@ -609,8 +610,18 @@ Required analysis:
             if isinstance(obs, dict) and "error" not in obs:
                 era5_climatology_output = obs
                 state.era5_climatology_response = obs
+                # Collect reference from ERA5 climatology
+                if "reference" in obs:
+                    collected_references.append(obs["reference"])
         if action.tool == "get_data_components":
-            data_components_outputs.append(_normalize_tool_observation(observation))
+            obs = _normalize_tool_observation(observation)
+            data_components_outputs.append(obs)
+            # Collect references from get_data_components
+            if isinstance(obs, dict):
+                if "reference" in obs:
+                    collected_references.append(obs["reference"])
+                if "references" in obs:
+                    collected_references.extend(obs["references"])
         if action.tool in ("Python_REPL", "python_repl"):
             obs = _normalize_tool_observation(observation)
             if isinstance(obs, dict):
@@ -620,6 +631,9 @@ Required analysis:
             obs = _normalize_tool_observation(observation)
             if isinstance(obs, dict):
                 era5_output = str(obs)
+                # Collect reference from ERA5 retrieval
+                if "reference" in obs:
+                    collected_references.append(obs["reference"])
             elif hasattr(obs, 'content'):
                 era5_output = obs.content
             else:
@@ -627,6 +641,11 @@ Required analysis:
             # Store in state
             state.era5_tool_response = era5_output
             state.input_params.setdefault("era5_results", []).append(obs)
+
+    # Add collected references to state.references (deduplicate)
+    for ref in collected_references:
+        if ref and ref not in state.references:
+            state.references.append(ref)
 
     analysis_text = result.get("output", "")
 
@@ -659,4 +678,5 @@ Required analysis:
         "data_analysis_prompt_text": analysis_brief,
         "era5_climatology_response": state.era5_climatology_response,
         "era5_tool_response": getattr(state, 'era5_tool_response', None),
+        "references": state.references,  # Propagate collected references
     }
