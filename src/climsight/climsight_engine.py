@@ -72,6 +72,13 @@ from sandbox_utils import (
 from smart_agent import get_aitta_chat_model, smart_agent
 # import data_analysis_agent
 from data_analysis_agent import data_analysis_agent
+# import predefined data preparation functions
+from tools.era5_climatology_tool import extract_era5_climatology_direct
+from tools.predefined_plots import (
+    _plot_climate_comparison,
+    _plot_disaster_summary,
+    _plot_population_projection,
+)
 
 # import climsight functions
 from geo_functions import (
@@ -822,44 +829,27 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             zero_agent_response['input_params']['population'] = population
             zero_agent_response['content_message'] += f"Population in {state.input_params['country']} data: {{population}} \n"
 
-        ##  ===================  plotting      =========================   
-        if config['show_add_info']:
-            logger.debug(f"plot_disaster_counts for filtered_events_square")              
-            try:
-                haz_fig = plot_disaster_counts(filtered_events_square)
-                source = '''
-                            *The GDIS data descriptor*  
-                            Rosvold, E.L., Buhaug, H. GDIS, a global dataset of geocoded disaster locations. Sci Data 8,
-                            61 (2021). https://doi.org/10.1038/s41597-021-00846-6  
-                            *The GDIS dataset*  
-                            Rosvold, E. and H. Buhaug. 2021. Geocoded disaster (GDIS) dataset. Palisades, NY: NASA
-                            Socioeconomic Data and Applications Center (SEDAC). https://doi.org/10.7927/zz3b-8y61.
-                            Accessed DAY MONTH YEAR.  
-                            *The EM-DAT dataset*  
-                            Guha-Sapir, Debarati, Below, Regina, & Hoyois, Philippe (2014). EM-DAT: International
-                            disaster database. Centre for Research on the Epidemiology of Disasters (CRED).
-                        '''
-                if not (haz_fig is None):
-                    figs['haz_fig'] = {'fig':haz_fig,'source':source}
-            except Exception as e:
-                logging.error(f"Unexpected error in plot_disaster_counts: {e}")
-                raise RuntimeError(f"Unexpected error in plot_disaster_counts: {e}")
+        ##  ===================  pass data for plotting to data_analysis_agent  =========================
+        # Instead of creating plots here, pass data to state for data_analysis_agent to handle
+        # This allows predefined plots to be created as tools with proper references
 
-            logger.debug(f"plot_population for: {config['pop_path'], state.input_params['country'] }")              
-            try:
-                population_plot = plot_population(config['pop_path'], state.input_params['country'] )
-                source = '''
-                        United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022, Online Edition. 
-                        Accessible at: https://population.un.org/wpp/Download/Standard/CSV/.
-                        '''
-                if not (population_plot is None):
-                    figs['population_plot'] = {'fig':population_plot,'source':source}        
-            except Exception as e:
-                logging.error(f"Unexpected error in population_plot: {e}")
-                raise RuntimeError(f"Unexpected error in population_plot: {e}")
-  
+        # Prepare hazard_data for data_analysis_agent (will be used by plot_disaster_summary tool)
+        hazard_data = filtered_events_square if filtered_events_square is not None else None
+
+        # Prepare population_config for data_analysis_agent (will be used by plot_population_projection tool)
+        population_config = {}
+        if config.get('pop_path') and state.input_params.get('country'):
+            population_config = {
+                'pop_path': config['pop_path'],
+                'country': state.input_params['country']
+            }
+
         logger.info(f"zero_agent_response: {zero_agent_response}")
-        return {'zero_agent_response': zero_agent_response}
+        return {
+            'zero_agent_response': zero_agent_response,
+            'hazard_data': hazard_data,
+            'population_config': population_config
+        }
                     
     def data_agent(state: AgentState, data={}, df={}):
         # data
@@ -924,7 +914,120 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         logger.info(f"data_agent_response: {data_agent_response}")
         return respond
 
-      
+    def prepare_predefined_data(state: AgentState):
+        """
+        Prepare predefined data: extract ERA5 climatology and generate standard plots.
+
+        This runs after all parallel agents complete, BEFORE data_analysis_agent.
+        When python_REPL is disabled, this prepares all data that combine_agent needs.
+        """
+        stream_handler.update_progress("Preparing climate data and visualizations...")
+
+        predefined_plot_paths = []
+        collected_references = []
+        era5_data = None
+
+        # Ensure sandbox paths are available
+        if not state.results_dir and state.thread_id:
+            sandbox_paths = get_sandbox_paths(state.thread_id)
+            ensure_sandbox_dirs(sandbox_paths)
+            state.uuid_main_dir = sandbox_paths["uuid_main_dir"]
+            state.results_dir = sandbox_paths["results_dir"]
+            state.climate_data_dir = sandbox_paths["climate_data_dir"]
+            state.era5_data_dir = sandbox_paths["era5_data_dir"]
+
+        # 1. Extract ERA5 climatology (needed for plots and combine_agent prompt)
+        has_era5_climatology = config.get("era5_climatology", {}).get("enabled", True)
+        if has_era5_climatology:
+            stream_handler.update_progress("Extracting ERA5 observational climatology...")
+            era5_config = config.get("era5_climatology", {})
+            era5_path = era5_config.get("path", "data/era5/era5_climatology_2015_2025.zarr")
+            era5_result = extract_era5_climatology_direct(
+                latitude=lat,
+                longitude=lon,
+                era5_path=era5_path,
+                variables=["t2m", "tp", "u10", "v10"],
+                save_to_dir=state.uuid_main_dir
+            )
+            if "error" not in era5_result:
+                era5_data = era5_result
+                state.era5_climatology_response = era5_result
+                if "reference" in era5_result:
+                    collected_references.append(era5_result["reference"])
+                logger.info(f"Extracted ERA5 climatology for ({lat}, {lon})")
+            else:
+                logger.warning(f"ERA5 climatology: {era5_result.get('error', 'unknown error')}")
+
+        # 2. Generate climate comparison plots (with ERA5 overlay)
+        if state.df_list:
+            stream_handler.update_progress("Generating climate comparison plots...")
+            climate_result = _plot_climate_comparison(
+                results_dir=state.results_dir,
+                df_list=state.df_list,
+                era5_data=era5_data,
+                include_era5=True
+            )
+            if climate_result.get("status") == "success":
+                predefined_plot_paths.extend(climate_result.get("plots", []))
+                if "reference" in climate_result:
+                    collected_references.append(climate_result["reference"])
+                logger.info(f"Generated {len(climate_result.get('plots', []))} climate plots")
+            else:
+                logger.warning(f"Climate plots: {climate_result.get('message', 'unknown error')}")
+
+        # 3. Generate disaster summary plot
+        if state.hazard_data is not None:
+            stream_handler.update_progress("Generating disaster summary plot...")
+            disaster_result = _plot_disaster_summary(
+                results_dir=state.results_dir,
+                filtered_events=state.hazard_data
+            )
+            if disaster_result.get("status") == "success":
+                if disaster_result.get("plot"):
+                    predefined_plot_paths.append(disaster_result["plot"])
+                if "reference" in disaster_result:
+                    collected_references.append(disaster_result["reference"])
+                logger.info("Generated disaster summary plot")
+            elif disaster_result.get("status") == "skipped":
+                logger.info(f"Disaster plot skipped: {disaster_result.get('message', '')}")
+
+        # 4. Generate population projection plot
+        if state.population_config:
+            stream_handler.update_progress("Generating population projection plot...")
+            pop_result = _plot_population_projection(
+                results_dir=state.results_dir,
+                pop_path=state.population_config.get('pop_path', ''),
+                country=state.population_config.get('country', '')
+            )
+            if pop_result.get("status") == "success":
+                if pop_result.get("plot"):
+                    predefined_plot_paths.append(pop_result["plot"])
+                if "reference" in pop_result:
+                    collected_references.append(pop_result["reference"])
+                logger.info("Generated population projection plot")
+            elif pop_result.get("status") == "skipped":
+                logger.info(f"Population plot skipped: {pop_result.get('message', '')}")
+
+        # Add references
+        for ref in collected_references:
+            if ref and ref not in references['used']:
+                references['used'].append(ref)
+
+        logger.info(f"Prepared {len(predefined_plot_paths)} predefined plots")
+
+        return {
+            'predefined_plots': predefined_plot_paths,
+            'era5_climatology_response': era5_data or {},
+            'data_analysis_images': predefined_plot_paths,  # For UI display
+        }
+
+    def route_after_prepare(state: AgentState) -> str:
+        """Route after prepare_predefined_data based on python_REPL config."""
+        if config.get('use_powerful_data_analysis', False):
+            return "data_analysis_agent"
+        else:
+            return "combine_agent"
+
     def ipcc_rag_agent(state: AgentState):
         ## === RAG integration === ##
         logger.info(f"IPCC RAG agent in work.")
@@ -1206,10 +1309,11 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     workflow.add_node("data_agent", lambda s: data_agent(s, data, df))  # Pass `data` as argument
     workflow.add_node("zero_rag_agent", lambda s: zero_rag_agent(s, figs))  # Pass `figs` as argument
     workflow.add_node("smart_agent", lambda s: smart_agent(s, config, api_key, api_key_local, stream_handler))
+    workflow.add_node("prepare_predefined_data", prepare_predefined_data)
     workflow.add_node("data_analysis_agent", lambda s: data_analysis_agent(
         s, config, api_key, api_key_local, stream_handler, llm_dataanalysis_agent
     ))
-    workflow.add_node("combine_agent", combine_agent)   
+    workflow.add_node("combine_agent", combine_agent)
 
     path_map = {
         'ipcc_rag_agent': 'ipcc_rag_agent',
@@ -1220,19 +1324,30 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         'FINISH': END
     }
 
+    # Path map for routing after prepare_predefined_data
+    prepare_path_map = {
+        'data_analysis_agent': 'data_analysis_agent',
+        'combine_agent': 'combine_agent'
+    }
+
     workflow.set_entry_point("intro_agent")  # Set the entry point of the graph
 
     # Route from intro_agent to parallel agents (conditionally includes smart_agent)
     workflow.add_conditional_edges("intro_agent", route_fromintro, path_map=path_map)
 
-    # All parallel agents (ipcc_rag, general_rag, data, zero_rag) go to data_analysis_agent
-    workflow.add_edge(["ipcc_rag_agent", "general_rag_agent", "data_agent", "zero_rag_agent"], "data_analysis_agent")
+    # All parallel agents go to prepare_predefined_data (ERA5 extraction + plots)
+    workflow.add_edge(["ipcc_rag_agent", "general_rag_agent", "data_agent", "zero_rag_agent"], "prepare_predefined_data")
 
-    # If smart_agent is enabled, it also goes to data_analysis_agent
+    # If smart_agent is enabled, it also goes to prepare_predefined_data
     if config.get('use_smart_agent', False):
-        workflow.add_edge("smart_agent", "data_analysis_agent")
+        workflow.add_edge("smart_agent", "prepare_predefined_data")
 
-    # Data analysis agent goes to combine agent
+    # Conditional routing from prepare_predefined_data:
+    # - If python_REPL enabled: go to data_analysis_agent
+    # - If python_REPL disabled: skip data_analysis_agent, go directly to combine_agent
+    workflow.add_conditional_edges("prepare_predefined_data", route_after_prepare, path_map=prepare_path_map)
+
+    # Data analysis agent goes to combine agent (when enabled)
     workflow.add_edge("data_analysis_agent", "combine_agent")
 
     # Combine agent goes to END
