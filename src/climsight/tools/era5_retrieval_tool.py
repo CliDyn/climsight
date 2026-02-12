@@ -41,6 +41,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # =============================================================================
 
 # Variable Mapping: Maps friendly names to Earthmover short codes
+# IMPORTANT: These are the ONLY variables available in the Arraylake ERA5 surface dataset.
+# 'tp' (total_precipitation) does NOT exist in this dataset.
+# For precipitation, use 'cp' (convective) or 'lsp' (large-scale) instead.
 VARIABLE_MAPPING = {
     # Temperature
     "sea_surface_temperature": "sst",
@@ -48,36 +51,57 @@ VARIABLE_MAPPING = {
     "temperature": "t2",
     "skin_temperature": "skt",
     "dewpoint_temperature": "d2",
+    "2m_dewpoint_temperature": "d2",
 
     # Wind
     "10m_u_component_of_wind": "u10",
     "10m_v_component_of_wind": "v10",
-    "u_component_of_wind": "u10", 
+    "u_component_of_wind": "u10",
     "v_component_of_wind": "v10",
 
     # Pressure
     "surface_pressure": "sp",
     "mean_sea_level_pressure": "mslp",
 
-    # Clouds/Precip
+    # Clouds/Precip/Snow
     "total_cloud_cover": "tcc",
     "convective_precipitation": "cp",
     "large_scale_precipitation": "lsp",
-    "total_precipitation": "tp",
+    "snow_depth": "sd",
 
-    # Identity mappings (so short codes work)
+    # Identity mappings (so short codes also work directly)
     "t2": "t2", "sst": "sst", "mslp": "mslp", "u10": "u10", "v10": "v10",
-    "sp": "sp", "tcc": "tcc", "cp": "cp", "lsp": "lsp", "sd": "sd", "tp": "tp"
+    "sp": "sp", "tcc": "tcc", "cp": "cp", "lsp": "lsp", "sd": "sd",
+    "skt": "skt", "d2": "d2"
 }
 
 class ERA5RetrievalArgs(BaseModel):
     # query_type is removed from the agent's view (hardcoded internally)
     variable_id: Literal[
-        "t2", "sst", "mslp", "u10", "v10", "sp", "tcc", "cp", "lsp", "sd", "skt", "d2", "tp",
-        "sea_surface_temperature", "surface_pressure", "total_cloud_cover", "total_precipitation",
+        "t2", "sst", "mslp", "u10", "v10", "sp", "tcc", "cp", "lsp", "sd", "skt", "d2",
+        "sea_surface_temperature", "surface_pressure", "total_cloud_cover",
+        "convective_precipitation", "large_scale_precipitation", "snow_depth",
         "10m_u_component_of_wind", "10m_v_component_of_wind", "2m_temperature", "2m_dewpoint_temperature",
-        "temperature", "u_component_of_wind", "v_component_of_wind"
-    ] = Field(description="ERA5 variable to retrieve. Preferred short codes: 't2' (Air Temp), 'sst' (Sea Surface Temp), 'u10'/'v10' (Wind), 'mslp' (Pressure), 'tp' (Total Precip).")
+        "temperature", "u_component_of_wind", "v_component_of_wind", "skin_temperature", "dewpoint_temperature",
+        "mean_sea_level_pressure"
+    ] = Field(description=(
+        "ERA5 variable to retrieve from Arraylake. Use short codes. "
+        "AVAILABLE VARIABLES (short code - description): "
+        "'t2' = 2m air temperature (K); "
+        "'d2' = 2m dewpoint temperature (K); "
+        "'sst' = sea surface temperature (K, ocean only); "
+        "'skt' = skin temperature (K, surface radiative temp); "
+        "'u10' = 10m U-component of wind (m/s, eastward); "
+        "'v10' = 10m V-component of wind (m/s, northward); "
+        "'mslp' = mean sea level pressure (Pa); "
+        "'sp' = surface pressure (Pa); "
+        "'tcc' = total cloud cover (fraction 0-1); "
+        "'cp' = convective precipitation (m, use for convective rain/showers); "
+        "'lsp' = large-scale precipitation (m, use for stratiform/frontal rain); "
+        "'sd' = snow depth (m water equivalent). "
+        "WARNING: 'tp' (total_precipitation) does NOT exist in this dataset. "
+        "For total precipitation, retrieve BOTH 'cp' and 'lsp' and sum them."
+    ))
 
     start_date: str = Field(description="Start date (YYYY-MM-DD). Data available 1979-2024.")
     end_date: str = Field(description="End date (YYYY-MM-DD).")
@@ -342,7 +366,13 @@ def create_era5_retrieval_tool(arraylake_api_key: str):
             "Optimized for TEMPORAL time-series extraction at specific locations. "
             "Automatically snaps to nearest grid point to ensure data is returned. "
             "Returns a Zarr directory path. "
-            "Available vars: t2 (temp), sst, u10/v10 (wind), mslp (pressure), tp (precip)."
+            "Available variables: t2 (2m air temperature), d2 (2m dewpoint temperature), "
+            "sst (sea surface temperature), skt (skin temperature), "
+            "u10 (10m U-wind), v10 (10m V-wind), "
+            "mslp (mean sea level pressure), sp (surface pressure), "
+            "tcc (total cloud cover), cp (convective precipitation), "
+            "lsp (large-scale precipitation), sd (snow depth). "
+            "WARNING: 'tp' does NOT exist. For total precipitation, retrieve 'cp' + 'lsp' and sum them."
         ),
         args_schema=ERA5RetrievalArgs
     )
@@ -357,7 +387,13 @@ era5_retrieval_tool = StructuredTool.from_function(
         "Optimized for TEMPORAL time-series extraction at specific locations. "
         "Automatically snaps to nearest grid point to ensure data is returned. "
         "Returns a Zarr directory path. "
-        "Available vars: t2 (temp), sst, u10/v10 (wind), mslp (pressure), tp (precip)."
+        "Available variables: t2 (2m air temperature), d2 (2m dewpoint temperature), "
+        "sst (sea surface temperature), skt (skin temperature), "
+        "u10 (10m U-wind), v10 (10m V-wind), "
+        "mslp (mean sea level pressure), sp (surface pressure), "
+        "tcc (total cloud cover), cp (convective precipitation), "
+        "lsp (large-scale precipitation), sd (snow depth). "
+        "WARNING: 'tp' does NOT exist. For total precipitation, retrieve 'cp' + 'lsp' and sum them."
     ),
     args_schema=ERA5RetrievalArgs
 )
