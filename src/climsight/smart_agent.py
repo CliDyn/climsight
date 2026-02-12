@@ -86,79 +86,46 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     work_dir_str = str(work_dir.resolve())
 
     # System prompt
-    prompt = f"""
-    You are the information gathering agent of ClimSight. Your task is to collect relevant background
-    information about the user's query using external knowledge sources.
-
-    You have access to three information retrieval tools:
-    - "wikipedia_search": Search Wikipedia for general information about the topic of interest.
-      Use this to understand the broader context of the user's question.
-
-    - "RAG_search": Query ClimSight's internal climate knowledge base for scientific details.
-      Use this to find detailed scientific information from climate literature and research.
-
-    - "ECOCROP_search": Get crop-specific environmental requirements from the ECOCROP database.
-      <Important> ONLY use this tool if the user's question is clearly about agriculture or crops.
-      Do NOT use it for general climate queries. </Important>
-
-    **Your goal**: Gather comprehensive background information and compile it into a well-structured
-    summary that will be used by subsequent agents for data analysis.
-
-    **Important guidelines**:
-    - When citing information from Wikipedia or RAG sources, include source references in your summary
-    - Present ECOCROP database results exactly as they are provided (no citations needed for database facts)
-    - Focus on gathering contextual information, NOT on extracting or analyzing specific climate data
-    - Do NOT attempt to retrieve climate data values - that will be handled by other agents
-    - Your output should be a comprehensive text summary with relevant background context
-    - If you call a tool multiple times, incorporate all results in your summary
-    - Do NOT call wikipedia_search more than 10 times total
-    """
+    prompt = (
+        "You are ClimSight's information gathering agent.\n"
+        "Your task: collect background context about the user's query from external knowledge sources,\n"
+        "then compile a structured summary for the downstream data analysis agents.\n\n"
+        "## TOOLS\n\n"
+        "1. **wikipedia_search** - Search Wikipedia for general context.\n"
+        "   - Search strategy: (a) the location or region name, (b) the topic (crop, industry, hazard),\n"
+        "     (c) the combination (e.g., 'agriculture in southern Germany').\n"
+        "   - Call limit: max 10 calls total. If you reach 10, stop and use what you have.\n\n"
+        "2. **RAG_search** - Query ClimSight's internal climate knowledge base.\n"
+        "   - Use for: IPCC findings, peer-reviewed climate science, region-specific climate projections.\n"
+        "   - Phrase queries as specific questions (e.g., 'What are projected temperature changes for Central Europe?').\n\n"
+        "3. **ECOCROP_search** - Get crop-specific environmental requirements.\n"
+        "   - ONLY use when the query explicitly mentions agriculture, crops, or food production.\n"
+        "   - Do NOT use for general climate, infrastructure, or energy queries.\n\n"
+    )
     if config['llm_smart']['model_type'] in ("local", "aitta"):
-        prompt += f"""
-
-        <Important> - Tool use order. Call the wikipedia_search, RAG_search, and ECOCROP_search tools as needed,
-        but only one at a time per turn. Gather all relevant background information. </Important>
-        """
+        prompt += (
+            "**Tool use order:** Call tools one at a time, sequentially.\n\n"
+        )
     else:
-        prompt += f"""
-
-        <Important> - Tool use order. Call wikipedia_search, RAG_search, and ECOCROP_search
-        (if applicable) SIMULTANEOUSLY to gather background information efficiently. </Important>
-
-        """
-    prompt += f"""
-
-    **Output format**:
-    After gathering information from the available tools, provide a well-structured summary organized as follows:
-
-    1. **General Background** (from Wikipedia if available):
-       - Key facts and context about the topic
-       - Relevant qualitative and quantitative information
-       - Include specific values with units where mentioned
-
-    2. **Scientific Context** (from RAG if available):
-       - Detailed scientific information from climate literature
-       - Relevant research findings and climate insights
-       - Technical details that provide context
-
-    3. **Specific Requirements** (from ECOCROP if applicable):
-       - Database results presented exactly as provided
-       - Environmental thresholds and requirements
-       - Optimal and tolerable ranges
-
-    4. **Key Takeaways**:
-       - Summarize the most important points for understanding the user's query
-       - Highlight critical factors or thresholds mentioned
-
-    <Important>
-    - Keep your summary concise but comprehensive
-    - Do NOT include chain-of-thought reasoning or tool invocation details
-    - Do NOT mention what you're going to do or explain your process
-    - Focus on presenting the gathered information in a clear, organized format
-    - The summary should help subsequent agents understand the context for data analysis
-    - If you have already called wikipedia_search 10 times, proceed without further Wikipedia calls
-    </Important>
-    """
+        prompt += (
+            "**Tool use order:** Call wikipedia_search, RAG_search, and ECOCROP_search (if applicable)\n"
+            "SIMULTANEOUSLY to gather information efficiently.\n\n"
+        )
+    prompt += (
+        "## RULES\n\n"
+        "- Focus on CONTEXT, not data extraction. Climate data retrieval is handled by other agents.\n"
+        "- Include source references when citing Wikipedia or RAG results.\n"
+        "- Present ECOCROP results verbatim (no citations needed for database facts).\n"
+        "- Do NOT attempt to retrieve or analyze specific climate data values.\n"
+        "- Do NOT include chain-of-thought reasoning or tool invocation details in your output.\n\n"
+        "## OUTPUT FORMAT\n\n"
+        "Provide a clean, organized summary with these sections (omit empty ones):\n\n"
+        "1. **General Background** - key facts, context, qualitative+quantitative info with units\n"
+        "2. **Scientific Context** - climate science findings, research results, projections\n"
+        "3. **Specific Requirements** - ECOCROP thresholds and ranges (if applicable)\n"
+        "4. **Key Takeaways** - 3-5 bullets summarizing the most important factors for analysis\n\n"
+        "Present ONLY the final summary. No process explanation, no tool call narration.\n"
+    )
 
     #[1] get_data_components tool moved to data_analysis_agent.py
 
@@ -190,41 +157,34 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             llm = get_aitta_chat_model(
                 config['llm_smart']['model_name'], temperature = temperature)
         # Define your custom prompt template
-        template = """
-        Read the provided  {wikipage} carefully. Extract and present information related to the following keywords relative to {question}:
-
-            • Temperature
-            • Precipitation
-            • Wind
-            • Elevation Above Sea Level
-            • Population
-            • Natural Hazards
-            • Soil Type
-
-        Guidelines:
-
-            • For each keyword, if information is available in the article, extract and present both qualitative and quantitative information separately.
-            • Separate the information into two sections: “Qualitative” and “Quantitative” for each keyword.
-            • In the Quantitative section, focus on specific numerical data, measurements, thresholds, or quantitative values associated with the keyword. Include units (e.g., °C, mm, km/h) where applicable.
-            • In the Qualitative section, provide relevant descriptive information that does not include specific numbers.
-            • If no information is available for a keyword, omit it entirely—do not mention the keyword.
-            • Present the information in a clear and organized manner.
-            • Do not include any additional information beyond what is relevant to the listed keywords.
-
-        Example Format:
-
-            • Temperature:
-                • Quantitative: Requires warm days above 10°C (50°F) for flowering.
-                • Qualitative: Maize is cold-intolerant and must be planted in the spring in temperate zones.
-            • Wind:
-                • Quantitative: Can be uprooted by winds exceeding 60km/h due to shallow roots.
-                • Qualitative: Maize pollen is dispersed by wind.
-            • Soil Type:
-                • Quantitative: Prefers soils with a pH between 6.0-7.5.
-                • Qualitative: Maize is intolerant of nutrient-deficient soils and depends on adequate soil moisture.
-
-        Note: Replace the placeholders with the actual qualitative and quantitative information extracted from the article, ensuring that each piece of information is placed in the appropriate section.
-        """
+        template = (
+            "Read the provided Wikipedia article: {wikipage}\n\n"
+            "Extract information relevant to the question: {question}\n\n"
+            "Focus on these categories (adapt to the query topic — skip irrelevant ones, add domain-specific ones):\n"
+            "Temperature, Precipitation, Wind, Elevation, Population, Natural Hazards, Soil Type,\n"
+            "Energy potential, Infrastructure risks, Agricultural suitability, Water resources,\n"
+            "Land use, Economic activity, Environmental regulations\n\n"
+            "For each relevant category, separate into:\n"
+            "- **Quantitative**: specific numbers, measurements, thresholds with units\n"
+            "- **Qualitative**: descriptive context without specific numbers\n\n"
+            "Example output format:\n\n"
+            "• Temperature:\n"
+            "  • Quantitative: Requires warm days above 10°C (50°F) for flowering. Frost-free period of 120-150 days.\n"
+            "  • Qualitative: Cold-intolerant crop; must be planted after last spring frost in temperate zones.\n"
+            "• Wind:\n"
+            "  • Quantitative: Can be uprooted by winds exceeding 60 km/h due to shallow root system.\n"
+            "  • Qualitative: Pollen is primarily dispersed by wind; strong winds during pollination reduce yield.\n"
+            "• Soil Type:\n"
+            "  • Quantitative: Optimal soil pH between 6.0 and 7.5. Requires minimum 200mm soil moisture.\n"
+            "  • Qualitative: Intolerant of nutrient-deficient soils; performs best in deep, well-drained loams.\n\n"
+            "Rules:\n"
+            "- Omit categories with no relevant information in the article — do not mention them at all.\n"
+            "- Include units for ALL numerical values (°C, mm, km/h, m, %, etc.).\n"
+            "- Extract both location-specific facts AND general domain knowledge relevant to the query.\n"
+            "- If the article discusses multiple locations, focus on information most relevant to the user's query.\n"
+            "- Do not add information beyond what the article contains.\n"
+            "- Do not include source citations for Wikipedia content.\n"
+        )
         
         #class EncyclopediaLoader:
         #    def __init__(self, topic):
@@ -268,20 +228,19 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             doc_content_chars_max=100000,
             load_max_docs=1
         )
-        raw_documents = loader.load()
+        try:
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(loader.load)
+                raw_documents = future.result(timeout=120)
+        except concurrent.futures.TimeoutError:
+            return "Wikipedia search timed out after 120 seconds. Skipping this source."
+        except Exception as e:
+            return f"Wikipedia search failed: {str(e)}"
 
-        #try:
-        #    loader = EncyclopediaLoader(query)
-        #    article_text = loader.load().page_content
-        #except Exception as e:
-        #    print(f"Encyclopedia loader failed: {str(e)}")
-        #    article_text = ""  # Set empty string if encyclopedia lookup fails
-
-        #raw_documents.append(article_text) 
-        #content_str = 'Encyclopedia article: ' + article_text + '\n' + 'Wikipedia article: ' + raw_documents[0].page_content
-        content_str = 'Wikipedia article: ' + raw_documents[0].page_content
         if not raw_documents:
             return "No Wikipedia article found for the query."
+        content_str = 'Wikipedia article: ' + raw_documents[0].page_content
 
         # Run the chain
         chain = prompt | llm
@@ -347,43 +306,37 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         rag_content = '\n\n'.join([doc.page_content for doc in retrieved_docs])
         rag_references = [doc.metadata.get("source", "") for doc in retrieved_docs]
         
-            # Define your custom prompt template
-        template = """
-        Read the provided {rag_content} carefully. Extract and present information related to the following keywords relative to {question}:
-
-            • Temperature
-            • Precipitation
-            • Wind
-            • Elevation Above Sea Level
-            • Population
-            • Natural Hazards
-            • Soil Type
-
-        Guidelines:
-
-            • For each keyword, if information is available in the article, extract and present both qualitative and quantitative information separately.
-            • Separate the information into two sections: “Qualitative” and “Quantitative” for each keyword.
-            • In the Quantitative section, focus on specific numerical data, measurements, thresholds, or quantitative values associated with the keyword. Include units (e.g., °C, mm, km/h) where applicable.
-            • In the Qualitative section, provide relevant descriptive information that does not include specific numbers.
-            • If no information is available for a keyword, omit it entirely—do not mention the keyword.
-            • Present the information in a clear and organized manner.
-            • Do not include any additional information beyond what is relevant to the listed keywords.
-
-        Example Format:
-
-            • Temperature:
-                • Quantitative: Requires warm days above 10 °C (50 °F) for flowering.
-                • Qualitative: Maize is cold-intolerant and must be planted in the spring in temperate zones.
-            • Wind:
-                • Quantitative: Can be uprooted by winds exceeding 60 km/h due to shallow roots.
-                • Qualitative: Maize pollen is dispersed by wind.
-            • Soil Type:
-                • Quantitative: Prefers soils with a pH between 6.0-7.5.
-                • Qualitative: Maize is intolerant of nutrient-deficient soils and depends on adequate soil moisture.
-
-        Note: Replace the placeholders with the actual qualitative and quantitative information extracted from the article, ensuring that each piece of information is placed in the appropriate section.
-        <Important> DO NOT include schema if no relevant information is found. Just return 'No relevant information found for the query.' AND NOTHING ELSE. </Important>
-        """
+        # Define your custom prompt template
+        template = (
+            "Read the provided climate knowledge base content: {rag_content}\n\n"
+            "Extract information relevant to the question: {question}\n\n"
+            "Focus on these categories (adapt to the query topic — skip irrelevant ones, add domain-specific ones):\n"
+            "Temperature, Precipitation, Wind, Elevation, Population, Natural Hazards, Soil Type,\n"
+            "Energy potential, Infrastructure risks, Agricultural suitability, Water resources,\n"
+            "Land use, Economic activity, Environmental regulations\n\n"
+            "For each relevant category, separate into:\n"
+            "- **Quantitative**: specific numbers, measurements, thresholds with units\n"
+            "- **Qualitative**: descriptive context without specific numbers\n\n"
+            "Example output format:\n\n"
+            "• Temperature:\n"
+            "  • Quantitative: Projected warming of 1.5-2.0°C by 2050 under SSP2-4.5. Heat wave days increase by 15-25 days/year.\n"
+            "  • Qualitative: Mediterranean-type warming pattern with strongest signal in summer months.\n"
+            "• Precipitation:\n"
+            "  • Quantitative: Winter precipitation increases by 5-15%. Summer precipitation decreases by 10-20%.\n"
+            "  • Qualitative: Shift toward more intense but less frequent rainfall events.\n"
+            "• Natural Hazards:\n"
+            "  • Quantitative: 100-year flood return period reduced to 50-year under RCP8.5.\n"
+            "  • Qualitative: Compound risks from drought-heat wave combinations becoming more likely.\n\n"
+            "Rules:\n"
+            "- Omit categories with no relevant information — do not mention them at all.\n"
+            "- Include units for ALL numerical values (°C, mm, %, days/year, etc.).\n"
+            "- If the content references IPCC reports or peer-reviewed studies, include the citation inline\n"
+            "  (e.g., 'IPCC AR6, WG2, Section 12.4').\n"
+            "- Extract both location-specific projections AND general climate science findings relevant to the query.\n"
+            "- Distinguish between observations (past data) and projections (future scenarios).\n"
+            "- Do not add information beyond what the source material contains.\n"
+            "- If no relevant information found, return ONLY: 'No relevant information found for the query.'\n"
+        )
         
         prompt = ChatPromptTemplate.from_template(template)
 

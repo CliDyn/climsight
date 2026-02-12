@@ -38,31 +38,40 @@ def view_and_analyze_image(image_path: str, openai_api_key: str, model_name: str
         
         base64_image = encode_image(image_path)
         
-        prompt = """You are a climate scientist analyzing a climate-related visualization. 
-Your task is to extract scientific insights and describe the data patterns shown in the image.
-
-Please provide a detailed analysis covering:
-
-1. **Data Description**: What variables and data are being displayed? Identify the type of visualization (line chart, bar chart, heatmap, etc.) and the variables on each axis.
-
-2. **Temporal Patterns**: If time-series data is shown, describe any trends, cycles, or changes over time. Note specific periods of interest.
-
-3. **Quantitative Observations**: Extract specific values, ranges, or magnitudes visible in the image. Include units when identifiable.
-
-4. **Climate Insights**: What climate-related patterns or phenomena are evident? This could include:
-   - Temperature changes or anomalies
-   - Precipitation patterns
-   - Seasonal variations
-   - Extreme events
-   - Future projections vs historical data
-
-5. **Key Findings**: Summarize the most important scientific insights that can be drawn from this visualization.
-
-6. **Implications**: Briefly discuss what these patterns might mean for climate impacts or decision-making at the location in question.
-
-Note: If the image quality makes any aspect difficult to read, mention this briefly and suggest regenerating the plot for better clarity.
-
-Provide a concise but thorough scientific analysis focused on extracting actionable insights from the data visualization."""
+        prompt = (
+            "You are a climate scientist analyzing a climate-related visualization.\n"
+            "Extract scientific insights and describe the data patterns shown.\n\n"
+            "Provide analysis covering:\n\n"
+            "1. **Data Description**: chart type (line chart, bar chart, heatmap, scatter, etc.),\n"
+            "   variables on each axis with their units, data source if identifiable,\n"
+            "   number of data series and what they represent\n\n"
+            "2. **Key Values**: extract specific numbers visible in the image:\n"
+            "   - Minimum and maximum values with their units\n"
+            "   - Mean or typical values if discernible\n"
+            "   - Any labeled thresholds, reference lines, or benchmarks\n"
+            "   - Notable outliers or extreme values\n\n"
+            "3. **Patterns & Trends**:\n"
+            "   - Temporal trends: warming/cooling, drying/wetting, acceleration/deceleration\n"
+            "   - Seasonal cycles: which months are peaks/troughs, amplitude of seasonal variation\n"
+            "   - Anomalies: departures from expected patterns, sudden shifts\n"
+            "   - Multi-series comparison: which series diverge and when\n\n"
+            "4. **Climate Insights**:\n"
+            "   - If ERA5 observations are shown (typically black line or markers):\n"
+            "     note the observed baseline values for each variable\n"
+            "   - If model projections are shown (typically colored lines, one per decade or scenario):\n"
+            "     note the climate change signal — how do future values differ from the baseline?\n"
+            "   - Identify critical months: months with largest projected changes,\n"
+            "     threshold exceedances (e.g., >35°C, <30mm precipitation), or highest risk\n"
+            "   - If multiple scenarios are shown: compare the spread and uncertainty\n\n"
+            "5. **Key Findings**: 3-5 bullet summary of the most important scientific insights.\n"
+            "   Each bullet should include at least one specific number with units.\n\n"
+            "6. **Data Quality**: note any unreadable text, clipped labels, overlapping elements,\n"
+            "   or unclear features. State what you CAN read clearly and flag what you cannot.\n"
+            "   If the plot has significant readability issues, note them but still extract\n"
+            "   whatever information is discernible.\n\n"
+            "Be concise but quantitative. Always include units. "
+            "Focus on what is actionable for climate impact assessment.\n"
+        )
 
         client = OpenAI(api_key=openai_api_key)
         
