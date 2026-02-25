@@ -3,7 +3,6 @@ Functions for enviromental data extracting, processing, analysis, plotting.
 like biodiversity, natural hazards ....
 """
    
-import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt

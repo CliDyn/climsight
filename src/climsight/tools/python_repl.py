@@ -30,29 +30,14 @@ try:
 except ImportError:
     raise ImportError("Missing dependencies for persistent REPL. Install jupyter_client and ipykernel.")
 
-try:
-    import streamlit as st
-except ImportError:
-    st = None
-
 logger = logging.getLogger(__name__)
 
 # --- Helper: Unified Session ID ---
 
 def get_global_session_id() -> str:
     """
-    Returns a unified session ID prioritizing:
-    1. Streamlit thread_id (most specific)
-    2. Streamlit session_uuid (fallback)
-    3. Environment variable (CLI/Docker)
-    4. Default fallback
+    Returns a unified session ID from environment variable or default fallback.
     """
-    if st is not None and hasattr(st, "session_state"):
-        if getattr(st.session_state, "thread_id", None):
-            return st.session_state.thread_id
-        if getattr(st.session_state, "session_uuid", None):
-            return st.session_state.session_uuid
-    
     return os.environ.get("CLIMSIGHT_THREAD_ID", "default_cli_session")
 
 # --- Jupyter Kernel Executor (ISOLATED PROCESS) ---

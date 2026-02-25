@@ -14,21 +14,17 @@ from typing import Dict, List, Tuple
 logger = logging.getLogger(__name__)
 
 
-def ensure_thread_id(session_state=None, existing_thread_id: str = "") -> str:
-    """Ensure a stable session thread_id across Streamlit/CLI runs."""
+def ensure_thread_id(existing_thread_id: str = "") -> str:
+    """Ensure a stable session thread_id."""
     thread_id = existing_thread_id or ""
 
-    if not thread_id and session_state is not None:
-        thread_id = session_state.get("thread_id", "")
+    if not thread_id:
+        thread_id = os.environ.get("CLIMSIGHT_THREAD_ID", "")
 
     if not thread_id:
         thread_id = uuid.uuid4().hex
 
-    if session_state is not None:
-        session_state["thread_id"] = thread_id
-
-    # Expose to non-Streamlit tools (CLI, background workers).
-    # CRITICAL: Always update (not setdefault) to ensure all tools use the same thread_id
+    # Expose to all tools via environment variable.
     os.environ["CLIMSIGHT_THREAD_ID"] = thread_id
 
     return thread_id

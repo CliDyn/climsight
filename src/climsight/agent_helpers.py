@@ -5,11 +5,6 @@ import os
 from typing import Any, Dict, List, Tuple
 
 try:
-    import streamlit as st
-except ImportError:
-    st = None
-
-try:
     from langchain.agents import AgentExecutor, create_openai_tools_agent
 except ImportError:
     from langchain_classic.agents import AgentExecutor, create_openai_tools_agent
@@ -90,8 +85,8 @@ def prepare_visualization_environment(datasets_info: List[Dict[str, Any]]) -> Tu
 
     datasets_text = uuid_paths + datasets_summary
 
-    if st is not None and hasattr(st, "session_state"):
-        st.session_state["viz_datasets_text"] = datasets_text
+    # Store for visualization tools via env var
+    os.environ["VIZ_DATASETS_TEXT"] = datasets_text
 
     return datasets, datasets_text, dataset_variables
 

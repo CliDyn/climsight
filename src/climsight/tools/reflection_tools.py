@@ -2,10 +2,6 @@
 import base64
 import os
 import logging
-try:
-    import streamlit as st  # Import streamlit to access session state
-except ImportError:
-    st = None
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 from openai import OpenAI
@@ -23,16 +19,12 @@ def reflect_on_image(image_path: str) -> str:
     """
     Analyzes an image and provides feedback. Automatically resolves sandbox paths.
     """
-    # --- NEW SANDBOX PATH RESOLUTION LOGIC ---
+    # --- SANDBOX PATH RESOLUTION LOGIC ---
     final_image_path = image_path
 
     # If the path is relative, resolve it against the current session's sandbox
     if not os.path.isabs(image_path):
-        thread_id = None
-        if st is not None and hasattr(st, "session_state"):
-            thread_id = st.session_state.get("thread_id")
-        if not thread_id:
-            thread_id = os.environ.get("CLIMSIGHT_THREAD_ID")
+        thread_id = os.environ.get("CLIMSIGHT_THREAD_ID")
 
         if thread_id:
             sandbox_dir = os.path.join("tmp", "sandbox", thread_id)

@@ -2,7 +2,6 @@
 Functions for climat data extracting, processing, analysis.
 climate patterns, historical and future climate projections
 """
-import streamlit as st
 import xarray as xr
 import numpy as np
 import pandas as pd

@@ -22,11 +22,6 @@ try:
     import zarr
     import arraylake
     from arraylake import Client
-    # Optional: Check for Streamlit to support session state if available
-    try:
-        import streamlit as st
-    except ImportError:
-        st = None
 except ImportError as e:
     install_command = "pip install --upgrade xarray zarr arraylake pandas numpy pydantic langchain-core"
     raise ImportError(
@@ -159,24 +154,13 @@ def retrieve_era5_data(
         logging.info(f"🌍 Earthmover ERA5 Retrieval ({query_type}): {short_var} | {start_date} to {end_date}")
 
         # --- 1. Sandbox / Path Logic ---
-        # Priority: 1) CLIMSIGHT_THREAD_ID env var, 2) Streamlit session, 3) work_dir, 4) default
+        # Priority: 1) CLIMSIGHT_THREAD_ID env var, 2) work_dir, 3) default
         main_dir = None
         thread_id = os.environ.get("CLIMSIGHT_THREAD_ID")
 
         if thread_id:
             # Use sandbox path based on thread_id (set by sandbox_utils)
             main_dir = os.path.join("tmp", "sandbox", thread_id)
-        elif "streamlit" in sys.modules and st is not None and hasattr(st, 'session_state'):
-            try:
-                session_uuid = getattr(st.session_state, "session_uuid", None)
-                if session_uuid:
-                    main_dir = os.path.join("tmp", "sandbox", session_uuid)
-                else:
-                    st_thread_id = st.session_state.get("thread_id")
-                    if st_thread_id:
-                        main_dir = os.path.join("tmp", "sandbox", st_thread_id)
-            except:
-                pass
 
         # Fallback to work_dir if no sandbox available
         if not main_dir and work_dir:
