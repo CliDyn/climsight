@@ -15,3 +15,12 @@ venv311
 venv
 tmp/
 .env
+all_changes*.txt
+changes.diff
+project_structure.txt
+save.py
+save_new.py
+era5_data/
+eval/
+node_modules/
+dist/
