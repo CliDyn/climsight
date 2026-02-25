@@ -141,7 +141,7 @@ export default function App() {
         });
       },
       () => setAnalysis((prev) => ({ ...prev, running: false })),
-      () => setAnalysis((prev) => ({ ...prev, error: 'WebSocket error', running: false })),
+      () => setAnalysis((prev) => ({ ...prev, error: 'WebSocket connection failed. Is the backend running?', running: false })),
     );
   }, [session, coords, question, config]);
 
@@ -188,7 +188,7 @@ export default function App() {
             question={question}
             onQuestionChange={setQuestion}
             onSubmit={handleSubmit}
-            disabled={analysis.running || !session}
+            disabled={analysis.running || !session || question.trim() === ''}
           />
 
           {/* Status / Error */}

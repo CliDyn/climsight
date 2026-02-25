@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { FileText, Info, BookOpen, Download, MapPin, Layers, Sprout, Mountain } from 'lucide-react';
 
 interface LocationData {
@@ -139,7 +140,7 @@ export function ReportView({ report, plots, location, running, inputParams, refe
                 {activeTab === 'report' && (
                     <>
                         <div className="report-content">
-                            <ReactMarkdown>{report}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{report}</ReactMarkdown>
                         </div>
 
                         {/* Plots */}
