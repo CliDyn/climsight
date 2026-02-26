@@ -39,9 +39,6 @@ SRC_DIR = os.path.join(REPO_ROOT, "src")
 if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
-# Ensure chroma_db path resolves correctly (tool uses relative paths)
-os.chdir(REPO_ROOT)
-
 from climsight.tools.destine_retrieval_tool import (
     _search_destine_parameters,
     retrieve_destine_data,
@@ -64,6 +61,16 @@ DEFAULT_LON = 13.3610
 # Default short date range (1 month)
 DEFAULT_START = "20200101"
 DEFAULT_END = "20200131"
+
+
+@pytest.fixture(autouse=True)
+def _chdir_to_repo_root():
+    """Change to repo root so relative paths (data/destine/chroma_db) resolve correctly.
+    Restores original cwd after each test."""
+    original_cwd = os.getcwd()
+    os.chdir(REPO_ROOT)
+    yield
+    os.chdir(original_cwd)
 
 
 @pytest.fixture
