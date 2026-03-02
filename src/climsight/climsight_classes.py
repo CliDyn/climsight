@@ -41,4 +41,5 @@ class AgentState(BaseModel):
     hazard_data: Optional[Any] = None  # filtered_events_square for disaster plotting
     population_config: dict = {}  # {'pop_path': str, 'country': str} for population plotting
     predefined_plots: list = []  # List of paths to auto-generated plots
+    downloadable_datasets: list = []  # List of {"label": str, "path": str, "source": str}
     # stream_handler: StreamHandler  # Uncomment if needed

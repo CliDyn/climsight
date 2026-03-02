@@ -888,6 +888,22 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 state.input_params.update(sandbox_paths)
                 state.input_params["climate_data_manifest"] = manifest_path
 
+                # Track climate CSVs as downloadable datasets
+                state.downloadable_datasets.append({
+                    "label": f"Climate Data Manifest ({climate_source})",
+                    "path": manifest_path,
+                    "source": climate_source,
+                })
+                climate_dir = sandbox_paths["climate_data_dir"]
+                if os.path.isdir(climate_dir):
+                    for fname in sorted(os.listdir(climate_dir)):
+                        if fname.endswith(".csv"):
+                            state.downloadable_datasets.append({
+                                "label": f"Climate Model CSV: {fname}",
+                                "path": os.path.join(climate_dir, fname),
+                                "source": climate_source,
+                            })
+
             # Add appropriate references based on data source
             ref_key_map = {
                 'nextGEMS': 'high_resolution_climate_model',
@@ -909,7 +925,11 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
 
         logger.info(f"Data agent in work (source: {climate_source}).")
 
-        respond = {'data_agent_response': data_agent_response, 'df_list': df_list}
+        respond = {
+            'data_agent_response': data_agent_response,
+            'df_list': df_list,
+            'downloadable_datasets': state.downloadable_datasets,
+        }
 
         logger.info(f"data_agent_response: {data_agent_response}")
         return respond
@@ -954,6 +974,14 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 state.era5_climatology_response = era5_result
                 if "reference" in era5_result:
                     collected_references.append(era5_result["reference"])
+                # Track ERA5 climatology JSON as downloadable
+                era5_json_path = os.path.join(state.uuid_main_dir, "era5_climatology.json")
+                if os.path.exists(era5_json_path):
+                    state.downloadable_datasets.append({
+                        "label": "ERA5 Climatology (monthly, 2015-2025)",
+                        "path": era5_json_path,
+                        "source": "ERA5",
+                    })
                 logger.info(f"Extracted ERA5 climatology for ({lat}, {lon})")
             else:
                 logger.warning(f"ERA5 climatology: {era5_result.get('error', 'unknown error')}")
@@ -1019,6 +1047,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             'predefined_plots': predefined_plot_paths,
             'era5_climatology_response': era5_data or {},
             'data_analysis_images': predefined_plot_paths,  # For UI display
+            'downloadable_datasets': state.downloadable_datasets,
         }
 
     def route_after_prepare(state: AgentState) -> str:
@@ -1279,9 +1308,12 @@ Examples:
         #print("chat_prompt_text: ", chat_prompt_text)
         #print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!") 
 
+        # Pass downloadable datasets to input_params for UI access
+        state.input_params['downloadable_datasets'] = state.downloadable_datasets
+
         return {
-            'final_answer': output_content, 
-            'input_params': state.input_params, 
+            'final_answer': output_content,
+            'input_params': state.input_params,
             'content_message': state.content_message,
             'combine_agent_prompt_text': chat_prompt_text
         }

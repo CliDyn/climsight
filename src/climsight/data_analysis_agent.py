@@ -816,6 +816,14 @@ Required analysis:
                 # Collect reference from ERA5 retrieval
                 if "reference" in obs:
                     agent_references.append(obs["reference"])
+                # Track downloaded Zarr for Data tab
+                if "output_path_zarr" in obs:
+                    variable = obs.get("variable", "unknown")
+                    state.downloadable_datasets.append({
+                        "label": f"ERA5 Time Series: {variable}",
+                        "path": obs["output_path_zarr"],
+                        "source": "ERA5",
+                    })
             elif hasattr(obs, 'content'):
                 era5_output = obs.content
             else:
@@ -828,6 +836,14 @@ Required analysis:
             if isinstance(obs, dict):
                 if "reference" in obs:
                     agent_references.append(obs["reference"])
+                # Track downloaded Zarr for Data tab
+                if "output_path_zarr" in obs:
+                    variable = obs.get("variable", obs.get("parameter", "unknown"))
+                    state.downloadable_datasets.append({
+                        "label": f"DestinE Time Series: {variable}",
+                        "path": obs["output_path_zarr"],
+                        "source": "DestinE",
+                    })
             state.destine_tool_response = str(obs)
             state.input_params.setdefault("destine_results", []).append(obs)
 
@@ -873,4 +889,5 @@ Required analysis:
         "era5_tool_response": getattr(state, 'era5_tool_response', None),
         "destine_tool_response": getattr(state, 'destine_tool_response', None),
         "references": state.references,  # Propagate collected references
+        "downloadable_datasets": state.downloadable_datasets,
     }

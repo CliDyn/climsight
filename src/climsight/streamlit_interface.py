@@ -464,9 +464,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         show_add_info_display = st.session_state.get('last_show_add_info', False)
         
         if show_add_info_display:
-            tab_text, tab_add, tab_refs = st.tabs(["Report", "Additional information", "References"])
+            tab_text, tab_figs, tab_data, tab_refs = st.tabs(["Report", "Figures", "Data", "References"])
         else:
-            tab_text, tab_refs = st.tabs(["Report", "References"])
+            tab_text, tab_data, tab_refs = st.tabs(["Report", "Data", "References"])
         
         with tab_text:
             st.markdown(st.session_state['last_output'])
@@ -477,12 +477,12 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     st.markdown(f"- {ref}")
         
         if show_add_info_display:
-            with tab_add:
+            with tab_figs:
                 stored_input_params = st.session_state.get('last_input_params', {})
                 stored_figs = st.session_state.get('last_figs', {})
                 stored_climatemodel_name = st.session_state.get('last_climatemodel_name', 'unknown')
-                
-                st.subheader("Additional information", divider='rainbow')
+
+                st.subheader("Figures", divider='rainbow')
                 if 'lat' in stored_input_params and 'lon' in stored_input_params:
                     st.markdown(f"**Coordinates:** {stored_input_params['lat']}, {stored_input_params['lon']}")
                 if 'elevation' in stored_input_params:
@@ -616,6 +616,51 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                         for image_path in other_plots:
                             st.image(image_path)
         
+        # Data tab - downloadable datasets
+        with tab_data:
+            stored_input_params_data = st.session_state.get('last_input_params', {})
+            datasets = stored_input_params_data.get('downloadable_datasets', [])
+            if datasets:
+                st.subheader("Available Datasets", divider='rainbow')
+                for idx, ds_entry in enumerate(datasets):
+                    path = ds_entry.get("path", "")
+                    label = ds_entry.get("label", "Dataset")
+                    source = ds_entry.get("source", "")
+                    if path and os.path.exists(path):
+                        col_label, col_btn = st.columns([3, 1])
+                        with col_label:
+                            st.markdown(f"**{label}**")
+                            st.caption(f"{source} — {os.path.basename(path)}")
+                        with col_btn:
+                            if os.path.isdir(path):
+                                # Zarr directories: zip on the fly
+                                import io
+                                import zipfile
+                                buf = io.BytesIO()
+                                with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                                    for root, dirs, files in os.walk(path):
+                                        for f in files:
+                                            fp = os.path.join(root, f)
+                                            zf.write(fp, os.path.relpath(fp, os.path.dirname(path)))
+                                st.download_button(
+                                    "Download",
+                                    buf.getvalue(),
+                                    file_name=os.path.basename(path) + ".zip",
+                                    mime="application/zip",
+                                    key=f"dl_data_{idx}",
+                                )
+                            else:
+                                with open(path, "rb") as f:
+                                    file_data = f.read()
+                                st.download_button(
+                                    "Download",
+                                    file_data,
+                                    file_name=os.path.basename(path),
+                                    key=f"dl_data_{idx}",
+                                )
+            else:
+                st.info("No datasets were generated for this query.")
+
         # Download buttons
         st.markdown("---")  # Add a separator
         
