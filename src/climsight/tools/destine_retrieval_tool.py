@@ -183,7 +183,7 @@ class DestinERetrievalArgs(BaseModel):
         "Examples: 'sfc' (surface), 'pl' (pressure levels), 'o2d' (ocean 2D)"
     ))
     start_date: str = Field(description="Start date in YYYYMMDD format. Data available 20200101-20391231.")
-    end_date: str = Field(description="End date in YYYYMMDD format. Keep range SHORT (1-2 years max) to avoid timeouts.")
+    end_date: str = Field(description="End date in YYYYMMDD format. Data available 20200101-20391231. Default to full range (20200101-20391231) unless user requests shorter.")
     latitude: float = Field(description="Latitude of the point (-90 to 90)")
     longitude: float = Field(description="Longitude of the point (-180 to 180)")
     work_dir: Optional[str] = Field(None, description="Working directory. Pass '.' for sandbox root.")
@@ -317,7 +317,7 @@ def retrieve_destine_data(
                      '1800', '1900', '2000', '2100', '2200', '2300'],
             'feature': {
                 "type": "timeseries",
-                "points": [[longitude, latitude]],  # NOTE: lon, lat order!
+                "points": [[latitude, longitude]],  # NOTE: lat, lon order!
                 "time_axis": "date",
             }
         }
@@ -401,7 +401,7 @@ def create_destine_retrieval_tool() -> StructuredTool:
             "Point time series for SSP3-7.0 scenario (IFS-NEMO model, 2020-2039). "
             "FIRST use search_destine_parameters to find the right param_id and levtype, "
             "then call this tool to download. "
-            "IMPORTANT: Keep date ranges SHORT (1-2 years) to avoid timeouts. "
+            "By default request the FULL period 20200101-20391231 for maximum coverage. "
             "Returns a Zarr directory path for loading in Python REPL."
         ),
         args_schema=DestinERetrievalArgs,

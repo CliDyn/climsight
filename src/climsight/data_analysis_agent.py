@@ -225,7 +225,8 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "**Step 2: Download data**\n"
             "Call `retrieve_destine_data` with param_id and levtype from search results.\n"
             "- Dates: YYYYMMDD format, range 20200101-20391231\n"
-            "- **IMPORTANT**: Keep date ranges SHORT (1-2 years max) to avoid timeouts (downloads can take 30-300s)\n"
+            "- **By default request the FULL period**: start_date=20200101, end_date=20391231 (20 years of projections)\n"
+            "- Only use a shorter range if the user explicitly asks for a specific period\n"
             "- Output: Zarr store saved to `destine_data/` folder\n\n"
             "Loading DestinE data in Python_REPL:\n"
         )
@@ -440,7 +441,7 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
         "- Python_REPL: a few calls, each focused on ONE logical task\n"
         "- retrieve_era5_data: 0-3 calls (one per variable: t2, cp, lsp)\n"
         "- search_destine_parameters: 1-2 calls (find param_ids before downloading)\n"
-        "- retrieve_destine_data: 0-3 calls (short date ranges only!)\n"
+        "- retrieve_destine_data: 0-3 calls (use full 2020-2039 range by default)\n"
         "- reflect_on_image: one call per plot — QA ALL generated plots, not just one\n"
         "- list_plotting_data_files / image_viewer: 0-2 calls\n"
         "- wise_agent: 0-1 calls\n\n"
