@@ -195,6 +195,8 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "- You need to detect warming/drying TRENDS → download t2, cp, and lsp (sum cp+lsp for total precip)\n"
             "- You need interannual variability or extreme-year identification → download the relevant variables\n"
             "- You only need monthly climatology for comparison → skip, use era5_climatology.json\n\n"
+            "**PARALLEL DOWNLOADS**: Call `retrieve_era5_data` for ALL needed variables in a SINGLE response.\n"
+            "Example: if you need t2, cp, and lsp — call all three retrieve_era5_data in ONE response, not sequentially.\n\n"
             "Tool parameters:\n"
             "- Variable codes: `t2` (temperature), `cp` (convective precip), `lsp` (large-scale precip), `u10`/`v10` (wind), `mslp` (pressure)\n"
             "- NOTE: `tp` (total precipitation) is NOT available. Use `cp` + `lsp` and sum them for total precipitation.\n"
@@ -219,11 +221,16 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "## 3b. DESTINE CLIMATE PROJECTIONS (SSP3-7.0, 82 parameters)\n\n"
             "You have access to the DestinE Climate DT — high-resolution projections (IFS-NEMO, 2020-2039).\n"
             "Use a TWO-STEP workflow:\n\n"
-            "**Step 1: Search for parameters**\n"
-            "Call `search_destine_parameters` with a natural language query to find relevant parameters.\n"
-            "Example: search_destine_parameters('temperature at 2 meters') → returns candidates with param_id, levtype.\n\n"
-            "**Step 2: Download data**\n"
-            "Call `retrieve_destine_data` with param_id and levtype from search results.\n"
+            "**Step 1: Search for ALL needed parameters FIRST**\n"
+            "Before downloading anything, decide which variables you need (temperature, precipitation, wind, etc.).\n"
+            "Call `search_destine_parameters` for each query to collect all param_ids and levtypes.\n"
+            "Example: search_destine_parameters('temperature at 2 meters') → param_id='167', levtype='sfc'\n\n"
+            "**Step 2: Download ALL variables IN PARALLEL**\n"
+            "Once you have all param_ids, call `retrieve_destine_data` for ALL of them in a SINGLE response.\n"
+            "The tools support parallel execution — multiple retrieve calls in one response run concurrently.\n"
+            "This is MUCH faster than downloading one variable at a time sequentially.\n\n"
+            "Example: if you need temperature (167) and precipitation (228), call BOTH retrieve_destine_data\n"
+            "in the SAME response, not one after the other in separate responses.\n\n"
             "- Dates: YYYYMMDD format, range 20200101-20391231\n"
             "- **By default request the FULL period**: start_date=20200101, end_date=20391231 (20 years of projections)\n"
             "- Only use a shorter range if the user explicitly asks for a specific period\n"
@@ -326,9 +333,11 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
 
     if has_era5_download:
         sections.append(
-            f"**Step {step} — (Optional) Download ERA5 time series:**\n"
-            "Call `retrieve_era5_data` for `t2`, `cp`, and/or `lsp` if year-by-year analysis is needed.\n"
-            "Load the resulting Zarr files in Python_REPL (see section 3 for loading pattern).\n"
+            f"**Step {step} — (Optional) Download ERA5/DestinE data — ALL IN PARALLEL:**\n"
+            "Decide which variables you need, then call ALL download tools in a SINGLE response.\n"
+            "ERA5: call `retrieve_era5_data` for t2, cp, lsp simultaneously.\n"
+            "DestinE: call `search_destine_parameters` first, then call `retrieve_destine_data` for all param_ids in one response.\n"
+            "Load the resulting Zarr files in Python_REPL (see sections 3/3b for loading patterns).\n"
         )
         step += 1
 
