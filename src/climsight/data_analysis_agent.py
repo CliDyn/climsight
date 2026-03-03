@@ -711,11 +711,12 @@ Required analysis:
 
     # 3. ERA5 time series retrieval (if enabled)
     if effective.get("use_era5_data", False):
-        arraylake_api_key = config.get("arraylake_api_key", "")
+        # Read from env var — NEVER from config (LangSmith traces config)
+        arraylake_api_key = os.environ.get("ARRAYLAKE_API_KEY", "")
         if arraylake_api_key:
             tools.append(create_era5_retrieval_tool(arraylake_api_key))
         else:
-            logger.warning("ERA5 data enabled but no arraylake_api_key in config. ERA5 retrieval tool not added.")
+            logger.warning("ERA5 data enabled but ARRAYLAKE_API_KEY env var not set. ERA5 retrieval tool not added.")
 
     # 3b. DestinE parameter search + data retrieval (if enabled)
     if effective.get("use_destine_data", False):
