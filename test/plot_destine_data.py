@@ -1,9 +1,19 @@
-"""Quick script to inspect and plot DestinE Zarr data."""
+"""Quick script to inspect and plot DestinE Zarr data.
+
+Usage:
+    python plot_destine_data.py path/to/destine_167_sfc_20200101_20211231.zarr
+"""
+
+import argparse
+import sys
 
 import xarray as xr
 import matplotlib.pyplot as plt
 
-zarr_path = "era5_cp_temporal_20200101_20291231.zarr"
+parser = argparse.ArgumentParser(description="Inspect and plot a DestinE Zarr dataset.")
+parser.add_argument("zarr_path", help="Path to the DestinE .zarr directory")
+args = parser.parse_args()
+zarr_path = args.zarr_path
 
 ds = xr.open_dataset(zarr_path, engine="zarr")
 
