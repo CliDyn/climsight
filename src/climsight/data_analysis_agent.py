@@ -199,7 +199,7 @@ def _create_planner_prompt(
 
     if has_era5_download:
         sections.append(
-            "## ERA5 Time Series (2015-2024, year-by-year)\n"
+            "## ERA5 Reanalysis Time Series (1979-2024)\n"
             "Available variables:\n"
             "- `t2` — 2m air temperature (K → °C)\n"
             "- `cp` — convective precipitation (m)\n"
@@ -214,8 +214,10 @@ def _create_planner_prompt(
             "- `sd` — snow depth (m)\n"
             "- `skt` — skin temperature (K)\n"
             "- `d2` — 2m dewpoint temperature (K)\n\n"
-            "Default date range: 2015-01-01 to 2024-12-31 (10 years).\n"
-            "Only download variables needed for the analysis — don't download everything.\n"
+            "Default date range: 1975-01-01 to 2024-12-31 (50 years of observations).\n"
+            "ALWAYS use the full default range unless the user explicitly asks for a shorter period.\n"
+            "ERA5 downloads are fast, so prefer downloading the full range.\n"
+            "Only download variables relevant to the analysis — don't download everything.\n"
             "Common patterns:\n"
             "- Temperature analysis → t2\n"
             "- Precipitation analysis → cp + lsp (always both)\n"
@@ -246,7 +248,7 @@ def _create_planner_prompt(
         "Return a JSON object with this structure:\n"
         "{{\n"
         '  "era5_downloads": [\n'
-        '    {{"variable_id": "t2", "start_date": "2015-01-01", "end_date": "2024-12-31"}}\n'
+        '    {{"variable_id": "t2", "start_date": "1975-01-01", "end_date": "2024-12-31"}}\n'
         "  ],\n"
         '  "destine_searches": ["temperature at 2 meters", "total precipitation"],\n'
         '  "destine_date_range": {{"start": "20200101", "end": "20391231"}},\n'
@@ -872,7 +874,7 @@ def data_analysis_agent(
             for item in plan.get("era5_downloads", []):
                 download_plan["era5"].append({
                     "variable_id": item["variable_id"],
-                    "start_date": item.get("start_date", "2015-01-01"),
+                    "start_date": item.get("start_date", "1975-01-01"),
                     "end_date": item.get("end_date", "2024-12-31"),
                     "min_latitude": g_lat if g_lat is not None else -90.0,
                     "max_latitude": g_lat if g_lat is not None else 90.0,

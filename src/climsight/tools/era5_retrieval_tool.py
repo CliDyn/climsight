@@ -144,6 +144,7 @@ def retrieve_era5_data(
                           ARRAYLAKE_API_KEY environment variable.
     """
     ds = None
+    client = None
     local_zarr_path = None
     query_type = "temporal" # Hardcoded for Climsight point-data focus
 
@@ -325,6 +326,11 @@ def retrieve_era5_data(
     finally:
         if ds is not None:
             ds.close()
+        if client is not None:
+            try:
+                client.close()
+            except Exception:
+                pass  # Suppress async loop conflicts during cleanup
 
 def create_era5_retrieval_tool(arraylake_api_key: str):
     """
