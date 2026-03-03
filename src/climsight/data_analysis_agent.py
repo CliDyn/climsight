@@ -190,6 +190,8 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
     ideal_calls = mode_config.get("ideal_tool_calls", "6-7")
     max_per_resp = mode_config.get("max_per_response", 4)
     max_reflect = mode_config.get("max_reflect", 2)
+    has_era5_download = config.get("use_era5_data", False)
+    has_destine = config.get("use_destine_data", False)
 
     # --- Build prompt without f-strings for code blocks to avoid brace escaping ---
     sections = []
@@ -342,6 +344,17 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "  But don't go overboard with tiny one-liner calls either — find a reasonable balance.\n"
             "  Each script should be self-contained: import what it needs, do meaningful work, print results."
         )
+    tools_list.append(
+        "- **Python_REPL** — execute Python code in a sandboxed environment.\n"
+        "  All files are relative to the sandbox root.\n"
+        "  The `results/` directory is pre-created for saving plots.\n"
+        "  Datasets are pre-loaded into the sandbox (see paths below).\n"
+        "  STRATEGY: DIVIDE AND CONQUER. Split your work into a few focused scripts,\n"
+        "  each tackling ONE logical task (e.g., load+explore, then analyze+plot-set-1,\n"
+        "  then analyze+plot-set-2). This avoids cascading errors from monolithic scripts.\n"
+        "  But don't go overboard with tiny one-liner calls either — find a reasonable balance.\n"
+        "  Each script should be self-contained: import what it needs, do meaningful work, print results."
+    )
     tools_list.append("- **list_plotting_data_files** — discover files in sandbox directories")
     tools_list.append("- **image_viewer** — view and analyze plots in `results/` (use relative paths)")
     if has_python_repl and max_reflect > 0:
@@ -550,6 +563,23 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
         )
 
     budget_lines.append(
+    sections.append(
+        "\n## TOOL BUDGET (HARD LIMIT: 30 tool calls total, max 3-4 per response)\n\n"
+        "Plan your session carefully — you have at most 30 tool calls:\n"
+        "- Python_REPL: a few calls, each focused on ONE logical task\n"
+        "- retrieve_era5_data: 0-3 calls (one per variable: t2, cp, lsp)\n"
+        "- search_destine_parameters: 1-2 calls (find param_ids before downloading)\n"
+        "- retrieve_destine_data: 0-3 calls (use full 2020-2039 range by default)\n"
+        "- reflect_on_image: one call per plot — QA ALL generated plots, not just one\n"
+        "- list_plotting_data_files / image_viewer: 0-2 calls\n"
+        "- wise_agent: 0-1 calls\n\n"
+        "DIVIDE AND CONQUER — Python_REPL strategy:\n"
+        "- Script 1: Load ALL data, explore structure, print column names and shapes\n"
+        "- Script 2: Climatology analysis + comparison plots (temp, precip, wind)\n"
+        "- Script 3: Threshold/risk analysis + additional plots (if ERA5 time series available)\n"
+        "- Script 4 (if needed): Fix any errors from previous scripts, create missing plots\n\n"
+        "WHY: One massive all-in-one script causes cascading errors — one bug kills everything.\n"
+        "Splitting into reasonable chunks lets you catch and fix errors between steps.\n\n"
         "ANTI-SPAM RULES:\n"
         f"- Never call more than {max_per_resp} tools in a single response.\n"
     )
@@ -719,6 +749,7 @@ Required analysis:
 
     # 3b. DestinE parameter search + data retrieval (if enabled)
     if effective.get("use_destine_data", False):
+    if config.get("use_destine_data", False):
         tools.append(create_destine_search_tool(config))
         tools.append(create_destine_retrieval_tool())
 

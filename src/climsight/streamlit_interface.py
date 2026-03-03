@@ -196,6 +196,22 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         with col1:
             # Always show additional information (removed toggle per user request)
             show_add_info = True
+            smart_agent   = st.toggle("Use extra search", value=False, help="""If this is activated, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
+            use_era5_data = st.toggle(
+                "Enable ERA5 data",
+                value=config.get("use_era5_data", False),
+                help="Allow the data analysis agent to retrieve ERA5 data into the sandbox.",
+            )
+            use_destine_data = st.toggle(
+                "Enable DestinE data",
+                value=config.get("use_destine_data", False),
+                help="Allow retrieval of DestinE Climate DT projections (SSP3-7.0, 82 parameters).",
+            )
+            use_powerful_data_analysis = st.toggle(
+                "Enable Python analysis",
+                value=config.get("use_powerful_data_analysis", False),
+                help="Allow the data analysis agent to use the Python REPL and generate plots.",
+            )
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
 
