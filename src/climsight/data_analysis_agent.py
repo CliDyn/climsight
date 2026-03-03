@@ -562,27 +562,6 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "Splitting into reasonable chunks lets you catch and fix errors between steps.\n\n"
         )
 
-    budget_lines.append(
-    sections.append(
-        "\n## TOOL BUDGET (HARD LIMIT: 30 tool calls total, max 3-4 per response)\n\n"
-        "Plan your session carefully — you have at most 30 tool calls:\n"
-        "- Python_REPL: a few calls, each focused on ONE logical task\n"
-        "- retrieve_era5_data: 0-3 calls (one per variable: t2, cp, lsp)\n"
-        "- search_destine_parameters: 1-2 calls (find param_ids before downloading)\n"
-        "- retrieve_destine_data: 0-3 calls (use full 2020-2039 range by default)\n"
-        "- reflect_on_image: one call per plot — QA ALL generated plots, not just one\n"
-        "- list_plotting_data_files / image_viewer: 0-2 calls\n"
-        "- wise_agent: 0-1 calls\n\n"
-        "DIVIDE AND CONQUER — Python_REPL strategy:\n"
-        "- Script 1: Load ALL data, explore structure, print column names and shapes\n"
-        "- Script 2: Climatology analysis + comparison plots (temp, precip, wind)\n"
-        "- Script 3: Threshold/risk analysis + additional plots (if ERA5 time series available)\n"
-        "- Script 4 (if needed): Fix any errors from previous scripts, create missing plots\n\n"
-        "WHY: One massive all-in-one script causes cascading errors — one bug kills everything.\n"
-        "Splitting into reasonable chunks lets you catch and fix errors between steps.\n\n"
-        "ANTI-SPAM RULES:\n"
-        f"- Never call more than {max_per_resp} tools in a single response.\n"
-    )
     if has_python_repl and max_reflect > 0:
         budget_lines.append("- Never call reflect_on_image in the same response as Python_REPL.\n")
         budget_lines.append(f"- Never call reflect_on_image more than {max_reflect} times total.\n")
@@ -749,7 +728,6 @@ Required analysis:
 
     # 3b. DestinE parameter search + data retrieval (if enabled)
     if effective.get("use_destine_data", False):
-    if config.get("use_destine_data", False):
         tools.append(create_destine_search_tool(config))
         tools.append(create_destine_retrieval_tool())
 
