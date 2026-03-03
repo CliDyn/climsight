@@ -1022,8 +1022,10 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         }
 
     def route_after_prepare(state: AgentState) -> str:
-        """Route after prepare_predefined_data based on python_REPL config."""
-        if config.get('use_powerful_data_analysis', False):
+        """Route after prepare_predefined_data based on analysis mode config."""
+        from data_analysis_agent import resolve_analysis_config
+        effective = resolve_analysis_config(config)
+        if effective.get('use_powerful_data_analysis', False):
             return "data_analysis_agent"
         else:
             return "combine_agent"
