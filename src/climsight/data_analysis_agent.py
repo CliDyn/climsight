@@ -952,9 +952,13 @@ def data_analysis_agent(
         )
         logger.info(f"download_node: starting {total} parallel downloads")
 
+        import time as _time
+
         results = []
         completed = 0
         max_workers = min(total, 6)
+        # Per-source elapsed times for summary
+        timings = {"era5": [], "destine": []}
 
         # Build human-readable labels for progress messages
         def _label(source, params):
@@ -962,46 +966,64 @@ def data_analysis_agent(
                 return f"ERA5 {params.get('variable_id', '?')}"
             return f"DestinE {params.get('param_id', '?')}"
 
+        start_times = {}
+        t_wall_start = _time.time()
+
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {}
             for source, params in tasks:
                 lbl = _label(source, params)
                 stream_handler.update_progress(f"  ↳ starting download: {lbl}")
                 if source == "era5":
-                    # API key read from ARRAYLAKE_API_KEY env var inside retrieve_era5_data
                     fut = executor.submit(retrieve_era5_data, **params)
                 else:
                     fut = executor.submit(retrieve_destine_data, **params)
                 futures[fut] = (source, params)
+                start_times[fut] = _time.time()
 
             for fut in as_completed(futures):
                 source, params = futures[fut]
                 lbl = _label(source, params)
+                elapsed = _time.time() - start_times[fut]
+                timings[source].append(elapsed)
                 try:
                     dl_result = fut.result()
                     results.append({"source": source, "params": params, "result": dl_result})
                     if dl_result.get("success"):
                         completed += 1
                         stream_handler.update_progress(
-                            f"  ✓ {lbl} done ({completed}/{total})"
+                            f"  ✓ {lbl} done ({completed}/{total}) — {elapsed:.1f}s"
                         )
-                        logger.info(f"download_node: {lbl} succeeded")
+                        logger.info(f"download_node: {lbl} succeeded in {elapsed:.1f}s")
                     else:
                         completed += 1
                         err = dl_result.get('error', '')
                         stream_handler.update_progress(
-                            f"  ✗ {lbl} failed ({completed}/{total}): {err[:80]}"
+                            f"  ✗ {lbl} failed ({completed}/{total}) — {elapsed:.1f}s: {err[:80]}"
                         )
-                        logger.warning(f"download_node: {lbl} returned error: {err}")
+                        logger.warning(f"download_node: {lbl} error in {elapsed:.1f}s: {err}")
                 except Exception as e:
                     completed += 1
                     stream_handler.update_progress(
-                        f"  ✗ {lbl} error ({completed}/{total}): {str(e)[:80]}"
+                        f"  ✗ {lbl} error ({completed}/{total}) — {elapsed:.1f}s: {str(e)[:80]}"
                     )
-                    logger.error(f"download_node: {lbl} failed: {e}")
+                    logger.error(f"download_node: {lbl} failed in {elapsed:.1f}s: {e}")
                     results.append({"source": source, "params": params, "error": str(e)})
 
-        stream_handler.update_progress(f"Data analysis: all {total} downloads finished.")
+        t_wall = _time.time() - t_wall_start
+
+        # Per-source timing summary
+        parts = []
+        if timings["era5"]:
+            t_max = max(timings["era5"])
+            parts.append(f"ERA5 {len(timings['era5'])} vars in {t_max:.1f}s")
+        if timings["destine"]:
+            t_max = max(timings["destine"])
+            parts.append(f"DestinE {len(timings['destine'])} vars in {t_max:.1f}s")
+        summary = f"all {total} downloads finished — wall time {t_wall:.1f}s"
+        if parts:
+            summary += f" ({', '.join(parts)})"
+        stream_handler.update_progress(f"Data analysis: {summary}")
         return {"download_results": results}
 
     @traceable(name="analysis_node", hide_inputs=True)
