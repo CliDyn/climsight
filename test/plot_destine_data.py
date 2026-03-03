@@ -3,7 +3,7 @@
 import xarray as xr
 import matplotlib.pyplot as plt
 
-zarr_path = "/Users/ikuznets/work/projects/climsight/code/climsight/tmp/sandbox/38c864498d174b8a90ebb24ac67cf70e/destine_data/destine_167_sfc_20200101_20211231.zarr"
+zarr_path = "era5_cp_temporal_20200101_20291231.zarr"
 
 ds = xr.open_dataset(zarr_path, engine="zarr")
 
