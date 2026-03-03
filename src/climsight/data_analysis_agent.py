@@ -190,8 +190,6 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
     ideal_calls = mode_config.get("ideal_tool_calls", "6-7")
     max_per_resp = mode_config.get("max_per_response", 4)
     max_reflect = mode_config.get("max_reflect", 2)
-    has_era5_download = config.get("use_era5_data", False)
-    has_destine = config.get("use_destine_data", False)
 
     # --- Build prompt without f-strings for code blocks to avoid brace escaping ---
     sections = []
@@ -344,17 +342,6 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "  But don't go overboard with tiny one-liner calls either — find a reasonable balance.\n"
             "  Each script should be self-contained: import what it needs, do meaningful work, print results."
         )
-    tools_list.append(
-        "- **Python_REPL** — execute Python code in a sandboxed environment.\n"
-        "  All files are relative to the sandbox root.\n"
-        "  The `results/` directory is pre-created for saving plots.\n"
-        "  Datasets are pre-loaded into the sandbox (see paths below).\n"
-        "  STRATEGY: DIVIDE AND CONQUER. Split your work into a few focused scripts,\n"
-        "  each tackling ONE logical task (e.g., load+explore, then analyze+plot-set-1,\n"
-        "  then analyze+plot-set-2). This avoids cascading errors from monolithic scripts.\n"
-        "  But don't go overboard with tiny one-liner calls either — find a reasonable balance.\n"
-        "  Each script should be self-contained: import what it needs, do meaningful work, print results."
-    )
     tools_list.append("- **list_plotting_data_files** — discover files in sandbox directories")
     tools_list.append("- **image_viewer** — view and analyze plots in `results/` (use relative paths)")
     if has_python_repl and max_reflect > 0:
@@ -562,6 +549,10 @@ def _create_tool_prompt(datasets_text: str, config: dict, lat: float = None, lon
             "Splitting into reasonable chunks lets you catch and fix errors between steps.\n\n"
         )
 
+    budget_lines.append(
+        "ANTI-SPAM RULES:\n"
+        f"- Never call more than {max_per_resp} tools in a single response.\n"
+    )
     if has_python_repl and max_reflect > 0:
         budget_lines.append("- Never call reflect_on_image in the same response as Python_REPL.\n")
         budget_lines.append(f"- Never call reflect_on_image more than {max_reflect} times total.\n")
@@ -825,6 +816,14 @@ Required analysis:
                 # Collect reference from ERA5 retrieval
                 if "reference" in obs:
                     agent_references.append(obs["reference"])
+                # Track downloaded Zarr for Data tab
+                if "output_path_zarr" in obs:
+                    variable = obs.get("variable", "unknown")
+                    state.downloadable_datasets.append({
+                        "label": f"ERA5 Time Series: {variable}",
+                        "path": obs["output_path_zarr"],
+                        "source": "ERA5",
+                    })
             elif hasattr(obs, 'content'):
                 era5_output = obs.content
             else:
@@ -837,6 +836,14 @@ Required analysis:
             if isinstance(obs, dict):
                 if "reference" in obs:
                     agent_references.append(obs["reference"])
+                # Track downloaded Zarr for Data tab
+                if "output_path_zarr" in obs:
+                    variable = obs.get("variable", obs.get("parameter", "unknown"))
+                    state.downloadable_datasets.append({
+                        "label": f"DestinE Time Series: {variable}",
+                        "path": obs["output_path_zarr"],
+                        "source": "DestinE",
+                    })
             state.destine_tool_response = str(obs)
             state.input_params.setdefault("destine_results", []).append(obs)
 
@@ -882,4 +889,5 @@ Required analysis:
         "era5_tool_response": getattr(state, 'era5_tool_response', None),
         "destine_tool_response": getattr(state, 'destine_tool_response', None),
         "references": state.references,  # Propagate collected references
+        "downloadable_datasets": state.downloadable_datasets,
     }
