@@ -17,12 +17,18 @@ climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 use_smart_agent: true
 use_era5_data: true  # Download ERA5 time series from CDS API (requires credentials)
+use_destine_data: true  # Download DestinE projections via HDA API (requires DESP credentials)
 use_powerful_data_analysis: true
 
 # ERA5 Climatology Configuration (pre-computed observational baseline)
 era5_climatology:
   enabled: true  # Always use ERA5 climatology as ground truth baseline
   path: "data/era5/era5_climatology_2015_2025.zarr"  # Path to pre-computed climatology
+
+# DestinE Climate DT Configuration (82 parameters via RAG + Polytope API)
+destine_settings:
+  chroma_db_path: "data/destine/chroma_db"
+  collection_name: "climate_parameters_with_usage_notes"
 
 # Climate Data Source Configuration
 # Options: "nextGEMS", "ICCP", "AWI_CM"

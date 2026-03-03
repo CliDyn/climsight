@@ -42,6 +42,7 @@ def get_sandbox_paths(thread_id: str) -> Dict[str, str]:
         "results_dir": str(base_dir / "results"),
         "climate_data_dir": str(base_dir / "climate_data"),
         "era5_data_dir": str(base_dir / "era5_data"),
+        "destine_data_dir": str(base_dir / "destine_data"),
     }
 
 

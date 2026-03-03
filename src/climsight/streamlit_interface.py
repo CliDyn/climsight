@@ -146,6 +146,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 value=config.get("use_era5_data", False),
                 help="Allow the data analysis agent to retrieve ERA5 data into the sandbox.",
             )
+            use_destine_data = st.toggle(
+                "Enable DestinE data",
+                value=config.get("use_destine_data", False),
+                help="Allow retrieval of DestinE Climate DT projections (SSP3-7.0, 82 parameters).",
+            )
             use_powerful_data_analysis = st.toggle(
                 "Enable Python analysis",
                 value=config.get("use_powerful_data_analysis", False),
@@ -208,6 +213,15 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 help="Required for downloading ERA5 time series data from Earthmover/Arraylake.",
             )
 
+        # Show DestinE token status
+        if use_destine_data:
+            from pathlib import Path
+            token_path = Path.home() / ".polytopeapirc"
+            if token_path.exists():
+                st.success("DestinE token found (~/.polytopeapirc)")
+            else:
+                st.warning("DestinE token not found. Run desp-authentication.py first.")
+
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
         
@@ -229,11 +243,20 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             # Store in config so data_analysis_agent can pass it to the tool
             config["arraylake_api_key"] = arraylake_api_key
 
+        # Check DestinE token file
+        if use_destine_data:
+            from pathlib import Path
+            token_path = Path.home() / ".polytopeapirc"
+            if not token_path.exists():
+                st.error("DestinE token not found at ~/.polytopeapirc. Run desp-authentication.py first.")
+                st.stop()
+
         # Update config with the selected LLM mode
         #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
         config['show_add_info'] = show_add_info
         config['use_smart_agent'] = smart_agent
         config['use_era5_data'] = use_era5_data
+        config['use_destine_data'] = use_destine_data
         config['use_powerful_data_analysis'] = use_powerful_data_analysis
 
     # RUN submit button
@@ -254,13 +277,22 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 # Store in config so data_analysis_agent can pass it to the tool
                 config["arraylake_api_key"] = arraylake_api_key
 
+            # Check DestinE token file
+            if use_destine_data:
+                from pathlib import Path
+                token_path = Path.home() / ".polytopeapirc"
+                if not token_path.exists():
+                    st.error("DestinE token not found at ~/.polytopeapirc. Run desp-authentication.py first.")
+                    st.stop()
+
             # Update config with the selected LLM mode
             #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
             config['show_add_info'] = show_add_info
             config['use_smart_agent'] = smart_agent
             config['use_era5_data'] = use_era5_data
+            config['use_destine_data'] = use_destine_data
             config['use_powerful_data_analysis'] = use_powerful_data_analysis
-            
+
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
             # Load RAG

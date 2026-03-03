@@ -115,6 +115,18 @@ export ARRAYLAKE_API_KEY="your-arraylake-api-key-here"
 
 You can also enter the Arraylake API key in the browser interface when the ERA5 data option is enabled.
 
+### DestinE Data Retrieval (Optional - for Destination Earth Climate DT)
+
+To download DestinE Climate Adaptation Digital Twin data (enabled via the "Enable DestinE data" toggle in the UI), you need a [Destination Earth](https://destination-earth.eu/) (DESP) account. Authentication is handled via a token stored in `~/.polytopeapirc`.
+
+To set up authentication, run the provided script:
+
+```bash
+python desp-authentication.py -u YOUR_DESP_USERNAME -p YOUR_DESP_PASSWORD
+```
+
+This writes a token to `~/.polytopeapirc` which is then used automatically by the DestinE retrieval tool. For more details on authentication and the polytope API, see the [polytope-examples](https://github.com/destination-earth-digital-twins/polytope-examples) repository.
+
 ## Running ClimSight
 
 ```bash
