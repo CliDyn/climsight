@@ -784,7 +784,7 @@ def data_analysis_agent(
     # effective, api_key so they don't need to be in graph state.
     # ==================================================================
 
-    @traceable(name="filter_node")
+    @traceable(name="filter_node", hide_inputs=True)
     def filter_node(gstate: dict) -> dict:
         """Node 1: Filter context into an analysis brief via LLM."""
         if use_filter_step and llm_dataanalysis_agent is not None:
@@ -821,7 +821,7 @@ def data_analysis_agent(
 
         return {"analysis_brief": analysis_brief}
 
-    @traceable(name="planner_node")
+    @traceable(name="planner_node", hide_inputs=True)
     def planner_node(gstate: dict) -> dict:
         """Node 2: LLM decides which ERA5/DestinE variables to download."""
         has_era5_download = effective.get("use_era5_data", False)
@@ -869,7 +869,6 @@ def data_analysis_agent(
 
         # ERA5 downloads
         if has_era5_download:
-            arraylake_api_key = config.get("arraylake_api_key", "")
             for item in plan.get("era5_downloads", []):
                 download_plan["era5"].append({
                     "variable_id": item["variable_id"],
@@ -880,7 +879,6 @@ def data_analysis_agent(
                     "min_longitude": g_lon if g_lon is not None else 0.0,
                     "max_longitude": g_lon if g_lon is not None else 359.75,
                     "work_dir": ".",
-                    "arraylake_api_key": arraylake_api_key,
                 })
 
         # DestinE: resolve search queries to param_ids, then build download tasks
@@ -932,7 +930,7 @@ def data_analysis_agent(
 
         return {"download_plan": download_plan}
 
-    @traceable(name="download_node")
+    @traceable(name="download_node", hide_inputs=True)
     def download_node(gstate: dict) -> dict:
         """Node 3: Execute ALL downloads in parallel using ThreadPoolExecutor."""
         plan = gstate["download_plan"]
@@ -953,12 +951,22 @@ def data_analysis_agent(
         logger.info(f"download_node: starting {total} parallel downloads")
 
         results = []
+        completed = 0
         max_workers = min(total, 6)
+
+        # Build human-readable labels for progress messages
+        def _label(source, params):
+            if source == "era5":
+                return f"ERA5 {params.get('variable_id', '?')}"
+            return f"DestinE {params.get('param_id', '?')}"
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {}
             for source, params in tasks:
+                lbl = _label(source, params)
+                stream_handler.update_progress(f"  ↳ starting download: {lbl}")
                 if source == "era5":
+                    # API key read from ARRAYLAKE_API_KEY env var inside retrieve_era5_data
                     fut = executor.submit(retrieve_era5_data, **params)
                 else:
                     fut = executor.submit(retrieve_destine_data, **params)
@@ -966,25 +974,35 @@ def data_analysis_agent(
 
             for fut in as_completed(futures):
                 source, params = futures[fut]
+                lbl = _label(source, params)
                 try:
                     dl_result = fut.result()
                     results.append({"source": source, "params": params, "result": dl_result})
-                    var_label = params.get("variable_id", params.get("param_id", "?"))
                     if dl_result.get("success"):
-                        logger.info(f"download_node: {source} {var_label} succeeded")
-                    else:
-                        logger.warning(
-                            f"download_node: {source} {var_label} returned error: "
-                            f"{dl_result.get('error', '')}"
+                        completed += 1
+                        stream_handler.update_progress(
+                            f"  ✓ {lbl} done ({completed}/{total})"
                         )
+                        logger.info(f"download_node: {lbl} succeeded")
+                    else:
+                        completed += 1
+                        err = dl_result.get('error', '')
+                        stream_handler.update_progress(
+                            f"  ✗ {lbl} failed ({completed}/{total}): {err[:80]}"
+                        )
+                        logger.warning(f"download_node: {lbl} returned error: {err}")
                 except Exception as e:
-                    logger.error(f"download_node: {source} download failed: {e}")
+                    completed += 1
+                    stream_handler.update_progress(
+                        f"  ✗ {lbl} error ({completed}/{total}): {str(e)[:80]}"
+                    )
+                    logger.error(f"download_node: {lbl} failed: {e}")
                     results.append({"source": source, "params": params, "error": str(e)})
 
-        stream_handler.update_progress(f"Data analysis: {len(results)} downloads completed.")
+        stream_handler.update_progress(f"Data analysis: all {total} downloads finished.")
         return {"download_results": results}
 
-    @traceable(name="analysis_node")
+    @traceable(name="analysis_node", hide_inputs=True)
     def analysis_node(gstate: dict) -> dict:
         """Node 4: Run the analysis AgentExecutor (Python REPL, image_viewer, reflect)."""
         analysis_brief = gstate["analysis_brief"]
