@@ -951,7 +951,8 @@ def data_analysis_agent(
             collection_name = destine_settings.get(
                 "collection_name", "climate_parameters_with_usage_notes"
             )
-            dest_api_key = (config.get("openai_api_key", "")
+            dest_api_key = (api_key
+                           or config.get("openai_api_key", "")
                            or os.environ.get("OPENAI_API_KEY", ""))
 
             destine_date_range = plan.get(
