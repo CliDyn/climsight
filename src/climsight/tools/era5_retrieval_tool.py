@@ -144,6 +144,7 @@ def retrieve_era5_data(
                           ARRAYLAKE_API_KEY environment variable.
     """
     ds = None
+    client = None
     local_zarr_path = None
     query_type = "temporal" # Hardcoded for Climsight point-data focus
 
@@ -277,35 +278,43 @@ def retrieve_era5_data(
         if subset.sizes.get('time', 0) == 0:
             return {"success": False, "error": "Empty time slice.", "message": "No data found for the requested dates."}
 
-        # --- 4. Save to Zarr (Atomic Write) ---
+        # --- 4. Save to Zarr (Atomic Write, with 1 retry) ---
         logging.info(f"Downloading data to {local_zarr_path}...")
 
         ds_out = subset.to_dataset(name=short_var)
-        
+
         # Clear encoding
         for var in ds_out.variables:
             ds_out[var].encoding = {}
 
         # Atomic write: write to temp dir first, then rename on success
         temp_zarr_path = local_zarr_path + ".tmp"
-        
-        # Clean up any previous failed temp directory
-        if os.path.exists(temp_zarr_path):
-            shutil.rmtree(temp_zarr_path)
+        max_attempts = 2
 
-        try:
-            ds_out.to_zarr(temp_zarr_path, mode="w", consolidated=True, compute=True)
-            
-            # Atomic replace: remove old cache (if exists) and rename temp to final
-            if os.path.exists(local_zarr_path):
-                shutil.rmtree(local_zarr_path)
-            os.rename(temp_zarr_path, local_zarr_path)
-            logging.info("✅ Download complete.")
-        except Exception as write_error:
-            # Clean up failed temp directory
+        for attempt in range(1, max_attempts + 1):
+            # Clean up any previous failed temp directory
             if os.path.exists(temp_zarr_path):
-                shutil.rmtree(temp_zarr_path, ignore_errors=True)
-            raise write_error
+                shutil.rmtree(temp_zarr_path)
+
+            try:
+                ds_out.to_zarr(temp_zarr_path, mode="w", consolidated=True, compute=True)
+
+                # Atomic replace: remove old cache (if exists) and rename temp to final
+                if os.path.exists(local_zarr_path):
+                    shutil.rmtree(local_zarr_path)
+                os.rename(temp_zarr_path, local_zarr_path)
+                logging.info("✅ Download complete.")
+                break  # success
+            except Exception as write_error:
+                # Clean up failed temp directory
+                if os.path.exists(temp_zarr_path):
+                    shutil.rmtree(temp_zarr_path, ignore_errors=True)
+                if attempt < max_attempts:
+                    import time as _time
+                    logging.warning(f"ERA5 {short_var}: download failed (attempt {attempt}/{max_attempts}), retrying in 10s... Error: {write_error}")
+                    _time.sleep(10)
+                else:
+                    raise write_error
 
         return {
             "success": True,
@@ -325,6 +334,11 @@ def retrieve_era5_data(
     finally:
         if ds is not None:
             ds.close()
+        if client is not None:
+            try:
+                client.close()
+            except Exception:
+                pass  # Suppress async loop conflicts during cleanup
 
 def create_era5_retrieval_tool(arraylake_api_key: str):
     """
