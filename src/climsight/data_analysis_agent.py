@@ -370,7 +370,10 @@ def _create_analysis_prompt(
         sections.append(
             "## 2. PRE-GENERATED PLOTS (already created — DO NOT recreate)\n\n"
             + "\n".join(predefined_plots) + "\n\n"
-            "Analyze the underlying DATA directly for your own insights.\n"
+            "These plots already cover basic monthly climatology comparisons (model decades vs ERA5).\n"
+            "DO NOT recreate similar plots — they are already done.\n"
+            "Instead, use the same underlying data for DEEPER analysis: trends, anomalies, extremes,\n"
+            "distributions, seasonal decomposition — things the predefined plots do NOT cover.\n"
             "Only use `image_viewer` on plots YOU create, not on these predefined ones.\n"
         )
     else:
@@ -462,36 +465,71 @@ def _create_analysis_prompt(
         sections.append(
             f"**Step {step} — Load downloaded time series:**\n"
             "ERA5/DestinE data was pre-downloaded by the planner. Load the Zarr files:\n\n"
+            "CRITICAL — analyze the FULL time range of each dataset:\n"
+            "- ERA5 covers ~1975–2024 (up to 50 years of observations). This is your primary record.\n"
+            "  Compute long-term trends, decadal averages, anomalies from the 30-year climatological mean.\n"
+            "- DestinE covers 2020–2039 (20 years of high-resolution projections under SSP3-7.0).\n"
+            "  Analyze the full projected range — trends, seasonal shifts, comparison to ERA5 baseline.\n"
+            "- Do NOT limit analysis to the overlap period (2020–2024). Each dataset tells its own story:\n"
+            "  ERA5 = what happened over decades, DestinE = what is projected for the next two decades.\n"
+            "- Use the overlap (2020–2024) ONLY for validating DestinE against ERA5 observations.\n\n"
         )
         sections.append(
             "```python\n"
             "import xarray as xr, glob\n"
-            "# ERA5 time series\n"
+            "# ERA5 time series (full historical record)\n"
             "era5_files = glob.glob('era5_data/*.zarr')\n"
             "for f in era5_files:\n"
             "    ds = xr.open_dataset(f, engine='zarr', chunks={{}})\n"
-            "    print(f, list(ds.data_vars))\n"
+            "    print(f, list(ds.data_vars), 'time range:', str(ds.time.values[0])[:10], 'to', str(ds.time.values[-1])[:10])\n"
+            "# DestinE projections (if available)\n"
+            "destine_files = glob.glob('destine_data/*.zarr')\n"
+            "for f in destine_files:\n"
+            "    ds = xr.open_dataset(f, engine='zarr', chunks={{}})\n"
+            "    print(f, list(ds.data_vars), 'time range:', str(ds.time.values[0])[:10], 'to', str(ds.time.values[-1])[:10])\n"
             "```\n\n"
         )
         step += 1
 
     sections.append(
-        f"**Step {step} — Climatology analysis + comparison plots:**\n"
+        f"**Step {step} — Deeper climatology analysis (DO NOT re-plot predefined figures):**\n"
+        "IMPORTANT: Monthly climatology comparison plots (temperature, precipitation, wind vs ERA5)\n"
+        "are ALREADY generated as predefined plots in `results/climate_*.png`.\n"
+        "Do NOT recreate them. Instead, use the same underlying data for DEEPER analysis:\n\n"
         "Load ALL climate model CSVs from Step 1. Use the EXACT column names you printed in Step 1.\n"
         "REMINDER: prepend 'climate_data/' to CSV filenames from manifest.\n"
         "REMINDER: Convert Month strings ('January'→1) if needed (see Step 1 code).\n"
-        "REMINDER: Precipitation may be column 'tp' (already in mm) or 'cp'/'lsp' (in meters, multiply by 1000).\n"
-        "Compute monthly means, deltas between decades.\n"
-        "Create 2-3 comparison plots (temperature, precipitation, wind) saved to `results/`.\n"
-        "Print a concise summary of baseline values and projected changes.\n"
+        "REMINDER: Precipitation may be column 'tp' (already in mm) or 'cp'/'lsp' (in meters, multiply by 1000).\n\n"
+        "Focus on analysis that goes BEYOND the predefined plots:\n"
+        "- Decadal change analysis: compute and plot differences between earliest and latest decades\n"
+        "- Seasonal cycle shifts: how does the seasonal pattern change across decades?\n"
+        "- If ERA5 time series downloaded: annual mean time series over the full record (1975-2024)\n"
+        "  with linear trend line, annotate slope (°C/decade or mm/decade)\n"
+        "- Multi-variable correlation: do temperature and precipitation changes correlate?\n"
+        "- Anomaly plots: departure from long-term mean per year or month\n"
+        "Print a concise summary of baseline values, projected changes, and their magnitudes.\n"
     )
     step += 1
 
     sections.append(
-        f"**Step {step} — Threshold & risk analysis + additional plots:**\n"
-        "If ERA5 time series were downloaded: compute threshold exceedances (heat days, frost days,\n"
-        "dry spells, wind extremes). Create 2-3 threshold/risk plots saved to `results/`.\n"
-        "Print quantitative risk metrics. If no ERA5 time series, skip this step.\n"
+        f"**Step {step} — Statistical analysis, trends, and extremes:**\n"
+        "Perform deep quantitative analysis on downloaded time series (4-6 plots minimum):\n\n"
+        "Trend analysis:\n"
+        "- Linear regression on annual means for each variable (scipy.stats.linregress)\n"
+        "- Report slope (per decade), R², and p-value for statistical significance\n"
+        "- Plot time series with trend line and confidence interval\n\n"
+        "Extreme value analysis:\n"
+        "- Threshold exceedances: heat days (>30°C), frost days (<0°C), heavy precip events, dry spells\n"
+        "- Compute annual counts of threshold exceedances and plot their trend over time\n"
+        "- Percentile analysis: 90th, 95th, 99th percentiles per decade — are extremes intensifying?\n\n"
+        "Distribution analysis:\n"
+        "- Compare distributions across decades (histograms or KDE plots)\n"
+        "- Seasonal decomposition: how do trends differ by season (DJF, MAM, JJA, SON)?\n\n"
+        "If DestinE projections available:\n"
+        "- Compare projected extremes (2020-2039) against ERA5 historical baseline (1975-2024)\n"
+        "- Quantify projected changes in threshold exceedances\n\n"
+        "Print ALL computed metrics — trends, p-values, exceedance counts, percentile shifts.\n"
+        "If no ERA5 time series, skip this step.\n"
     )
     step += 1
 
@@ -547,33 +585,52 @@ def _create_analysis_prompt(
     # ── 8. PROACTIVE ANALYSIS ─────────────────────────────────────────────
     sections.append(
         "\n## 8. PROACTIVE ANALYSIS\n\n"
-        "Even if the user's query is vague, you SHOULD proactively:\n"
-        "- Create a temperature trend visualization (all decades + ERA5 baseline)\n"
-        "- Create a precipitation comparison chart\n"
+        "You have a generous tool budget — USE IT. More analysis is always better than less.\n"
+        "Think like a climate scientist writing a technical report. The user needs quantitative evidence.\n\n"
+        "Even if the user's query is vague, you MUST proactively:\n"
+        "- For EVERY downloaded variable: produce (a) full time series plot, (b) trend analysis with slope,\n"
+        "  (c) anomaly plot relative to long-term mean, (d) seasonal breakdown\n"
+        "- Compute and report: trend significance (p-value), standard deviations, correlation between variables\n"
         "- Highlight the 3 months with the largest projected changes\n"
         "- Identify potential climate risks relevant to the query\n"
+        "- If both ERA5 and DestinE are available: create a combined timeline plot showing\n"
+        "  historical observations transitioning into projections\n\n"
+        "Even if a finding won't make the final report, the analysis informs a better answer.\n"
+        "Do NOT stop after 2-3 plots — exploit your full tool budget for thorough analysis.\n"
     )
 
     # ── 9. OUTPUT FORMAT ─────────────────────────────────────────────────
     sections.append(
-        "\n## 9. OUTPUT FORMAT\n\n"
+        "\n## 9. OUTPUT FORMAT (CRITICAL)\n\n"
+        "Your final text response is the ONLY information passed to the downstream combine agent.\n"
+        "Raw Python REPL output (print statements, statistics) is NOT forwarded — only YOUR written response.\n"
+        "Therefore you MUST include ALL quantitative results in your final response:\n"
+        "- Every computed number: trend slopes (°C/decade), p-values, R² values, percentiles\n"
+        "- Threshold exceedance counts, mean values, standard deviations\n"
+        "- For EVERY plot: describe what it shows and the key finding (do NOT include file paths in your text)\n\n"
         "Your final response MUST include:\n"
     )
     if has_era5_data:
         sections.append(
-            "1. **Observed Climate** — current conditions from ERA5 (2015-2025 baseline)\n"
-            "2. **Model Performance** — how well projections match ERA5 observations\n"
-            "3. **Projected Changes** — future vs baseline, with magnitude and timing\n"
-            "4. **Critical Months** — months with largest changes or highest risk\n"
-            "5. **Visualizations** — list of created plot files in `results/`\n"
-            "6. **Implications** — interpretation relevant to the user's query\n"
+            "1. **Observed Climate** — current conditions from ERA5 with specific values\n"
+            "   (e.g., 'Mean annual temperature: 10.3°C, warmest month: July at 21.5°C')\n"
+            "2. **Long-term Trends** — trend slope, significance, time period analyzed\n"
+            "   (e.g., 'Temperature trend: +0.35°C/decade (p<0.01) over 1975-2024')\n"
+            "3. **Model Performance** — how well projections match ERA5 observations, with bias values\n"
+            "4. **Projected Changes** — future vs baseline with magnitude and timing\n"
+            "   (e.g., 'Temperature +2.1°C by 2040s relative to 1995-2014 baseline')\n"
+            "5. **Extremes** — threshold exceedances, percentile shifts, with counts\n"
+            "   (e.g., 'Heat days (>30°C): increased from 5/year (1975-1984) to 18/year (2015-2024)')\n"
+            "6. **Critical Months** — months with largest changes or highest risk, with values\n"
+            "7. **Visualizations** — for each plot: one-sentence description of what it shows and key finding\n"
+            "8. **Implications** — interpretation relevant to the user's query\n"
         )
     else:
         sections.append(
-            "1. **Key Climate Values** — temperature, precipitation, wind summary\n"
-            "2. **Climate Change Signal** — future vs historical differences\n"
-            "3. **Critical Months** — months with largest changes\n"
-            "4. **Visualizations** — list of created plot files\n"
+            "1. **Key Climate Values** — temperature, precipitation, wind with specific numbers\n"
+            "2. **Climate Change Signal** — future vs historical differences with magnitudes\n"
+            "3. **Critical Months** — months with largest changes, with values\n"
+            "4. **Visualizations** — for each plot: one-sentence description of what it shows and key finding\n"
             "5. **Implications** — interpretation relevant to the user's query\n"
         )
 
@@ -592,12 +649,16 @@ def _create_analysis_prompt(
     if has_python_repl:
         budget_lines.append(
             "DIVIDE AND CONQUER — Python_REPL strategy:\n"
-            "- Script 1: Load ALL data, explore structure, print column names and shapes\n"
-            "- Script 2: Climatology analysis + comparison plots (temp, precip, wind)\n"
-            "- Script 3: Threshold/risk analysis + additional plots (if ERA5 time series available)\n"
-            "- Script 4 (if needed): Fix any errors from previous scripts, create missing plots\n\n"
+            "- Script 1: Load ALL data, explore structure, print column names, shapes, and time ranges\n"
+            "- Script 2: ERA5 long-term time series analysis + trend plots (full historical record)\n"
+            "- Script 3: Climatology comparison — model decades vs ERA5 baseline (monthly plots)\n"
+            "- Script 4: Extreme/threshold analysis + distribution plots (if time series available)\n"
+            "- Script 5: DestinE projection analysis — trends, comparison to ERA5 (if DestinE available)\n"
+            "- Script 6: Statistical summary — print all computed metrics for the final report\n"
+            "- Additional scripts: fix errors, re-plot after reflection feedback\n\n"
             "WHY: One massive all-in-one script causes cascading errors — one bug kills everything.\n"
-            "Splitting into reasonable chunks lets you catch and fix errors between steps.\n\n"
+            "Splitting into reasonable chunks lets you catch and fix errors between steps.\n"
+            "You have a large budget — use more scripts for deeper analysis, not fewer.\n\n"
         )
 
     budget_lines.append(
