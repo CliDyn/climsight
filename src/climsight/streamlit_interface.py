@@ -104,6 +104,62 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         # normalize longitude in case map has been move around global (more than) once
         lon_default = normalize_longitude(lon_default)
 
+    # --- Analysis mode selector (outside form so toggles update immediately) ---
+    from data_analysis_agent import ANALYSIS_MODES
+    mode_options = ["fast", "smart", "deep"]
+    default_mode = config.get("analysis_mode", "smart")
+    if default_mode not in mode_options:
+        default_mode = "smart"
+
+    def _on_mode_change():
+        """Sync toggle states when analysis mode changes."""
+        mode = st.session_state["analysis_mode_radio"]
+        defaults = ANALYSIS_MODES[mode]
+        st.session_state["toggle_smart_agent"] = defaults["use_smart_agent"]
+        st.session_state["toggle_era5"] = defaults["use_era5_data"]
+        st.session_state["toggle_destine"] = defaults["use_destine_data"]
+        st.session_state["toggle_python"] = defaults["use_powerful_data_analysis"]
+
+    # Initialize toggle defaults on first run
+    if "toggle_smart_agent" not in st.session_state:
+        init_defaults = ANALYSIS_MODES[default_mode]
+        st.session_state["toggle_smart_agent"] = init_defaults["use_smart_agent"]
+        st.session_state["toggle_era5"] = init_defaults["use_era5_data"]
+        st.session_state["toggle_destine"] = init_defaults["use_destine_data"]
+        st.session_state["toggle_python"] = init_defaults["use_powerful_data_analysis"]
+
+    analysis_mode = st.radio(
+        "Analysis mode",
+        options=mode_options,
+        index=mode_options.index(default_mode),
+        horizontal=True,
+        help="fast: pre-computed data only | smart: + Python REPL + ERA5 | deep: + DestinE projections",
+        key="analysis_mode_radio",
+        on_change=_on_mode_change,
+    )
+
+    mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+    smart_agent = mcol1.toggle(
+        "Extra search",
+        key="toggle_smart_agent",
+        help="Additional Wikipedia/RAG requests (can increase response time).",
+    )
+    use_era5_data = mcol2.toggle(
+        "ERA5 data",
+        key="toggle_era5",
+        help="Allow the data analysis agent to retrieve ERA5 data.",
+    )
+    use_destine_data = mcol3.toggle(
+        "DestinE data",
+        key="toggle_destine",
+        help="DestinE Climate DT projections (SSP3-7.0, 82 parameters).",
+    )
+    use_powerful_data_analysis = mcol4.toggle(
+        "Python analysis",
+        key="toggle_python",
+        help="Python REPL for custom analysis and plots.",
+    )
+
     # Wrap the input fields and the submit button in a form
     with st.form(key='my_form'):
         user_message = st.text_input(
@@ -136,21 +192,10 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             if 'gpt' in config['llm_combine']['model_name']:
                 config['llm_combine']['model_type'] = "openai"
             else:
-                config['llm_combine']['model_type'] = "local"            
+                config['llm_combine']['model_type'] = "local"
         with col1:
             # Always show additional information (removed toggle per user request)
             show_add_info = True
-            smart_agent   = st.toggle("Use extra search", value=False, help="""If this is activated, ClimSight will make additional requests to Wikipedia and RAG, which can significantly increase response time.""")
-            use_era5_data = st.toggle(
-                "Enable ERA5 data",
-                value=config.get("use_era5_data", False),
-                help="Allow the data analysis agent to retrieve ERA5 data into the sandbox.",
-            )
-            use_powerful_data_analysis = st.toggle(
-                "Enable Python analysis",
-                value=config.get("use_powerful_data_analysis", False),
-                help="Allow the data analysis agent to use the Python REPL and generate plots.",
-            )
             # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
             #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
 
@@ -208,6 +253,15 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 help="Required for downloading ERA5 time series data from Earthmover/Arraylake.",
             )
 
+        # Show DestinE token status
+        if use_destine_data:
+            from pathlib import Path
+            token_path = Path.home() / ".polytopeapirc"
+            if token_path.exists():
+                st.success("DestinE token found (~/.polytopeapirc)")
+            else:
+                st.warning("DestinE token not found. Run desp-authentication.py first.")
+
         # Replace the st.button with st.form_submit_button
         submit_button = st.form_submit_button(label='Generate')
         
@@ -229,11 +283,21 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             # Store in config so data_analysis_agent can pass it to the tool
             config["arraylake_api_key"] = arraylake_api_key
 
+        # Check DestinE token file
+        if use_destine_data:
+            from pathlib import Path
+            token_path = Path.home() / ".polytopeapirc"
+            if not token_path.exists():
+                st.error("DestinE token not found at ~/.polytopeapirc. Run desp-authentication.py first.")
+                st.stop()
+
         # Update config with the selected LLM mode
         #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
         config['show_add_info'] = show_add_info
+        config['analysis_mode'] = analysis_mode
         config['use_smart_agent'] = smart_agent
         config['use_era5_data'] = use_era5_data
+        config['use_destine_data'] = use_destine_data
         config['use_powerful_data_analysis'] = use_powerful_data_analysis
 
     # RUN submit button
@@ -254,13 +318,23 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 # Store in config so data_analysis_agent can pass it to the tool
                 config["arraylake_api_key"] = arraylake_api_key
 
+            # Check DestinE token file
+            if use_destine_data:
+                from pathlib import Path
+                token_path = Path.home() / ".polytopeapirc"
+                if not token_path.exists():
+                    st.error("DestinE token not found at ~/.polytopeapirc. Run desp-authentication.py first.")
+                    st.stop()
+
             # Update config with the selected LLM mode
             #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
             config['show_add_info'] = show_add_info
+            config['analysis_mode'] = analysis_mode
             config['use_smart_agent'] = smart_agent
             config['use_era5_data'] = use_era5_data
+            config['use_destine_data'] = use_destine_data
             config['use_powerful_data_analysis'] = use_powerful_data_analysis
-            
+
             # Creating a potential bottle neck here with loading the db inside the streamlit form, but it works fine 
             # for the moment. Just making a note here for any potential problems that might arise later one. 
             # Load RAG
@@ -390,9 +464,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         show_add_info_display = st.session_state.get('last_show_add_info', False)
         
         if show_add_info_display:
-            tab_text, tab_add, tab_refs = st.tabs(["Report", "Additional information", "References"])
+            tab_text, tab_figs, tab_data, tab_refs = st.tabs(["Report", "Figures", "Data", "References"])
         else:
-            tab_text, tab_refs = st.tabs(["Report", "References"])
+            tab_text, tab_data, tab_refs = st.tabs(["Report", "Data", "References"])
         
         with tab_text:
             st.markdown(st.session_state['last_output'])
@@ -403,12 +477,12 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     st.markdown(f"- {ref}")
         
         if show_add_info_display:
-            with tab_add:
+            with tab_figs:
                 stored_input_params = st.session_state.get('last_input_params', {})
                 stored_figs = st.session_state.get('last_figs', {})
                 stored_climatemodel_name = st.session_state.get('last_climatemodel_name', 'unknown')
-                
-                st.subheader("Additional information", divider='rainbow')
+
+                st.subheader("Figures", divider='rainbow')
                 if 'lat' in stored_input_params and 'lon' in stored_input_params:
                     st.markdown(f"**Coordinates:** {stored_input_params['lat']}, {stored_input_params['lon']}")
                 if 'elevation' in stored_input_params:
@@ -542,6 +616,51 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                         for image_path in other_plots:
                             st.image(image_path)
         
+        # Data tab - downloadable datasets
+        with tab_data:
+            stored_input_params_data = st.session_state.get('last_input_params', {})
+            datasets = stored_input_params_data.get('downloadable_datasets', [])
+            if datasets:
+                st.subheader("Available Datasets", divider='rainbow')
+                for idx, ds_entry in enumerate(datasets):
+                    path = ds_entry.get("path", "")
+                    label = ds_entry.get("label", "Dataset")
+                    source = ds_entry.get("source", "")
+                    if path and os.path.exists(path):
+                        col_label, col_btn = st.columns([3, 1])
+                        with col_label:
+                            st.markdown(f"**{label}**")
+                            st.caption(f"{source} — {os.path.basename(path)}")
+                        with col_btn:
+                            if os.path.isdir(path):
+                                # Zarr directories: zip on the fly
+                                import io
+                                import zipfile
+                                buf = io.BytesIO()
+                                with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                                    for root, dirs, files in os.walk(path):
+                                        for f in files:
+                                            fp = os.path.join(root, f)
+                                            zf.write(fp, os.path.relpath(fp, os.path.dirname(path)))
+                                st.download_button(
+                                    "Download",
+                                    buf.getvalue(),
+                                    file_name=os.path.basename(path) + ".zip",
+                                    mime="application/zip",
+                                    key=f"dl_data_{idx}",
+                                )
+                            else:
+                                with open(path, "rb") as f:
+                                    file_data = f.read()
+                                st.download_button(
+                                    "Download",
+                                    file_data,
+                                    file_name=os.path.basename(path),
+                                    key=f"dl_data_{idx}",
+                                )
+            else:
+                st.info("No datasets were generated for this query.")
+
         # Download buttons
         st.markdown("---")  # Add a separator
         

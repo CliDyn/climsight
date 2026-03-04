@@ -35,8 +35,11 @@ class AgentState(BaseModel):
     era5_data_dir: str = ""  # ERA5 output directory
     era5_climatology_response: dict = {}  # ERA5 observed climatology (ground truth)
     era5_tool_response: str = ""
+    destine_data_dir: str = ""  # DestinE output directory
+    destine_tool_response: str = ""  # DestinE retrieval response
     # Predefined plots data (passed from zero_rag_agent to data_analysis_agent)
     hazard_data: Optional[Any] = None  # filtered_events_square for disaster plotting
     population_config: dict = {}  # {'pop_path': str, 'country': str} for population plotting
     predefined_plots: list = []  # List of paths to auto-generated plots
+    downloadable_datasets: list = []  # List of {"label": str, "path": str, "source": str}
     # stream_handler: StreamHandler  # Uncomment if needed
