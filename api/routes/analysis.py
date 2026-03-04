@@ -12,10 +12,13 @@ import traceback
 import yaml
 from typing import Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.responses import Response, FileResponse
+from starlette.background import BackgroundTask
 
 from session_manager import SessionManager
 from sandbox_utils import ensure_thread_id, get_sandbox_paths, ensure_sandbox_dirs
+from stream_handler import StreamHandler
 
 router = APIRouter()
 
@@ -139,11 +142,14 @@ async def analysis_websocket(ws: WebSocket, session_id: str):
 
             # --- Run the analysis in a thread pool (blocking calls) ---
             try:
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
+                # Bridge: sync StreamHandler → async WebSocket
+                stream_handler = _AsyncWsHandler(ws, loop)
                 result = await loop.run_in_executor(
                     None,
                     lambda: _run_analysis(
-                        session_id, session_data, lat, lon, query, per_request_config
+                        session_id, session_data, lat, lon, query,
+                        per_request_config, stream_handler,
                     ),
                 )
             except Exception as e:
@@ -192,6 +198,30 @@ async def analysis_websocket(ws: WebSocket, session_id: str):
 
 
 # ---------------------------------------------------------------------------
+# Async WebSocket streaming bridge (sync thread → async WS)
+# Inherits StreamHandler so it passes isinstance checks in climsight_engine.py
+# ---------------------------------------------------------------------------
+class _AsyncWsHandler(StreamHandler):
+    """StreamHandler subclass that forwards progress + tokens to WebSocket."""
+    def __init__(self, ws: WebSocket, loop: asyncio.AbstractEventLoop):
+        super().__init__(container=None)  # headless — no Streamlit container
+        self._ws = ws
+        self._loop = loop
+
+    def update_progress(self, progress: str):
+        self.progress_text = progress
+        asyncio.run_coroutine_threadsafe(
+            send_json(self._ws, "status", {"message": progress}), self._loop
+        )
+
+    def on_llm_new_token(self, token: str, **kwargs):
+        self.text += token
+        asyncio.run_coroutine_threadsafe(
+            send_json(self._ws, "token", {"text": token}), self._loop
+        )
+
+
+# ---------------------------------------------------------------------------
 # Blocking analysis runner (runs in thread pool)
 # ---------------------------------------------------------------------------
 def _run_analysis(
@@ -200,14 +230,14 @@ def _run_analysis(
     lat: float,
     lon: float,
     query: str,
-    per_request_config: dict,
+    per_request_config: dict | None = None,
+    stream_handler=None,
 ) -> dict:
     """
     Execute the full ClimSight analysis pipeline.
     Returns a dict with output, plot_images, input_params, references, error.
     """
     from climsight_engine import normalize_longitude, location_request, llm_request
-    from stream_handler import StreamHandler
     from data_container import DataContainer
     from rag import load_rag
 
@@ -222,6 +252,9 @@ def _run_analysis(
     config["use_era5_data"] = per_request_config.get(
         "use_era5_data", session_data.get("use_era5_data", config.get("use_era5_data", False))
     )
+    config["use_destine_data"] = per_request_config.get(
+        "use_destine_data", session_data.get("use_destine_data", config.get("use_destine_data", False))
+    )
     config["use_powerful_data_analysis"] = per_request_config.get(
         "use_powerful_data_analysis",
         session_data.get("use_powerful_data_analysis", config.get("use_powerful_data_analysis", False)),
@@ -229,6 +262,10 @@ def _run_analysis(
     config["climate_data_source"] = per_request_config.get(
         "climate_data_source",
         session_data.get("climate_data_source", config.get("climate_data_source", "nextGEMS")),
+    )
+    config["analysis_mode"] = per_request_config.get(
+        "analysis_mode",
+        session_data.get("analysis_mode", config.get("analysis_mode", "smart")),
     )
     config["show_add_info"] = True
     config["llmModeKey"] = "agent_llm"
@@ -246,19 +283,26 @@ def _run_analysis(
         else:
             config["llm_combine"]["model_type"] = "local"
 
-    # API keys
-    api_key = os.environ.get("OPENAI_API_KEY", "")
+    # API keys — prefer per-request (from UI) → env var
+    api_key = per_request_config.get("api_key") or os.environ.get("OPENAI_API_KEY", "")
     api_key_local = os.environ.get("OPENAI_API_KEY_LOCAL", "")
 
     if not api_key and config.get("llm_combine", {}).get("model_type") == "openai":
-        return {"error": "No OPENAI_API_KEY set in environment."}
+        return {"error": "No OpenAI API key provided. Set OPENAI_API_KEY or enter it in the UI."}
 
     # Arraylake key for ERA5
     if config.get("use_era5_data"):
-        arraylake_key = os.environ.get("ARRAYLAKE_API_KEY", "")
+        arraylake_key = per_request_config.get("arraylake_api_key") or os.environ.get("ARRAYLAKE_API_KEY", "")
         if not arraylake_key:
-            return {"error": "ARRAYLAKE_API_KEY required for ERA5 data."}
+            return {"error": "Arraylake API key required for ERA5 data. Set ARRAYLAKE_API_KEY or enter it in the UI."}
         config["arraylake_api_key"] = arraylake_key
+
+    # DestinE token validation
+    if config.get("use_destine_data"):
+        from pathlib import Path
+        token_path = Path.home() / ".polytopeapirc"
+        if not token_path.exists():
+            return {"error": "DestinE token not found at ~/.polytopeapirc. Run desp-authentication.py first."}
 
     # Sandbox setup
     thread_id = session_data.get("thread_id", "")
@@ -268,7 +312,8 @@ def _run_analysis(
 
     sandbox_paths = get_sandbox_paths(thread_id)
     ensure_sandbox_dirs(sandbox_paths)
-    os.environ["CLIMSIGHT_THREAD_ID"] = thread_id
+    # NOTE: Do NOT set os.environ["CLIMSIGHT_THREAD_ID"] — not thread-safe.
+    # thread_id is passed through input_params instead.
 
     # Location request
     content_message, input_params = location_request(config, lat, lon)
@@ -306,9 +351,16 @@ def _run_analysis(
     except Exception as e:
         logging.warning(f"General RAG load failed: {e}")
 
-    # Create a no-op stream handler (no Streamlit containers)
-    stream_handler = StreamHandler()
+    # Create stream handler (use async bridge if provided, else no-op)
+    if stream_handler is None:
+        stream_handler = StreamHandler()
     data_pocket = DataContainer()
+
+    # Attach progress callback if our async handler
+    if isinstance(stream_handler, _AsyncWsHandler):
+        pass  # already has update_progress
+    else:
+        stream_handler.update_progress = lambda msg: None  # no-op fallback
 
     # Run LLM request
     output, input_params, content_message, _ = llm_request(
@@ -338,3 +390,44 @@ def _run_analysis(
         "references": references,
         "location_info": location_info,
     }
+
+
+# ---------------------------------------------------------------------------
+# Dataset download endpoint — path-safe, streams from disk, searches full sandbox
+# ---------------------------------------------------------------------------
+@router.get("/datasets/{session_id}/{filename:path}")
+async def download_dataset(session_id: str, filename: str):
+    """Download a dataset file from the session's sandbox."""
+    import tempfile
+    import zipfile
+    from pathlib import Path
+
+    session_data = SessionManager.get_session(session_id)
+    if "thread_id" not in session_data:
+        raise HTTPException(status_code=404, detail="Session not found.")
+
+    sandbox_paths = get_sandbox_paths(session_data["thread_id"])
+    sandbox_root = Path(sandbox_paths.get("uuid_main_dir", "")).resolve()
+
+    # Resolve target and prevent directory traversal
+    target = (sandbox_root / filename).resolve()
+    if not target.is_relative_to(sandbox_root) or not target.exists():
+        raise HTTPException(status_code=404, detail="File not found or access denied.")
+
+    if target.is_dir():
+        # Zarr directory → zip to tempfile (not RAM)
+        fd, temp_zip = tempfile.mkstemp(suffix=".zip")
+        os.close(fd)
+        with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for root, _dirs, files in os.walk(target):
+                for f in files:
+                    fp = os.path.join(root, f)
+                    zf.write(fp, os.path.relpath(fp, target.parent))
+        return FileResponse(
+            temp_zip,
+            media_type="application/zip",
+            filename=f"{target.name}.zip",
+            background=BackgroundTask(os.remove, temp_zip),
+        )
+
+    return FileResponse(target, filename=target.name)

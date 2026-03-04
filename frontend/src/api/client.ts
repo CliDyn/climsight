@@ -31,17 +31,25 @@ export const getSession = (id: string) => http.get<Session>(`/api/sessions/${id}
 export const deleteSession = (id: string) => http.delete(`/api/sessions/${id}`);
 
 // Config
-export const getModels = () => http.get<ModelInfo>('/api/sessions/models');
-export const getClimSources = () => http.get<{ sources: ClimateSource[] }>('/api/sessions/climate-sources');
+export const getModels = () => http.get<ModelInfo>('/api/models');
+export const getClimSources = () => http.get<{ sources: ClimateSource[] }>('/api/climate-sources');
 export const selectModel = (sid: string, slot: string, model: string) =>
     http.put(`/api/sessions/${sid}/model`, { slot, model_name: model });
 
 // Health
 export const healthCheck = () => http.get('/health');
 
+// Env status — check which API keys are configured server-side
+export interface EnvStatus {
+    openai_key_set: boolean;
+    arraylake_key_set: boolean;
+    destine_token_exists: boolean;
+}
+export const fetchEnvStatus = () => http.get<EnvStatus>('/api/env-status');
+
 // ── WebSocket Client ───────────────────────────────────── //
 
-export type WsMessageType = 'status' | 'location' | 'response' | 'error' | 'complete' | 'plot';
+export type WsMessageType = 'status' | 'location' | 'response' | 'error' | 'complete' | 'plot' | 'token';
 
 export interface WsMessage {
     type: WsMessageType;

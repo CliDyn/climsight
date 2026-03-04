@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Cpu, Database, Search, Code, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, Cpu, Database, Search, Code, Zap, Globe, Key, Check, AlertTriangle } from 'lucide-react';
 
 const MODEL_OPTIONS = [
     'gpt-5.2',
@@ -22,25 +22,68 @@ const CLIMATE_SOURCES = [
 export interface AnalysisConfig {
     model_name: string;
     climate_data_source: string;
+    analysis_mode: 'fast' | 'smart' | 'deep';
     use_smart_agent: boolean;
     use_era5_data: boolean;
+    use_destine_data: boolean;
     use_powerful_data_analysis: boolean;
+}
+
+const ANALYSIS_MODES: Record<string, Partial<AnalysisConfig>> = {
+    fast: {
+        use_smart_agent: false,
+        use_era5_data: false,
+        use_destine_data: false,
+        use_powerful_data_analysis: false,
+    },
+    smart: {
+        use_smart_agent: true,
+        use_era5_data: true,
+        use_destine_data: false,
+        use_powerful_data_analysis: true,
+    },
+    deep: {
+        use_smart_agent: true,
+        use_era5_data: true,
+        use_destine_data: true,
+        use_powerful_data_analysis: true,
+    },
+};
+
+const MODE_DESCRIPTIONS: Record<string, string> = {
+    fast: 'Pre-computed data only',
+    smart: '+ Python REPL + ERA5',
+    deep: '+ DestinE projections',
+};
+
+export interface EnvStatus {
+    openai_key_set: boolean;
+    arraylake_key_set: boolean;
+    destine_token_exists: boolean;
+}
+
+export interface ApiKeys {
+    api_key: string;
+    arraylake_api_key: string;
 }
 
 interface Props {
     config: AnalysisConfig;
     onChange: (config: AnalysisConfig) => void;
     disabled?: boolean;
+    envStatus?: EnvStatus;
+    apiKeys?: ApiKeys;
+    onApiKeysChange?: (keys: ApiKeys) => void;
 }
 
-export function SettingsPanel({ config, onChange, disabled }: Props) {
+export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, onApiKeysChange }: Props) {
     const [expanded, setExpanded] = useState(true);
 
     const set = <K extends keyof AnalysisConfig>(key: K, val: AnalysisConfig[K]) =>
         onChange({ ...config, [key]: val });
 
     return (
-        <div className="glass" style={{ overflow: 'hidden' }}>
+        <div className="glass" style={{ overflow: 'visible' }}>
             {/* Header — always visible */}
             <button
                 className="settings-header"
@@ -67,7 +110,47 @@ export function SettingsPanel({ config, onChange, disabled }: Props) {
             </button>
 
             {expanded && (
-                <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '55vh', overflowY: 'auto' }}>
+                    {/* Analysis mode radio */}
+                    <div>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                            <Zap size={12} /> Analysis mode
+                        </span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            {(['fast', 'smart', 'deep'] as const).map((mode) => (
+                                <button
+                                    key={mode}
+                                    onClick={() => {
+                                        if (disabled) return;
+                                        const defaults = ANALYSIS_MODES[mode]!;
+                                        onChange({ ...config, analysis_mode: mode, ...defaults });
+                                    }}
+                                    title={MODE_DESCRIPTIONS[mode]}
+                                    style={{
+                                        flex: 1,
+                                        padding: '6px 10px',
+                                        borderRadius: 6,
+                                        border: `1px solid ${config.analysis_mode === mode ? 'var(--accent)' : 'var(--border)'}`,
+                                        background: config.analysis_mode === mode ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                                        color: config.analysis_mode === mode ? 'var(--accent)' : 'var(--text-secondary)',
+                                        cursor: disabled ? 'not-allowed' : 'pointer',
+                                        fontSize: '0.75rem',
+                                        fontWeight: config.analysis_mode === mode ? 600 : 400,
+                                        fontFamily: 'var(--font)',
+                                        opacity: disabled ? 0.5 : 1,
+                                        transition: 'all 0.2s',
+                                        textTransform: 'capitalize',
+                                    }}
+                                >
+                                    {mode}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 3 }}>
+                            {MODE_DESCRIPTIONS[config.analysis_mode]}
+                        </div>
+                    </div>
+
                     {/* Model selector */}
                     <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
@@ -123,6 +206,14 @@ export function SettingsPanel({ config, onChange, disabled }: Props) {
                             disabled={disabled}
                         />
                         <Toggle
+                            icon={<Globe size={12} />}
+                            label="DestinE data"
+                            help="DestinE Climate DT projections (SSP3-7.0)"
+                            checked={config.use_destine_data}
+                            onChange={(v) => set('use_destine_data', v)}
+                            disabled={disabled}
+                        />
+                        <Toggle
                             icon={<Code size={12} />}
                             label="Python analysis"
                             help="Allow Python REPL & plot generation"
@@ -131,6 +222,51 @@ export function SettingsPanel({ config, onChange, disabled }: Props) {
                             disabled={disabled}
                         />
                     </div>
+
+                    {/* API Keys section — shown only when keys are missing */}
+                    {(envStatus && (!envStatus.openai_key_set || (!envStatus.arraylake_key_set && config.use_era5_data))) && (
+                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 4 }}>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                                <Key size={12} /> API Keys
+                            </span>
+                            {!envStatus.openai_key_set && (
+                                <input
+                                    className="input"
+                                    type="password"
+                                    placeholder="OpenAI API key"
+                                    value={apiKeys?.api_key ?? ''}
+                                    onChange={(e) => onApiKeysChange?.({ ...apiKeys!, api_key: e.target.value })}
+                                    disabled={disabled}
+                                    style={{ fontSize: '0.8rem', marginBottom: 6 }}
+                                />
+                            )}
+                            {config.use_era5_data && !envStatus.arraylake_key_set && (
+                                <input
+                                    className="input"
+                                    type="password"
+                                    placeholder="Arraylake API key (for ERA5)"
+                                    value={apiKeys?.arraylake_api_key ?? ''}
+                                    onChange={(e) => onApiKeysChange?.({ ...apiKeys!, arraylake_api_key: e.target.value })}
+                                    disabled={disabled}
+                                    style={{ fontSize: '0.8rem' }}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* DestinE token status */}
+                    {config.use_destine_data && envStatus && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            fontSize: '0.75rem', marginTop: 4,
+                            color: envStatus.destine_token_exists ? 'var(--accent)' : '#f59e0b',
+                        }}>
+                            {envStatus.destine_token_exists
+                                ? <><Check size={12} /> DestinE token found</>
+                                : <><AlertTriangle size={12} /> DestinE token missing — run desp-authentication.py</>
+                            }
+                        </div>
+                    )}
                 </div>
             )}
         </div>

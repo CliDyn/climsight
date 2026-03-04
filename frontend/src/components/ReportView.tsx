@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { FileText, Info, BookOpen, Download, MapPin, Layers, Sprout, Mountain } from 'lucide-react';
+import { FileText, Info, BookOpen, Download, MapPin, Layers, Sprout, Mountain, Database, FileDown } from 'lucide-react';
 
 interface LocationData {
     address?: string;
@@ -25,6 +25,7 @@ interface InputParams {
     distance_to_coastline?: number;
     location_str?: string;
     location_str_for_print?: string;
+    downloadable_datasets?: Array<{ path: string; label: string; source: string }>;
     [key: string]: unknown;
 }
 
@@ -35,11 +36,12 @@ interface Props {
     running: boolean;
     inputParams?: InputParams;
     references?: { used?: string[] };
+    sessionId?: string;
 }
 
-type TabKey = 'report' | 'additional' | 'references';
+type TabKey = 'report' | 'additional' | 'data' | 'references';
 
-export function ReportView({ report, plots, location, running, inputParams, references }: Props) {
+export function ReportView({ report, plots, location, running, inputParams, references, sessionId }: Props) {
     const [activeTab, setActiveTab] = useState<TabKey>('report');
 
     if (!report && !running) {
@@ -78,7 +80,8 @@ export function ReportView({ report, plots, location, running, inputParams, refe
 
     const tabs: { key: TabKey; label: string; icon: React.ReactNode }[] = [
         { key: 'report', label: 'Report', icon: <FileText size={13} /> },
-        { key: 'additional', label: 'Additional Info', icon: <Info size={13} /> },
+        { key: 'additional', label: 'Figures', icon: <Info size={13} /> },
+        { key: 'data', label: 'Data', icon: <Database size={13} /> },
         { key: 'references', label: 'References', icon: <BookOpen size={13} /> },
     ];
 
@@ -143,23 +146,7 @@ export function ReportView({ report, plots, location, running, inputParams, refe
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{report}</ReactMarkdown>
                         </div>
 
-                        {/* Plots */}
-                        {plots.length > 0 && (
-                            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                {plots.map((url, i) => (
-                                    <img
-                                        key={i}
-                                        src={url}
-                                        alt={`Analysis plot ${i + 1}`}
-                                        style={{
-                                            width: '100%',
-                                            borderRadius: 8,
-                                            border: '1px solid var(--border)',
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                        {/* Plots moved to Figures tab only */}
 
                         {/* Download */}
                         {report && (
@@ -177,6 +164,14 @@ export function ReportView({ report, plots, location, running, inputParams, refe
                                 >
                                     <Download size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
                                     Download Text
+                                </button>
+                                <button
+                                    className="btn-primary"
+                                    style={{ fontSize: '0.78rem', padding: '8px 14px' }}
+                                    onClick={() => downloadPdf(report)}
+                                >
+                                    <FileDown size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
+                                    Download PDF
                                 </button>
                             </div>
                         )}
@@ -203,15 +198,22 @@ export function ReportView({ report, plots, location, running, inputParams, refe
                         {inputParams?.distance_to_coastline != null && (
                             <InfoRow icon={<MapPin size={13} />} label="Distance to shore" value={formatDist(inputParams.distance_to_coastline)} />
                         )}
-                        {inputParams?.location_str_for_print && (
-                            <InfoRow icon={<MapPin size={13} />} label="Address" value={safe(inputParams.location_str_for_print).replace(/\*\*/g, '')} />
+
+                        {/* Categorized plots */}
+                        {plots.length > 0 && (
+                            <CategorizedPlots plots={plots} />
                         )}
-                        {!inputParams && (
+
+                        {!inputParams && plots.length === 0 && (
                             <p style={{ color: 'var(--text-muted)' }}>
                                 Additional information will appear after running an analysis.
                             </p>
                         )}
                     </div>
+                )}
+
+                {activeTab === 'data' && (
+                    <DataTab datasets={inputParams?.downloadable_datasets ?? []} sessionId={sessionId} />
                 )}
 
                 {activeTab === 'references' && (
@@ -270,4 +272,162 @@ function downloadText(content: string) {
     a.download = `climsight_report_${ts}.txt`;
     a.click();
     URL.revokeObjectURL(a.href);
+}
+
+function downloadPdf(content: string) {
+    const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const html = `
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>ClimSight Report</title>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #222; }
+  h1, h2, h3 { color: #1a1a2e; }
+  pre, code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background: #f0f0f0; }
+</style>
+</head><body>
+<h1>ClimSight Analysis Report</h1>
+<p style="color: #666;">Generated: ${new Date().toLocaleString()}</p>
+<hr>
+${content.replace(/\n/g, '<br>')}
+</body></html>`;
+    const w = window.open('', '_blank');
+    if (w) {
+        w.document.write(html);
+        w.document.close();
+        setTimeout(() => { w.print(); }, 300);
+    } else {
+        // Fallback: download as HTML
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `climsight_report_${ts}.html`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+}
+
+/* ── Categorized Plots ────────────────────────────────────── */
+
+function categorizePlot(url: string): string {
+    const name = url.split('/').pop()?.toLowerCase() ?? '';
+    if (/climate|temperature|precipitation|wind/.test(name)) return 'Climate Data';
+    if (/disaster|hazard/.test(name)) return 'Natural Hazards';
+    if (/population/.test(name)) return 'Population Data';
+    return 'Additional Analysis';
+}
+
+function CategorizedPlots({ plots }: { plots: string[] }) {
+    const groups: Record<string, string[]> = {};
+    for (const url of plots) {
+        const cat = categorizePlot(url);
+        (groups[cat] ??= []).push(url);
+    }
+    const order = ['Climate Data', 'Natural Hazards', 'Population Data', 'Additional Analysis'];
+    return (
+        <>
+            {order.filter((c) => groups[c]).map((category) => (
+                <div key={category} style={{ marginTop: 12 }}>
+                    <h4 style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>
+                        {category}
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {groups[category].map((url, i) => (
+                            <img
+                                key={i}
+                                src={url}
+                                alt={`${category} ${i + 1}`}
+                                style={{ width: '100%', borderRadius: 8, border: '1px solid var(--border)' }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </>
+    );
+}
+
+/* ── Data Tab ─────────────────────────────────────────────── */
+
+function DataTab({ datasets, sessionId }: { datasets: Array<{ path: string; label: string; source: string }>; sessionId?: string }) {
+    if (datasets.length === 0) {
+        return (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                <Database size={28} style={{ opacity: 0.3, marginBottom: 8 }} />
+                <p>No datasets were generated for this query.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.85rem' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', borderBottom: '1px solid var(--border)', paddingBottom: 6 }}>
+                Available Datasets
+            </h3>
+            {datasets.map((ds, idx) => {
+                const filename = ds.path.split('/').pop() ?? 'dataset';
+                // Extract relative path from sandbox root for the download endpoint.
+                // Paths look like /tmp/sandbox/<uuid>/climate_data/file.csv
+                // We need: climate_data/file.csv (relative to uuid_main_dir)
+                const sandboxParts = ds.path.split('/sandbox/');
+                let relativePath = filename;  // fallback: just the basename
+                if (sandboxParts.length > 1) {
+                    // After '/sandbox/' we have '<uuid>/sub/path/file.csv'
+                    // Strip the UUID segment
+                    const afterSandbox = sandboxParts[1];
+                    const slashIdx = afterSandbox.indexOf('/');
+                    if (slashIdx !== -1) {
+                        relativePath = afterSandbox.substring(slashIdx + 1);
+                    }
+                }
+                const downloadUrl = sessionId
+                    ? `/api/datasets/${sessionId}/${relativePath}`
+                    : `/artifacts/${filename}`;
+                return (
+                    <div
+                        key={idx}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 14px',
+                            borderRadius: 8,
+                            border: '1px solid var(--border)',
+                            background: 'var(--bg-secondary)',
+                        }}
+                    >
+                        <div>
+                            <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{ds.label}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                {ds.source} — {filename}
+                            </div>
+                        </div>
+                        <a
+                            href={downloadUrl}
+                            download={filename}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '6px 12px',
+                                borderRadius: 6,
+                                border: '1px solid var(--accent)',
+                                color: 'var(--accent)',
+                                fontSize: '0.78rem',
+                                textDecoration: 'none',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            <Download size={13} />
+                            Download
+                        </a>
+                    </div>
+                );
+            })}
+        </div>
+    );
 }

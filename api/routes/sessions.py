@@ -39,8 +39,10 @@ class SessionInfo(BaseModel):
     thread_id: str
     model_name: Optional[str] = None
     climate_source: Optional[str] = None
+    analysis_mode: str = "smart"
     use_smart_agent: bool = False
     use_era5_data: bool = False
+    use_destine_data: bool = False
     use_powerful_data_analysis: bool = False
 
 
@@ -51,9 +53,11 @@ class ModelSetRequest(BaseModel):
 class ConfigUpdateRequest(BaseModel):
     use_smart_agent: Optional[bool] = None
     use_era5_data: Optional[bool] = None
+    use_destine_data: Optional[bool] = None
     use_powerful_data_analysis: Optional[bool] = None
     climate_data_source: Optional[str] = None
     model_name: Optional[str] = None
+    analysis_mode: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -95,8 +99,10 @@ async def create_session():
     config = _load_config()
     session_data["model_name"] = config.get("llm_combine", {}).get("model_name", "gpt-5.2")
     session_data["climate_data_source"] = config.get("climate_data_source", "nextGEMS")
+    session_data["analysis_mode"] = config.get("analysis_mode", "smart")
     session_data["use_smart_agent"] = config.get("use_smart_agent", False)
     session_data["use_era5_data"] = config.get("use_era5_data", False)
+    session_data["use_destine_data"] = config.get("use_destine_data", False)
     session_data["use_powerful_data_analysis"] = config.get("use_powerful_data_analysis", False)
 
     logging.info(f"Created session {session_id} (thread_id: {thread_id})")
@@ -115,8 +121,10 @@ async def get_session(session_id: str):
         thread_id=session_data["thread_id"],
         model_name=session_data.get("model_name"),
         climate_source=session_data.get("climate_data_source"),
+        analysis_mode=session_data.get("analysis_mode", "smart"),
         use_smart_agent=session_data.get("use_smart_agent", False),
         use_era5_data=session_data.get("use_era5_data", False),
+        use_destine_data=session_data.get("use_destine_data", False),
         use_powerful_data_analysis=session_data.get("use_powerful_data_analysis", False),
     )
 
@@ -143,10 +151,14 @@ async def update_config(session_id: str, body: ConfigUpdateRequest):
         session_data["use_smart_agent"] = body.use_smart_agent
     if body.use_era5_data is not None:
         session_data["use_era5_data"] = body.use_era5_data
+    if body.use_destine_data is not None:
+        session_data["use_destine_data"] = body.use_destine_data
     if body.use_powerful_data_analysis is not None:
         session_data["use_powerful_data_analysis"] = body.use_powerful_data_analysis
     if body.climate_data_source is not None:
         session_data["climate_data_source"] = body.climate_data_source
+    if body.analysis_mode is not None:
+        session_data["analysis_mode"] = body.analysis_mode
 
     return {"status": "updated"}
 
@@ -178,4 +190,18 @@ async def list_climate_sources():
         "sources": sources,
         "descriptions": source_descriptions,
         "default": default,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Environment Status — used by frontend to show/hide API key inputs
+# ---------------------------------------------------------------------------
+@router.get("/env-status")
+async def env_status():
+    """Report which API keys / tokens are configured server-side."""
+    from pathlib import Path
+    return {
+        "openai_key_set": bool(os.environ.get("OPENAI_API_KEY")),
+        "arraylake_key_set": bool(os.environ.get("ARRAYLAKE_API_KEY")),
+        "destine_token_exists": (Path.home() / ".polytopeapirc").exists(),
     }

@@ -3,10 +3,11 @@ import { MapPanel } from './components/MapPanel';
 import { QueryForm } from './components/QueryForm';
 import { ReportView } from './components/ReportView';
 import { StatusBar } from './components/StatusBar';
-import { SettingsPanel, type AnalysisConfig } from './components/SettingsPanel';
+import { SettingsPanel, type AnalysisConfig, type EnvStatus, type ApiKeys } from './components/SettingsPanel';
 import {
   createSession,
   connectAnalysis,
+  fetchEnvStatus,
   type Session,
   type WsMessage,
 } from './api/client';
@@ -50,9 +51,11 @@ const INITIAL_ANALYSIS: AnalysisState = {
 const DEFAULT_CONFIG: AnalysisConfig = {
   model_name: 'gpt-5-mini',
   climate_data_source: 'nextGEMS',
-  use_smart_agent: false,
-  use_era5_data: false,
-  use_powerful_data_analysis: false,
+  analysis_mode: 'smart',
+  use_smart_agent: true,
+  use_era5_data: true,
+  use_destine_data: false,
+  use_powerful_data_analysis: true,
 };
 
 export default function App() {
@@ -61,6 +64,8 @@ export default function App() {
   const [question, setQuestion] = useState('');
   const [analysis, setAnalysis] = useState<AnalysisState>(INITIAL_ANALYSIS);
   const [config, setConfig] = useState<AnalysisConfig>(DEFAULT_CONFIG);
+  const [envStatus, setEnvStatus] = useState<EnvStatus | undefined>(undefined);
+  const [apiKeys, setApiKeys] = useState<ApiKeys>({ api_key: '', arraylake_api_key: '' });
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
   });
@@ -73,6 +78,7 @@ export default function App() {
 
   useEffect(() => {
     createSession().then((res) => setSession(res.data));
+    fetchEnvStatus().then((res) => setEnvStatus(res.data)).catch(() => { });
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -97,9 +103,14 @@ export default function App() {
       config: {
         model_name: config.model_name,
         climate_data_source: config.climate_data_source,
+        analysis_mode: config.analysis_mode,
         use_smart_agent: config.use_smart_agent,
         use_era5_data: config.use_era5_data,
+        use_destine_data: config.use_destine_data,
         use_powerful_data_analysis: config.use_powerful_data_analysis,
+        // API keys from UI (only if user entered them)
+        ...(apiKeys.api_key ? { api_key: apiKeys.api_key } : {}),
+        ...(apiKeys.arraylake_api_key ? { arraylake_api_key: apiKeys.arraylake_api_key } : {}),
       },
     };
 
@@ -112,6 +123,9 @@ export default function App() {
           switch (msg.type) {
             case 'status':
               return { ...prev, status: (d?.message ?? d) as string };
+            case 'token':
+              // Streaming LLM tokens — append to report in real-time
+              return { ...prev, report: prev.report + ((d as Record<string, string>)?.text ?? '') };
             case 'location':
               return { ...prev, location: d as unknown as LocationData };
             case 'response': {
@@ -143,7 +157,7 @@ export default function App() {
       () => setAnalysis((prev) => ({ ...prev, running: false })),
       () => setAnalysis((prev) => ({ ...prev, error: 'WebSocket connection failed. Is the backend running?', running: false })),
     );
-  }, [session, coords, question, config]);
+  }, [session, coords, question, config, apiKeys]);
 
   return (
     <div className="app-shell">
@@ -179,7 +193,14 @@ export default function App() {
 
         <div className="content-pane">
           {/* Settings */}
-          <SettingsPanel config={config} onChange={setConfig} disabled={analysis.running} />
+          <SettingsPanel
+            config={config}
+            onChange={setConfig}
+            disabled={analysis.running}
+            envStatus={envStatus}
+            apiKeys={apiKeys}
+            onApiKeysChange={setApiKeys}
+          />
 
           {/* Query form */}
           <QueryForm
@@ -208,6 +229,7 @@ export default function App() {
             running={analysis.running}
             inputParams={analysis.inputParams ?? undefined}
             references={analysis.references ?? undefined}
+            sessionId={session?.session_id}
           />
         </div>
       </div>
