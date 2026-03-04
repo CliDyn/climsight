@@ -280,8 +280,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             if not arraylake_api_key:
                 st.error("Please provide an Arraylake API key to use ERA5 data retrieval.")
                 st.stop()
-            # Store in config so data_analysis_agent can pass it to the tool
-            config["arraylake_api_key"] = arraylake_api_key
+            # Set env var so era5_retrieval_tool picks it up directly
+            os.environ["ARRAYLAKE_API_KEY"] = arraylake_api_key
 
         # Check DestinE token file
         if use_destine_data:
@@ -315,8 +315,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                 if not arraylake_api_key:
                     st.error("Please provide an Arraylake API key to use ERA5 data retrieval.")
                     st.stop()
-                # Store in config so data_analysis_agent can pass it to the tool
-                config["arraylake_api_key"] = arraylake_api_key
+                # Set env var so era5_retrieval_tool picks it up directly
+                os.environ["ARRAYLAKE_API_KEY"] = arraylake_api_key
 
             # Check DestinE token file
             if use_destine_data:
