@@ -15,7 +15,10 @@ import subprocess
 import sys
 import time
 
+from dotenv import load_dotenv
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(ROOT, ".env"))
 
 
 def start_backend(port: int = 8000):

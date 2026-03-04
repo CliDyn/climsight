@@ -168,10 +168,10 @@ export function ReportView({ report, plots, location, running, inputParams, refe
                                 <button
                                     className="btn-primary"
                                     style={{ fontSize: '0.78rem', padding: '8px 14px' }}
-                                    onClick={() => downloadPdf(report)}
+                                    onClick={() => downloadMarkdown(report)}
                                 >
                                     <FileDown size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-                                    Download PDF
+                                    Download Markdown
                                 </button>
                             </div>
                         )}
@@ -274,41 +274,14 @@ function downloadText(content: string) {
     URL.revokeObjectURL(a.href);
 }
 
-function downloadPdf(content: string) {
+function downloadMarkdown(content: string) {
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const html = `
-<!DOCTYPE html>
-<html><head>
-<meta charset="utf-8">
-<title>ClimSight Report</title>
-<style>
-  body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #222; }
-  h1, h2, h3 { color: #1a1a2e; }
-  pre, code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-  th { background: #f0f0f0; }
-</style>
-</head><body>
-<h1>ClimSight Analysis Report</h1>
-<p style="color: #666;">Generated: ${new Date().toLocaleString()}</p>
-<hr>
-${content.replace(/\n/g, '<br>')}
-</body></html>`;
-    const w = window.open('', '_blank');
-    if (w) {
-        w.document.write(html);
-        w.document.close();
-        setTimeout(() => { w.print(); }, 300);
-    } else {
-        // Fallback: download as HTML
-        const blob = new Blob([html], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `climsight_report_${ts}.html`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-    }
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `climsight_report_${ts}.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
 
 /* ── Categorized Plots ────────────────────────────────────── */

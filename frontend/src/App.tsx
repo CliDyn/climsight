@@ -163,24 +163,24 @@ export default function App() {
     <div className="app-shell">
       {/* ── Top bar ──────────────────────────── */}
       <header className="top-bar">
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="icon-box">
-            <Compass size={18} className="text-sky-400" />
+            <Compass size={16} style={{ color: 'var(--accent)' }} />
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight leading-none">ClimSight</h1>
-            <p className="text-[11px] leading-none mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            <h1 style={{ fontSize: '0.9rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>ClimSight</h1>
+            <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500, lineHeight: 1 }}>
               Climate Intelligence Platform
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme">
-            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+            {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
             {theme === 'dark' ? 'Light' : 'Dark'}
           </button>
-          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            {session ? `Session ${session.session_id.slice(0, 8)}…` : 'Connecting…'}
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.02em' }}>
+            {session ? session.session_id.slice(0, 8) : '…'}
           </div>
         </div>
       </header>

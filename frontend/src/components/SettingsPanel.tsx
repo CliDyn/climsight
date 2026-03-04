@@ -98,7 +98,7 @@ export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, 
                     border: 'none',
                     color: 'var(--text-primary)',
                     cursor: 'pointer',
-                    fontSize: '0.85rem',
+                    fontSize: '0.92rem',
                     fontWeight: 600,
                 }}
             >
@@ -113,7 +113,7 @@ export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, 
                 <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '55vh', overflowY: 'auto' }}>
                     {/* Analysis mode radio */}
                     <div>
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
                             <Zap size={12} /> Analysis mode
                         </span>
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -134,7 +134,7 @@ export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, 
                                         background: config.analysis_mode === mode ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
                                         color: config.analysis_mode === mode ? 'var(--accent)' : 'var(--text-secondary)',
                                         cursor: disabled ? 'not-allowed' : 'pointer',
-                                        fontSize: '0.75rem',
+                                        fontSize: '0.82rem',
                                         fontWeight: config.analysis_mode === mode ? 600 : 400,
                                         fontFamily: 'var(--font)',
                                         opacity: disabled ? 0.5 : 1,
@@ -146,13 +146,13 @@ export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, 
                                 </button>
                             ))}
                         </div>
-                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 3 }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>
                             {MODE_DESCRIPTIONS[config.analysis_mode]}
                         </div>
                     </div>
 
                     {/* Model selector */}
-                    <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
                             <Cpu size={12} /> Model for synthesis
                         </span>
@@ -161,7 +161,7 @@ export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, 
                             value={config.model_name}
                             onChange={(e) => set('model_name', e.target.value)}
                             disabled={disabled}
-                            style={{ fontSize: '0.8rem' }}
+                            style={{ fontSize: '0.85rem' }}
                         >
                             {MODEL_OPTIONS.map((m) => (
                                 <option key={m} value={m}>{m}</option>
@@ -303,7 +303,7 @@ function Toggle({
                 background: checked ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
                 color: checked ? 'var(--accent)' : 'var(--text-secondary)',
                 cursor: disabled ? 'not-allowed' : 'pointer',
-                fontSize: '0.75rem',
+                fontSize: '0.82rem',
                 fontFamily: 'var(--font)',
                 opacity: disabled ? 0.5 : 1,
                 transition: 'all 0.2s',
