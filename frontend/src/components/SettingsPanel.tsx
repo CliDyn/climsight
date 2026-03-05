@@ -1,0 +1,316 @@
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, Cpu, Database, Search, Code, Zap, Globe, Key, Check, AlertTriangle } from 'lucide-react';
+
+const MODEL_OPTIONS = [
+    'gpt-5.2',
+    'gpt-5.2-mini',
+    'gpt-5-nano',
+    'gpt-5-mini',
+    'gpt-5',
+    'gpt-4.1-nano',
+    'gpt-4.1-mini',
+    'gpt-4.1',
+];
+
+const CLIMATE_SOURCES = [
+    { value: 'nextGEMS', label: 'nextGEMS (High resolution)' },
+    { value: 'ICCP', label: 'ICCP (AWI-CM3, medium resolution)' },
+    { value: 'AWI_CM', label: 'AWI-CM (CMIP6, low resolution)' },
+    { value: 'DestinE', label: 'DestinE IFS-FESOM (High resolution, SSP3-7.0)' },
+];
+
+export interface AnalysisConfig {
+    model_name: string;
+    climate_data_source: string;
+    analysis_mode: 'fast' | 'smart' | 'deep';
+    use_smart_agent: boolean;
+    use_era5_data: boolean;
+    use_destine_data: boolean;
+    use_powerful_data_analysis: boolean;
+}
+
+const ANALYSIS_MODES: Record<string, Partial<AnalysisConfig>> = {
+    fast: {
+        use_smart_agent: false,
+        use_era5_data: false,
+        use_destine_data: false,
+        use_powerful_data_analysis: false,
+    },
+    smart: {
+        use_smart_agent: true,
+        use_era5_data: true,
+        use_destine_data: false,
+        use_powerful_data_analysis: true,
+    },
+    deep: {
+        use_smart_agent: true,
+        use_era5_data: true,
+        use_destine_data: true,
+        use_powerful_data_analysis: true,
+    },
+};
+
+const MODE_DESCRIPTIONS: Record<string, string> = {
+    fast: 'Pre-computed data only',
+    smart: '+ Python REPL + ERA5',
+    deep: '+ DestinE projections',
+};
+
+export interface EnvStatus {
+    openai_key_set: boolean;
+    arraylake_key_set: boolean;
+    destine_token_exists: boolean;
+}
+
+export interface ApiKeys {
+    api_key: string;
+    arraylake_api_key: string;
+}
+
+interface Props {
+    config: AnalysisConfig;
+    onChange: (config: AnalysisConfig) => void;
+    disabled?: boolean;
+    envStatus?: EnvStatus;
+    apiKeys?: ApiKeys;
+    onApiKeysChange?: (keys: ApiKeys) => void;
+}
+
+export function SettingsPanel({ config, onChange, disabled, envStatus, apiKeys, onApiKeysChange }: Props) {
+    const [expanded, setExpanded] = useState(true);
+
+    const set = <K extends keyof AnalysisConfig>(key: K, val: AnalysisConfig[K]) =>
+        onChange({ ...config, [key]: val });
+
+    return (
+        <div className="glass" style={{ overflow: 'visible' }}>
+            {/* Header — always visible */}
+            <button
+                className="settings-header"
+                onClick={() => setExpanded((e) => !e)}
+                style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    fontSize: '0.92rem',
+                    fontWeight: 600,
+                }}
+            >
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Zap size={14} style={{ color: 'var(--accent)' }} />
+                    Settings
+                </span>
+                {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {expanded && (
+                <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '55vh', overflowY: 'auto' }}>
+                    {/* Analysis mode radio */}
+                    <div>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                            <Zap size={12} /> Analysis mode
+                        </span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            {(['fast', 'smart', 'deep'] as const).map((mode) => (
+                                <button
+                                    key={mode}
+                                    onClick={() => {
+                                        if (disabled) return;
+                                        const defaults = ANALYSIS_MODES[mode]!;
+                                        onChange({ ...config, analysis_mode: mode, ...defaults });
+                                    }}
+                                    title={MODE_DESCRIPTIONS[mode]}
+                                    style={{
+                                        flex: 1,
+                                        padding: '6px 10px',
+                                        borderRadius: 6,
+                                        border: `1px solid ${config.analysis_mode === mode ? 'var(--accent)' : 'var(--border)'}`,
+                                        background: config.analysis_mode === mode ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                                        color: config.analysis_mode === mode ? 'var(--accent)' : 'var(--text-secondary)',
+                                        cursor: disabled ? 'not-allowed' : 'pointer',
+                                        fontSize: '0.82rem',
+                                        fontWeight: config.analysis_mode === mode ? 600 : 400,
+                                        fontFamily: 'var(--font)',
+                                        opacity: disabled ? 0.5 : 1,
+                                        transition: 'all 0.2s',
+                                        textTransform: 'capitalize',
+                                    }}
+                                >
+                                    {mode}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>
+                            {MODE_DESCRIPTIONS[config.analysis_mode]}
+                        </div>
+                    </div>
+
+                    {/* Model selector */}
+                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                            <Cpu size={12} /> Model for synthesis
+                        </span>
+                        <select
+                            className="input"
+                            value={config.model_name}
+                            onChange={(e) => set('model_name', e.target.value)}
+                            disabled={disabled}
+                            style={{ fontSize: '0.85rem' }}
+                        >
+                            {MODEL_OPTIONS.map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                            ))}
+                        </select>
+                    </label>
+
+                    {/* Climate data source */}
+                    <label style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                            <Database size={12} /> Climate data source
+                        </span>
+                        <select
+                            className="input"
+                            value={config.climate_data_source}
+                            onChange={(e) => set('climate_data_source', e.target.value)}
+                            disabled={disabled}
+                            style={{ fontSize: '0.8rem' }}
+                        >
+                            {CLIMATE_SOURCES.map((s) => (
+                                <option key={s.value} value={s.value}>{s.label}</option>
+                            ))}
+                        </select>
+                    </label>
+
+                    {/* Toggles row */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        <Toggle
+                            icon={<Search size={12} />}
+                            label="Extra search"
+                            help="Additional Wikipedia & RAG requests (slower)"
+                            checked={config.use_smart_agent}
+                            onChange={(v) => set('use_smart_agent', v)}
+                            disabled={disabled}
+                        />
+                        <Toggle
+                            icon={<Database size={12} />}
+                            label="ERA5 data"
+                            help="Retrieve ERA5 time series from Arraylake"
+                            checked={config.use_era5_data}
+                            onChange={(v) => set('use_era5_data', v)}
+                            disabled={disabled}
+                        />
+                        <Toggle
+                            icon={<Globe size={12} />}
+                            label="DestinE data"
+                            help="DestinE Climate DT projections (SSP3-7.0)"
+                            checked={config.use_destine_data}
+                            onChange={(v) => set('use_destine_data', v)}
+                            disabled={disabled}
+                        />
+                        <Toggle
+                            icon={<Code size={12} />}
+                            label="Python analysis"
+                            help="Allow Python REPL & plot generation"
+                            checked={config.use_powerful_data_analysis}
+                            onChange={(v) => set('use_powerful_data_analysis', v)}
+                            disabled={disabled}
+                        />
+                    </div>
+
+                    {/* API Keys section — shown only when keys are missing */}
+                    {(envStatus && (!envStatus.openai_key_set || (!envStatus.arraylake_key_set && config.use_era5_data))) && (
+                        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 4 }}>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6 }}>
+                                <Key size={12} /> API Keys
+                            </span>
+                            {!envStatus.openai_key_set && (
+                                <input
+                                    className="input"
+                                    type="password"
+                                    placeholder="OpenAI API key"
+                                    value={apiKeys?.api_key ?? ''}
+                                    onChange={(e) => onApiKeysChange?.({ ...apiKeys!, api_key: e.target.value })}
+                                    disabled={disabled}
+                                    style={{ fontSize: '0.8rem', marginBottom: 6 }}
+                                />
+                            )}
+                            {config.use_era5_data && !envStatus.arraylake_key_set && (
+                                <input
+                                    className="input"
+                                    type="password"
+                                    placeholder="Arraylake API key (for ERA5)"
+                                    value={apiKeys?.arraylake_api_key ?? ''}
+                                    onChange={(e) => onApiKeysChange?.({ ...apiKeys!, arraylake_api_key: e.target.value })}
+                                    disabled={disabled}
+                                    style={{ fontSize: '0.8rem' }}
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* DestinE token status */}
+                    {config.use_destine_data && envStatus && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            fontSize: '0.75rem', marginTop: 4,
+                            color: envStatus.destine_token_exists ? 'var(--accent)' : '#f59e0b',
+                        }}>
+                            {envStatus.destine_token_exists
+                                ? <><Check size={12} /> DestinE token found</>
+                                : <><AlertTriangle size={12} /> DestinE token missing — run desp-authentication.py</>
+                            }
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* -- Toggle chip --------------------------------------------------------- */
+function Toggle({
+    icon,
+    label,
+    help,
+    checked,
+    onChange,
+    disabled,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    help: string;
+    checked: boolean;
+    onChange: (v: boolean) => void;
+    disabled?: boolean;
+}) {
+    return (
+        <button
+            onClick={() => !disabled && onChange(!checked)}
+            title={help}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '5px 10px',
+                borderRadius: 6,
+                border: `1px solid ${checked ? 'var(--accent)' : 'var(--border)'}`,
+                background: checked ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                color: checked ? 'var(--accent)' : 'var(--text-secondary)',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                fontSize: '0.82rem',
+                fontFamily: 'var(--font)',
+                opacity: disabled ? 0.5 : 1,
+                transition: 'all 0.2s',
+            }}
+        >
+            {icon}
+            {label}
+        </button>
+    );
+}

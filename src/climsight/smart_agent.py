@@ -41,7 +41,6 @@ from tools.image_viewer import create_image_viewer_tool
 
 #Import for working Path
 import uuid
-import streamlit as st
 from pathlib import Path
 try:
     from aitta_client import Model, Client
@@ -77,11 +76,14 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         temperature = 1
 
 
-    if 'session_uuid' not in st.session_state:
-        st.session_state.session_uuid = str(uuid.uuid4())
+    # Get or create session thread_id from environment
+    thread_id = os.environ.get("CLIMSIGHT_THREAD_ID", "")
+    if not thread_id:
+        thread_id = str(uuid.uuid4())
+        os.environ["CLIMSIGHT_THREAD_ID"] = thread_id
 
     # Create working directory
-    work_dir = Path("tmp/sandbox") / st.session_state.session_uuid
+    work_dir = Path("tmp/sandbox") / thread_id
     work_dir.mkdir(parents=True, exist_ok=True)
     work_dir_str = str(work_dir.resolve())
 

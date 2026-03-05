@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 class StreamHandler(BaseCallbackHandler):
     """
     Handles streaming output from LLM and agent workflow progress.
+    Works with any container that has a display method (or None for headless mode).
     """
 
     def __init__(self, container=None, container2=None, display_method="markdown"):
@@ -40,12 +41,7 @@ class StreamHandler(BaseCallbackHandler):
                 try:
                     display_function(self.text)
                 except Exception as e:
-                    # Streamlit context not available (e.g., running in worker thread)
-                    # Log the message instead
-                    if "NoSessionContext" in str(type(e).__name__):
-                        logger.debug(f"Streamlit context not available, skipping display: {self.text[:100]}")
-                    else:
-                        logger.error(f"Error displaying text: {e}")
+                    logger.debug(f"Display unavailable, skipping: {self.text[:100]}")
             else:
                 raise ValueError(f"Invalid display_method: {self.display_method}")
                 
@@ -56,11 +52,7 @@ class StreamHandler(BaseCallbackHandler):
                 try:
                     display_function(self.reference_text)
                 except Exception as e:
-                    # Streamlit context not available (e.g., running in worker thread)
-                    if "NoSessionContext" in str(type(e).__name__):
-                        logger.debug(f"Streamlit context not available, skipping reference display")
-                    else:
-                        logger.error(f"Error displaying reference text: {e}")
+                    logger.debug(f"Reference display unavailable, skipping")
             else:
                 raise ValueError(f"Invalid display_method: {self.display_method}")
 
@@ -71,12 +63,7 @@ class StreamHandler(BaseCallbackHandler):
                 try:
                     display_function(self.progress_text)
                 except Exception as e:
-                    # Streamlit context not available (e.g., running in worker thread)
-                    # This is expected when agents run in parallel
-                    if "NoSessionContext" in str(type(e).__name__):
-                        logger.debug(f"Progress update (no UI context): {self.progress_text}")
-                    else:
-                        logger.error(f"Error displaying progress: {e}")
+                    logger.debug(f"Progress update (no UI context): {self.progress_text}")
 
     def get_text(self):
         return self.text

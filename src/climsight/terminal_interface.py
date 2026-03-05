@@ -17,7 +17,7 @@ from climsight_engine import llm_request, forming_request, location_request
 from data_container import DataContainer
 
 from extract_climatedata_functions import plot_climate_data
-from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths
+from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths, clean_sandbox
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     thread_id = ensure_thread_id()
     sandbox_paths = get_sandbox_paths(thread_id)
     ensure_sandbox_dirs(sandbox_paths)
+    clean_sandbox(sandbox_paths)
 
     if not isinstance(skip_llm_call, bool):
         logging.error(f"skip_llm_call must be bool")
@@ -149,15 +150,20 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     # Record the start time
     start_time = time.time()
 
-    # RAG
+    # RAG — safe defaults when RAG is off or loading fails
+    ipcc_rag_ready = False
+    ipcc_rag_db = None
+    general_rag_ready = False
+    general_rag_db = None
+
     if not skip_llm_call and rag_activated:
         try:
             logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
             ipcc_rag_ready, ipcc_rag_db = load_rag(config, openai_api_key=api_key, db_type='ipcc')
         except Exception as e:
             logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
-            rag_ready = False
-            rag_db = None
+            ipcc_rag_ready = False
+            ipcc_rag_db = None
         try:
             logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
             general_rag_ready, general_rag_db = load_rag(config, openai_api_key=api_key, db_type='general')
@@ -235,7 +241,16 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             print_verbose(verbose, "")    
             print_verbose(verbose, output)            
             print_verbose(verbose, "")    
-            print_verbose(verbose, "|=============================================================================")    
+            print_verbose(verbose, "|=============================================================================")
+
+            # Save report to sandbox
+            report_path = os.path.join(sandbox_paths.get("results_dir", ""), "report.md")
+            try:
+                with open(report_path, "w", encoding="utf-8") as f:
+                    f.write(output)
+                print_verbose(verbose, f"\nReport saved to: {report_path}")
+            except Exception as e:
+                logger.warning(f"Could not save report: {e}")
         else:
             output = content_message.format(**input_params)
             print_verbose(verbose, "|============================ Prompt after formatting:  ======================")    

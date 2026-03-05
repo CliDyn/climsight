@@ -14,21 +14,17 @@ from typing import Dict, List, Tuple
 logger = logging.getLogger(__name__)
 
 
-def ensure_thread_id(session_state=None, existing_thread_id: str = "") -> str:
-    """Ensure a stable session thread_id across Streamlit/CLI runs."""
+def ensure_thread_id(existing_thread_id: str = "") -> str:
+    """Ensure a stable session thread_id."""
     thread_id = existing_thread_id or ""
 
-    if not thread_id and session_state is not None:
-        thread_id = session_state.get("thread_id", "")
+    if not thread_id:
+        thread_id = os.environ.get("CLIMSIGHT_THREAD_ID", "")
 
     if not thread_id:
         thread_id = uuid.uuid4().hex
 
-    if session_state is not None:
-        session_state["thread_id"] = thread_id
-
-    # Expose to non-Streamlit tools (CLI, background workers).
-    # CRITICAL: Always update (not setdefault) to ensure all tools use the same thread_id
+    # Expose to all tools via environment variable.
     os.environ["CLIMSIGHT_THREAD_ID"] = thread_id
 
     return thread_id
@@ -53,6 +49,25 @@ def ensure_sandbox_dirs(paths: Dict[str, str]) -> None:
             continue
         os.makedirs(path, exist_ok=True)
         logger.debug("Ensured sandbox dir %s: %s", key, path)
+
+
+def clean_sandbox(paths: Dict[str, str]) -> None:
+    """Remove and recreate data subdirectories so each analysis starts fresh.
+
+    Only wipes ``results_dir``, ``climate_data_dir``, ``era5_data_dir``, and
+    ``destine_data_dir``.  The root sandbox (``uuid_main_dir``) is kept.
+    """
+    import shutil
+
+    keys_to_clean = ("results_dir", "climate_data_dir", "era5_data_dir", "destine_data_dir")
+    for key in keys_to_clean:
+        path = paths.get(key, "")
+        if not path:
+            continue
+        if os.path.exists(path):
+            shutil.rmtree(path)
+            logger.info("Cleaned sandbox dir %s: %s", key, path)
+        os.makedirs(path, exist_ok=True)
 
 
 def write_climate_data_manifest(

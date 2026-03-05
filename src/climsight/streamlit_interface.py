@@ -22,7 +22,7 @@ from climsight_engine import normalize_longitude, llm_request, forming_request, 
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
 from climate_data_providers import get_available_providers
-from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths
+from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths, clean_sandbox
 
 #ui for saving docs
 from datetime import datetime
@@ -45,7 +45,8 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         None
     """
     # Ensure sandbox exists for the current session.
-    thread_id = ensure_thread_id(session_state=st.session_state)
+    thread_id = ensure_thread_id(existing_thread_id=st.session_state.get("thread_id", ""))
+    st.session_state["thread_id"] = thread_id
     sandbox_paths = get_sandbox_paths(thread_id)
     ensure_sandbox_dirs(sandbox_paths)
   
@@ -293,6 +294,9 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
 
         # Update config with the selected LLM mode
         #config['llmModeKey'] = "direct_llm" if llmModeKey_box == "Direct" else "agent_llm"
+        # Clean sandbox before each new analysis
+        clean_sandbox(sandbox_paths)
+
         config['show_add_info'] = show_add_info
         config['analysis_mode'] = analysis_mode
         config['use_smart_agent'] = smart_agent

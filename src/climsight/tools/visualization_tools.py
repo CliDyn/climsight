@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-import streamlit as st
+
 
 try:
     from ..config import API_KEY as _API_KEY
@@ -75,7 +75,6 @@ def list_plotting_data_files(dummy_arg: str = "") -> str:
     Returns a flat list of all available file paths using relative paths.
     """
     import os
-    import streamlit as st
     
     all_files = []
     cwd = os.getcwd()
@@ -90,9 +89,7 @@ def list_plotting_data_files(dummy_arg: str = "") -> str:
                 all_files.append(f"STATIC: {full_path}")
     
     # Part 2: List all files from the current sandbox directory
-    thread_id = st.session_state.get("thread_id") if hasattr(st, "session_state") else None
-    if not thread_id:
-        thread_id = os.environ.get("CLIMSIGHT_THREAD_ID")
+    thread_id = os.environ.get("CLIMSIGHT_THREAD_ID")
 
     if thread_id:
         sandbox_dir = os.path.join("tmp", "sandbox", thread_id)
@@ -139,7 +136,6 @@ def wise_agent(query: str) -> str:
     Returns:
         str: AI's advice on visualization
     """
-    import streamlit as st
     import logging
     import yaml
     import os
@@ -157,7 +153,7 @@ def wise_agent(query: str) -> str:
     provider = wise_agent_config.get("provider", "openai")  # Default to OpenAI
     
     # Get dataset information from session state
-    datasets_text = st.session_state.get("viz_datasets_text", "")
+    datasets_text = os.environ.get("VIZ_DATASETS_TEXT", "")
     
     if not datasets_text:
         datasets_text = "No dataset information available"
@@ -211,12 +207,11 @@ Please provide visualization advice based on this information.
     try:
         if provider.lower() == "anthropic":
             # Use Anthropic's Claude
-            try:
-                anthropic_api_key = st.secrets["general"]["anthropic_api_key"]
-                logging.info("Using Anthropic Claude for wise_agent")
-            except KeyError:
-                logging.error("Anthropic API key not found in .streamlit/secrets.toml")
-                return "Error: Anthropic API key not found in .streamlit/secrets.toml. Please add it to use WISE_AGENT with Claude."
+            anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+            if not anthropic_api_key:
+                logging.error("ANTHROPIC_API_KEY not set in environment")
+                return "Error: ANTHROPIC_API_KEY not set in environment. Please set it to use WISE_AGENT with Claude."
+            logging.info("Using Anthropic Claude for wise_agent")
             
             anthropic_model = wise_agent_config.get("anthropic_model", "claude-3-7-sonnet-20250219")
             

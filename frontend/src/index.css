@@ -1,0 +1,617 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ═══════════════════════════════════════════════════════════
+   CLIMSIGHT — Scientific Intelligence Design System
+   Inspired by Nature, Science, and academic data platforms
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Dark Theme (default) ──────────────────────────────── */
+:root {
+  --bg-primary: #08090d;
+  --bg-secondary: #0f1117;
+  --bg-card: #13151e;
+  --bg-card-hover: #191c28;
+  --bg-elevated: #1a1d2a;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --text-primary: #e8eaf0;
+  --text-secondary: #8b8fa3;
+  --text-muted: #4a4e63;
+  --accent: #5eaeff;
+  --accent-subtle: rgba(94, 174, 255, 0.08);
+  --accent-glow: rgba(94, 174, 255, 0.15);
+  --success: #3dd68c;
+  --warning: #f0b429;
+  --error: #ef6b6b;
+  --glass-bg: rgba(15, 17, 23, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.04);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Light Theme ───────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-primary: #f6f7f9;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8f9fb;
+  --bg-elevated: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --text-primary: #111318;
+  --text-secondary: #5c5f6e;
+  --text-muted: #a0a3b1;
+  --accent: #2d7dd2;
+  --accent-subtle: rgba(45, 125, 210, 0.06);
+  --accent-glow: rgba(45, 125, 210, 0.10);
+  --success: #0f9960;
+  --warning: #c87c11;
+  --error: #cf3030;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: var(--font);
+  font-size: 15px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
+  line-height: 1.5;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── Scrollbar — nearly invisible ──────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── Selection ─────────────────────────────────────────── */
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Glass Card ────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+
+.glass:hover {
+  border-color: var(--border);
+}
+
+/* ── App Shell ─────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top Bar ───────────────────────────────────────────── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 48px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.icon-box {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-glow);
+}
+
+/* ── Theme Toggle ──────────────────────────────────────── */
+.theme-toggle {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  font-family: var(--font);
+  letter-spacing: 0.02em;
+  transition: all var(--transition);
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+/* ── Split Layout ──────────────────────────────────────── */
+.split-layout {
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+.map-pane {
+  position: relative;
+  overflow: hidden;
+}
+
+.content-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--bg-primary);
+}
+
+/* ── Button ────────────────────────────────────────────── */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.88rem;
+  font-family: var(--font);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 12px var(--accent-glow);
+  transform: translateY(-0.5px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  filter: brightness(0.95);
+}
+
+.btn-primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+/* ── Input ─────────────────────────────────────────────── */
+.input {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-family: var(--font);
+  transition: all var(--transition);
+  width: 100%;
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235c5f6e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px;
+}
+
+/* ── Badges ────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.badge-success {
+  background: rgba(61, 214, 140, 0.08);
+  color: var(--success);
+  border: 1px solid rgba(61, 214, 140, 0.12);
+}
+
+.badge-warning {
+  background: rgba(240, 180, 41, 0.08);
+  color: var(--warning);
+  border: 1px solid rgba(240, 180, 41, 0.12);
+}
+
+.badge-error {
+  background: rgba(239, 107, 107, 0.08);
+  color: var(--error);
+  border: 1px solid rgba(239, 107, 107, 0.12);
+}
+
+.badge-info {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border: 1px solid var(--accent-glow);
+}
+
+/* ── Spinner ───────────────────────────────────────────── */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Leaflet overrides ─────────────────────────────────── */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: var(--bg-primary) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REPORT — Scientific Paper Typography
+   ═══════════════════════════════════════════════════════════ */
+.report-content {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.85;
+  letter-spacing: -0.005em;
+}
+
+/* ── Headings ──────────────────────────────────────────── */
+.report-content h1 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.3;
+  margin: 2.2rem 0 1rem;
+  color: var(--text-primary);
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--accent);
+}
+
+.report-content h1:first-child {
+  margin-top: 0;
+}
+
+.report-content h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  margin: 2rem 0 0.7rem;
+  color: var(--text-primary);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.report-content h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.4;
+  margin: 1.6rem 0 0.5rem;
+  color: var(--accent);
+}
+
+.report-content h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1.2rem 0 0.3rem;
+  color: var(--text-primary);
+  letter-spacing: 0;
+}
+
+/* ── Body text ─────────────────────────────────────────── */
+.report-content p {
+  margin: 0.5rem 0 0.7rem;
+  line-height: 1.85;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* ── Lists — explicit styles to override resets ────────── */
+.report-content ul,
+.report-content ol {
+  margin: 0.5rem 0 0.7rem;
+  padding-left: 1.4rem;
+}
+
+.report-content ul {
+  list-style-type: disc;
+}
+
+.report-content ol {
+  list-style-type: decimal;
+}
+
+.report-content ul ul {
+  list-style-type: circle;
+  margin: 0.15rem 0;
+}
+
+.report-content ul ul ul {
+  list-style-type: square;
+}
+
+.report-content ol ol {
+  list-style-type: lower-alpha;
+}
+
+.report-content li {
+  margin: 0.2rem 0;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  display: list-item;
+  padding-left: 0.2rem;
+}
+
+.report-content li::marker {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Emphasis ──────────────────────────────────────────── */
+.report-content strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.report-content em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+/* ── Horizontal rule ───────────────────────────────────── */
+.report-content hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 1.8rem 0;
+}
+
+/* ── Inline code ───────────────────────────────────────── */
+.report-content code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--bg-elevated);
+  color: var(--accent);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+/* ── Code block ────────────────────────────────────────── */
+.report-content pre {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+  line-height: 1.55;
+}
+
+.report-content pre code {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+/* ── Blockquote ────────────────────────────────────────── */
+.report-content blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 1rem 0;
+  padding: 0.5rem 0 0.5rem 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+  background: var(--accent-subtle);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.report-content blockquote p {
+  margin: 0.2rem 0;
+}
+
+/* ── Table — scientific data presentation ──────────────── */
+.report-content table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* Make tables scrollable when they overflow */
+.report-content div:has(> table),
+.report-content table {
+  display: block;
+  max-height: 45vh;
+  overflow: auto;
+}
+
+/* Reset table children to table display */
+.report-content table thead {
+  display: table-header-group;
+}
+
+.report-content table tbody {
+  display: table-row-group;
+}
+
+.report-content table tr {
+  display: table-row;
+}
+
+.report-content table th,
+.report-content table td {
+  display: table-cell;
+}
+
+.report-content th,
+.report-content td {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.report-content th {
+  background: var(--bg-elevated);
+  font-weight: 600;
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.report-content td {
+  color: var(--text-secondary);
+}
+
+.report-content tbody tr:nth-of-type(even) {
+  background: var(--accent-subtle);
+}
+
+.report-content tbody tr {
+  transition: background var(--transition);
+}
+
+.report-content tbody tr:hover {
+  background: var(--accent-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS PANEL — refined controls
+   ═══════════════════════════════════════════════════════════ */
+.settings-header {
+  font-family: var(--font) !important;
+  letter-spacing: -0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 35vh 1fr;
+  }
+
+  .content-pane {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* ── Subtle entrance animations ────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.report-content {
+  animation: fadeIn 0.4s ease-out;
+}

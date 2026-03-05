@@ -4,7 +4,6 @@ These functions handle tasks such as location lookup,
 distance calculations, and geographic attributes 
 extraction.
 """
-import streamlit as st
 import requests
 from shapely.geometry import Point, Polygon, LineString
 import geopandas as gpd

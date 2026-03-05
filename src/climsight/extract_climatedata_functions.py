@@ -8,7 +8,6 @@ For new code, prefer using climate_data_providers directly:
     from climate_data_providers import get_climate_data_provider, ClimateDataResult
 """
 
-import streamlit as st
 import xarray as xr
 import numpy as np
 import pandas as pd
