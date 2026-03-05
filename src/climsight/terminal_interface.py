@@ -17,7 +17,7 @@ from climsight_engine import llm_request, forming_request, location_request
 from data_container import DataContainer
 
 from extract_climatedata_functions import plot_climate_data
-from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths
+from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths, clean_sandbox
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +62,7 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     thread_id = ensure_thread_id()
     sandbox_paths = get_sandbox_paths(thread_id)
     ensure_sandbox_dirs(sandbox_paths)
+    clean_sandbox(sandbox_paths)
 
     if not isinstance(skip_llm_call, bool):
         logging.error(f"skip_llm_call must be bool")
@@ -240,7 +241,16 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
             print_verbose(verbose, "")    
             print_verbose(verbose, output)            
             print_verbose(verbose, "")    
-            print_verbose(verbose, "|=============================================================================")    
+            print_verbose(verbose, "|=============================================================================")
+
+            # Save report to sandbox
+            report_path = os.path.join(sandbox_paths.get("results_dir", ""), "report.md")
+            try:
+                with open(report_path, "w", encoding="utf-8") as f:
+                    f.write(output)
+                print_verbose(verbose, f"\nReport saved to: {report_path}")
+            except Exception as e:
+                logger.warning(f"Could not save report: {e}")
         else:
             output = content_message.format(**input_params)
             print_verbose(verbose, "|============================ Prompt after formatting:  ======================")    

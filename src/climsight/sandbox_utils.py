@@ -51,6 +51,25 @@ def ensure_sandbox_dirs(paths: Dict[str, str]) -> None:
         logger.debug("Ensured sandbox dir %s: %s", key, path)
 
 
+def clean_sandbox(paths: Dict[str, str]) -> None:
+    """Remove and recreate data subdirectories so each analysis starts fresh.
+
+    Only wipes ``results_dir``, ``climate_data_dir``, ``era5_data_dir``, and
+    ``destine_data_dir``.  The root sandbox (``uuid_main_dir``) is kept.
+    """
+    import shutil
+
+    keys_to_clean = ("results_dir", "climate_data_dir", "era5_data_dir", "destine_data_dir")
+    for key in keys_to_clean:
+        path = paths.get(key, "")
+        if not path:
+            continue
+        if os.path.exists(path):
+            shutil.rmtree(path)
+            logger.info("Cleaned sandbox dir %s: %s", key, path)
+        os.makedirs(path, exist_ok=True)
+
+
 def write_climate_data_manifest(
     df_list: List[Dict],
     climate_data_dir: str,

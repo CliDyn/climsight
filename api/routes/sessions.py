@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from session_manager import SessionManager
-from sandbox_utils import ensure_thread_id, get_sandbox_paths, ensure_sandbox_dirs
+from sandbox_utils import ensure_thread_id, get_sandbox_paths, ensure_sandbox_dirs, clean_sandbox
 from climate_data_providers import get_available_providers
 
 router = APIRouter()

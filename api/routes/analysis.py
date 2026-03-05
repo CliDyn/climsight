@@ -17,7 +17,7 @@ from fastapi.responses import Response, FileResponse
 from starlette.background import BackgroundTask
 
 from session_manager import SessionManager
-from sandbox_utils import ensure_thread_id, get_sandbox_paths, ensure_sandbox_dirs
+from sandbox_utils import ensure_thread_id, get_sandbox_paths, ensure_sandbox_dirs, clean_sandbox
 from stream_handler import StreamHandler
 
 router = APIRouter()
@@ -312,7 +312,7 @@ def _run_analysis(
 
     sandbox_paths = get_sandbox_paths(thread_id)
     ensure_sandbox_dirs(sandbox_paths)
-    # NOTE: Do NOT set os.environ["CLIMSIGHT_THREAD_ID"] — not thread-safe.
+    clean_sandbox(sandbox_paths)  # wipe stale data from prior runs
     # thread_id is passed through input_params instead.
 
     # Location request
