@@ -149,15 +149,20 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
     # Record the start time
     start_time = time.time()
 
-    # RAG
+    # RAG — safe defaults when RAG is off or loading fails
+    ipcc_rag_ready = False
+    ipcc_rag_db = None
+    general_rag_ready = False
+    general_rag_db = None
+
     if not skip_llm_call and rag_activated:
         try:
             logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
             ipcc_rag_ready, ipcc_rag_db = load_rag(config, openai_api_key=api_key, db_type='ipcc')
         except Exception as e:
             logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
-            rag_ready = False
-            rag_db = None
+            ipcc_rag_ready = False
+            ipcc_rag_db = None
         try:
             logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
             general_rag_ready, general_rag_db = load_rag(config, openai_api_key=api_key, db_type='general')
