@@ -324,30 +324,45 @@ def retrieve_destine_data(
 
         logger.info(f"Sending earthkit.data request to polytope at {POLYTOPE_ADDRESS}...")
 
-        # --- 6. Download via earthkit.data ---
-        data = earthkit.data.from_source(
-            "polytope", "destination-earth",
-            request,
-            address=POLYTOPE_ADDRESS,
-            stream=False,
-        )
-        ds = data.to_xarray()
-        logger.info(f"Received xarray dataset: {ds}")
+        # --- 6. Download via earthkit.data with Retry Logic ---
+        import time
+        max_retries = 3
+        ds = None
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                data = earthkit.data.from_source(
+                    "polytope", "destination-earth",
+                    request,
+                    address=POLYTOPE_ADDRESS,
+                    stream=False,
+                )
+                ds = data.to_xarray()
+                logger.info(f"Received xarray dataset on attempt {attempt}: {ds}")
+                
+                # --- 7. Save as Zarr ---
+                temp_zarr_path = local_zarr_path + ".tmp"
+                if os.path.exists(temp_zarr_path):
+                    import shutil
+                    shutil.rmtree(temp_zarr_path)
 
-        # --- 7. Save as Zarr ---
-        temp_zarr_path = local_zarr_path + ".tmp"
-        if os.path.exists(temp_zarr_path):
-            shutil.rmtree(temp_zarr_path)
+                # Clear encoding for portability
+                for var in ds.data_vars:
+                    ds[var].encoding.clear()
+                for coord in ds.coords:
+                    ds[coord].encoding.clear()
 
-        # Clear encoding for portability
-        for var in ds.data_vars:
-            ds[var].encoding.clear()
-        for coord in ds.coords:
-            ds[coord].encoding.clear()
+                ds.to_zarr(temp_zarr_path, mode='w')
+                os.rename(temp_zarr_path, local_zarr_path)
+                logger.info(f"Saved Zarr: {local_zarr_path}")
+                break  # Success, exit the retry loop
+                
+            except Exception as e:
+                logger.warning(f"Attempt {attempt}/{max_retries} failed for DestinE retrieval: {e}")
+                if attempt == max_retries:
+                    raise  # Re-raise the exception if we've exhausted all retries
+                time.sleep(5 * attempt)  # Simple backoff: 5s, 10s
 
-        ds.to_zarr(temp_zarr_path, mode='w')
-        os.rename(temp_zarr_path, local_zarr_path)
-        logger.info(f"Saved Zarr: {local_zarr_path}")
 
         # --- 8. Return result ---
         return {
