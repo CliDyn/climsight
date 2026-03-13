@@ -245,6 +245,8 @@ def retrieve_era5_data(
             # Must do spatial selection FIRST (with method="nearest"), THEN time slicing.
             center_lat = (min_latitude + max_latitude) / 2.0
             center_lon = (min_longitude + max_longitude) / 2.0
+            # Normalize longitude to 0-360 range (ERA5 Arraylake convention)
+            center_lon = center_lon % 360
 
             logging.info(f"Point query detected: selecting nearest neighbor to {center_lat}, {center_lon}")
 

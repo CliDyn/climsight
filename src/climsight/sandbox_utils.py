@@ -58,6 +58,7 @@ def clean_sandbox(paths: Dict[str, str]) -> None:
     ``destine_data_dir``.  The root sandbox (``uuid_main_dir``) is kept.
     """
     import shutil
+    import time
 
     keys_to_clean = ("results_dir", "climate_data_dir", "era5_data_dir", "destine_data_dir")
     for key in keys_to_clean:
@@ -65,7 +66,20 @@ def clean_sandbox(paths: Dict[str, str]) -> None:
         if not path:
             continue
         if os.path.exists(path):
-            shutil.rmtree(path)
+            # Retry logic: macOS can raise [Errno 66] "Directory not empty"
+            # when .DS_Store or spotlight metadata is recreated mid-delete.
+            for attempt in range(3):
+                try:
+                    shutil.rmtree(path)
+                    break
+                except OSError as exc:
+                    logger.warning(
+                        "clean_sandbox attempt %d for %s failed: %s",
+                        attempt + 1, path, exc,
+                    )
+                    time.sleep(0.2)
+            else:
+                shutil.rmtree(path, ignore_errors=True)
             logger.info("Cleaned sandbox dir %s: %s", key, path)
         os.makedirs(path, exist_ok=True)
 
