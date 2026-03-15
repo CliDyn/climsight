@@ -24,3 +24,5 @@ era5_data/
 eval/
 node_modules/
 dist/
+climsight.egg-info/
+.venv/
