@@ -3,9 +3,33 @@ Set of functions dedicated to economic and demographic data.
 This module includes tools for population studies, economic impact
 assessments, and demographic trends extraction/analysis.
 """
+import logging
 import pandas as pd
 import datetime
 import matplotlib.pyplot as plt
+
+logger = logging.getLogger(__name__)
+
+NUMERIC_POPULATION_COLUMNS = [
+    'TPopulation1July',
+    'PopDensity',
+    'PopGrowthRate',
+    'LEx',
+    'NetMigrations',
+]
+
+
+def _normalize_positive_int(value, field_name):
+    """Return a validated positive integer for window sizes and similar inputs."""
+    try:
+        normalized = int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{field_name} must be a positive integer, got {value!r}.") from exc
+
+    if normalized <= 0:
+        raise ValueError(f"{field_name} must be a positive integer, got {value!r}.")
+    return normalized
+
 
 def get_population(pop_path, country):
     """
@@ -23,15 +47,18 @@ def get_population(pop_path, country):
         - LEx (Life Expactancy at Birth, both sexes, in years)
         - NetMigrations (Number of Migrants, thousands)    
     """
-    pop_dat = pd.read_csv(pop_path)
+    pop_dat = pd.read_csv(pop_path, low_memory=False)
 
     unique_locations = pop_dat['Location'].unique()
     my_location = country
 
     # check if data is available for the country that we are currently investigating
     if my_location in unique_locations:
-        country_data = pop_dat[pop_dat['Location'] == country]
-        red_pop_data = country_data[['Time', 'TPopulation1July', 'PopDensity', 'PopGrowthRate', 'LEx', 'NetMigrations']]
+        country_data = pop_dat[pop_dat['Location'] == country].copy()
+        red_pop_data = country_data[['Time', 'TPopulation1July', 'PopDensity', 'PopGrowthRate', 'LEx', 'NetMigrations']].copy()
+        red_pop_data['Time'] = pd.to_numeric(red_pop_data['Time'], errors='coerce')
+        for column in NUMERIC_POPULATION_COLUMNS:
+            red_pop_data[column] = pd.to_numeric(red_pop_data[column], errors='coerce')
         return red_pop_data
     else:
         print(f"No population data available {'for' +  country if country else ''}.")
@@ -106,14 +133,45 @@ def calc_mean(years, dataset):
     Returns:
     pandas data frame: A data frame with the means calculated for the given time span.
     """
-    years = str(years) + 'YE'
-    dataset.set_index('Time', inplace=True) # Set the 'Time' column as the index
-    numeric_columns = dataset.select_dtypes(include='number')
-    dataset = numeric_columns.resample(years).mean() # Resample the numeric data in x-year intervals and calculate the mean
-    dataset.reset_index(inplace=True) # Reset the index to have 'Time' as a regular column
-    dataset['Time'] = dataset['Time'].dt.year # and normal year format
-    
-    return dataset
+    years = _normalize_positive_int(years, 'years')
+
+    if dataset is None:
+        return None
+    if dataset.empty:
+        return dataset.copy()
+    if 'Time' not in dataset.columns:
+        raise KeyError("dataset must contain a 'Time' column.")
+
+    working = dataset.copy()
+    working['Time'] = pd.to_datetime(working['Time'], errors='coerce')
+    working = working.dropna(subset=['Time']).sort_values('Time').reset_index(drop=True)
+
+    numeric_columns = [
+        column for column in working.select_dtypes(include='number').columns
+        if column != 'Time'
+    ]
+    if not numeric_columns:
+        return working[['Time']].iloc[0:0].copy()
+
+    # Ignore rows that carry only a year marker but no actual population values.
+    working = working.dropna(subset=numeric_columns, how='all')
+    if working.empty:
+        return pd.DataFrame(columns=['Time', *numeric_columns])
+
+    base_year = working['Time'].dt.year.iloc[0]
+    working['_bucket'] = ((working['Time'].dt.year - base_year) // years).astype(int)
+
+    aggregated = (
+        working
+        .groupby('_bucket', as_index=False)
+        .agg({
+            'Time': 'min',
+            **{column: 'mean' for column in numeric_columns},
+        })
+    )
+    aggregated['Time'] = aggregated['Time'].dt.year.astype(int)
+
+    return aggregated[['Time', *numeric_columns]]
  
 def x_year_mean_population(pop_path, country, year_step=1, start_year=None, end_year=None):
     """
@@ -129,23 +187,31 @@ def x_year_mean_population(pop_path, country, year_step=1, start_year=None, end_
     Returns:
     pandas data frame: A data frame containing the mean population data values for a given time period.
     """
+    year_step = _normalize_positive_int(year_step, 'year_step')
+
     # Check if start_year and end_year are within the allowed range
     if (start_year is not None and (start_year < 1950 or start_year > 2100)) or \
        (end_year is not None and (end_year < 1950 or end_year > 2100)):
-        print("Warning: Start and end years must be between 1950 and 2100.")
+        logger.warning("Start and end years must be between 1950 and 2100.")
+        return None
+    if start_year is not None and end_year is not None and start_year > end_year:
+        logger.warning("start_year must be less than or equal to end_year.")
         return None
     
     population_xY_mean = get_population(pop_path, country)
     if population_xY_mean is None:
-        print(f"No population data available for {country}.")
+        logger.warning(f"No population data available for {country}.")
         return None
     column_to_remove = ['LEx', 'NetMigrations'] # change here if less / other columns are wanted
     
 
     if not population_xY_mean.empty:
-        population_xY_mean = population_xY_mean.drop(columns=column_to_remove)
+        population_xY_mean = population_xY_mean.drop(columns=column_to_remove).copy()
 
-        population_xY_mean['Time'] = pd.to_datetime(population_xY_mean['Time'], format='%Y')
+        population_xY_mean['Time'] = pd.to_datetime(population_xY_mean['Time'], format='%Y', errors='coerce')
+        numeric_columns = ['TPopulation1July', 'PopDensity', 'PopGrowthRate']
+        for column in numeric_columns:
+            population_xY_mean[column] = pd.to_numeric(population_xY_mean[column], errors='coerce')
 
         # Filter data based on start_year and end_year
         if start_year is not None:
@@ -155,18 +221,15 @@ def x_year_mean_population(pop_path, country, year_step=1, start_year=None, end_
             end_year = max(min(end_year, 2100), 1950)
             population_xY_mean = population_xY_mean[population_xY_mean['Time'].dt.year <= end_year]
 
-        # Subdivide data into two data frames. One that contains the last complete x-year period (z-times the year_step) and the rest (modulo). For each data set the mean is calculated.
-        modulo_years = len(population_xY_mean['Time']) % year_step 
-        lastFullPeriodYear = population_xY_mean['Time'].dt.year.iloc[-1] - modulo_years  
-        FullPeriod = population_xY_mean[population_xY_mean['Time'].dt.year <= lastFullPeriodYear]
-        RestPeriod = population_xY_mean[population_xY_mean['Time'].dt.year > lastFullPeriodYear]
+        population_xY_mean = population_xY_mean.dropna(subset=['Time']).sort_values('Time').reset_index(drop=True)
+        population_xY_mean = population_xY_mean.dropna(subset=numeric_columns, how='all')
+        if population_xY_mean.empty:
+            logger.warning(f"No valid population rows available for {country} after filtering.")
+            return None
 
-        # calculate mean for each period
-        FullPeriodMean = calc_mean(year_step, FullPeriod)
-        RestPeriodMean = calc_mean(modulo_years - 1, RestPeriod)
-        RestPeriodMean = RestPeriodMean.iloc[1:] # drop first row as it will be same as last one of FullPeriodMean
-
-        combinedMean  = pd.concat([FullPeriodMean, RestPeriodMean], ignore_index=True) # combine back into one data set
+        combinedMean = calc_mean(year_step, population_xY_mean)
+        if combinedMean is None or combinedMean.empty:
+            return None
 
         new_column_names = {
             'TPopulation1July': 'TotalPopulationAsOf1July',
