@@ -31,7 +31,7 @@ logging.basicConfig(
 )
 
 # Load config
-config_path = os.getenv('CONFIG_PATH', 'config.yml')
+config_path = os.getenv('CONFIG_PATH', '../config.yml')
 with open(config_path, 'r') as file:
     config = yaml.safe_load(file)
 

@@ -13,14 +13,16 @@ import sys
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-load_dotenv()
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv(os.path.join(ROOT, ".env"))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 # Ensure src/climsight is on sys.path so engine imports work
-_src_dir = os.path.join(os.path.dirname(__file__), os.pardir, "src", "climsight")
+_src_dir = os.path.join(ROOT, "src", "climsight")
 sys.path.insert(0, os.path.abspath(_src_dir))
 
 from api.routes import sessions, analysis
