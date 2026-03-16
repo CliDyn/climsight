@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { LocateFixed } from 'lucide-react';
 
 // Custom SVG marker
 const pinIcon = L.divIcon({
@@ -37,26 +38,51 @@ function ClickHandler({ onClick }: { onClick: Props['onClick'] }) {
 
 export function MapPanel({ lat, lng, onClick, theme }: Props) {
     const mapRef = useRef<L.Map | null>(null);
+    const [locating, setLocating] = useState(false);
 
     useEffect(() => {
         mapRef.current?.flyTo([lat, lng], mapRef.current.getZoom(), { animate: true, duration: 0.6 });
     }, [lat, lng]);
 
+    const handleLocate = useCallback(() => {
+        if (!navigator.geolocation) return;
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                onClick(pos.coords.latitude, pos.coords.longitude);
+                mapRef.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 10, { animate: true, duration: 1 });
+                setLocating(false);
+            },
+            () => setLocating(false),
+            { enableHighAccuracy: true, timeout: 10000 },
+        );
+    }, [onClick]);
+
     return (
-        <MapContainer
-            center={[lat, lng]}
-            zoom={6}
-            ref={mapRef}
-            style={{ width: '100%', height: '100%' }}
-            zoomControl={false}
-        >
-            <TileLayer
-                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                url={TILES[theme]}
-                key={theme}
-            />
-            <Marker position={[lat, lng]} icon={pinIcon} />
-            <ClickHandler onClick={onClick} />
-        </MapContainer>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <MapContainer
+                center={[lat, lng]}
+                zoom={6}
+                ref={mapRef}
+                style={{ width: '100%', height: '100%' }}
+                zoomControl={false}
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                    url={TILES[theme]}
+                    key={theme}
+                />
+                <Marker position={[lat, lng]} icon={pinIcon} />
+                <ClickHandler onClick={onClick} />
+            </MapContainer>
+            <button
+                className="locate-btn"
+                onClick={handleLocate}
+                disabled={locating}
+                title="Go to my location"
+            >
+                <LocateFixed size={16} className={locating ? 'locate-spin' : ''} />
+            </button>
+        </div>
     );
 }
