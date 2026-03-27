@@ -29,7 +29,7 @@ except ImportError:
 
 try:
     import streamlit as st
-except ImportError:
+except Exception:
     st = None
 
 logger = logging.getLogger(__name__)
