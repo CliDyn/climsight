@@ -25,7 +25,7 @@ try:
     # Optional: Check for Streamlit to support session state if available
     try:
         import streamlit as st
-    except ImportError:
+    except Exception:
         st = None
 except ImportError as e:
     install_command = "pip install --upgrade xarray zarr arraylake pandas numpy pydantic langchain-core"
