@@ -73,19 +73,28 @@ OPENAI_API_KEY="sk-..."
 ARRAYLAKE_API_KEY="your-arraylake-key"
 ```
 
-### 4. Start the FastAPI backend
-
-```bash
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-The API runs on `http://localhost:8000`. Health check: `GET /health`.
-
-### 5. Start the React frontend
+### 4. Install frontend dependencies
 
 ```bash
 cd frontend
 npm install
+cd ..
+```
+
+> **Important:** Run `npm install` *before* starting the backend. If uvicorn is already running with `--reload`, the creation of `node_modules/` triggers a server restart, causing temporary `ETIMEDOUT` proxy errors in the frontend.
+
+### 5. Start the FastAPI backend
+
+```bash
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude 'frontend/node_modules/*'
+```
+
+The API runs on `http://localhost:8000`. Health check: `GET /health`.
+
+### 6. Start the React frontend
+
+```bash
+cd frontend
 npm run dev
 ```
 
