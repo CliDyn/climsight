@@ -176,7 +176,7 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
             return state
 
         # First, retrieve documents to get sources
-        docs = retriever.get_relevant_documents(input_params['user_message'])
+        docs = retriever.invoke(input_params['user_message'])
         sources_list = extract_sources(docs)
         # Get unique sources (filenames)
         unique_sources = list(set(sources_list))

@@ -527,7 +527,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
 
 
     # Run the agent
-    result = agent_executor(agent_input)
+    result = agent_executor.invoke(agent_input)
 
     # Extract the tool outputs
     wikipedia_results = []

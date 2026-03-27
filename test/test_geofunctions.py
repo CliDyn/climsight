@@ -12,6 +12,7 @@ import yaml
 import warnings
 import sys
 import os
+import logging
 import requests
 import requests_mock
 
@@ -23,14 +24,17 @@ if module_dir not in sys.path:
 
 
 from geo_functions import (
+    extract_current_land_use,
     get_location,
     where_is_point,
     get_adress_string,
     get_location_details,
     closest_shore_distance,
+    get_current_land_use_from_api,
     get_elevation_from_api,
     fetch_land_use,
     get_soil_from_api,
+    safe_get_soil_from_api,
     is_point_onland,
     is_point_in_inlandwater
 )
@@ -262,6 +266,22 @@ def test_mock_fetch_land_use(config_geo, requests_mock):
     current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
     assert current_land_use == exp_landuse, f"error in land use at point lat={lat}, lon={lon}"  
 
+
+@pytest.mark.mock_request
+def test_get_current_land_use_from_api_empty_response(requests_mock):
+    lat, lon = 46.0, 8.9
+    fetch_land_use.cache_clear()
+    mock_url = "http://overpass-api.de/api/interpreter"
+
+    requests_mock.get(mock_url, json={"elements": []})
+
+    current_land_use = get_current_land_use_from_api(lat, lon)
+    assert current_land_use is None
+
+
+def test_extract_current_land_use_handles_missing_elements():
+    assert extract_current_land_use({"elements": []}) is None
+
 #--------------------------------   get_soil_from_api  
 @pytest.mark.request
 def test_get_soil_from_api(config_geo):
@@ -291,5 +311,29 @@ def test_mock_get_soil_from_api(config_geo, requests_mock):
     soil = get_soil_from_api(lat, lon)
 
     assert soil == config_geo['test_location']['soil'], f'error in soil at point  lat={lat}, lon={lon}'
-    
 
+
+@pytest.mark.mock_request
+def test_safe_get_soil_from_api_invalid_json(requests_mock):
+    lat, lon = 46.1, 8.95
+    get_soil_from_api.cache_clear()
+    mock_url = f"https://rest.isric.org/soilgrids/v2.0/classification/query?lon={lon}&lat={lat}&number_classes=5"
+
+    requests_mock.get(mock_url, text="<html>temporary upstream error</html>")
+
+    soil = safe_get_soil_from_api(lat, lon)
+    assert soil is None
+
+
+def test_is_point_in_inlandwater_handles_no_matching_features(monkeypatch, caplog):
+    def _raise_no_matching_features(*args, **kwargs):
+        raise Exception("No matching features. Check query location, tags, and log.")
+
+    monkeypatch.setattr("geo_functions.ox.features.features_from_point", _raise_no_matching_features)
+
+    caplog.set_level(logging.INFO)
+    is_inland_water, water_body_status = is_point_in_inlandwater(46.82, 8.65)
+
+    assert is_inland_water is False
+    assert water_body_status == "The selected point is on land."
+    assert not any(record.levelno >= logging.ERROR for record in caplog.records)

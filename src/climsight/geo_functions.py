@@ -1,19 +1,20 @@
-""" 
-Collection of functions for geographic data processing. 
-These functions handle tasks such as location lookup, 
-distance calculations, and geographic attributes 
+"""
+Collection of functions for geographic data processing.
+These functions handle tasks such as location lookup,
+distance calculations, and geographic attributes
 extraction.
 """
-import requests
-from shapely.geometry import Point, Polygon, LineString
-import geopandas as gpd
-import pandas as pd
-from pyproj import Geod
-from requests.exceptions import Timeout
 from functools import lru_cache
-import os
 import logging
+import os
+
+import geopandas as gpd
 import osmnx as ox
+import pandas as pd
+import requests
+from pyproj import Geod
+from requests.exceptions import RequestException, Timeout
+from shapely.geometry import Point, Polygon, LineString
 
 
 logger = logging.getLogger(__name__)
@@ -102,19 +103,22 @@ def is_point_in_inlandwater(lat, lon, water_body_status="The selected point is o
 
     #request to openstreetmap OSM with osmnx
     no_error = True
-    try: 
+    is_inland_water = False
+    try:
         distance = 1000
-        tags = {'natural':'water'}
-        gdf = ox.features.features_from_point((lat,lon),tags,dist=distance)
+        tags = {'natural': 'water'}
+        gdf = ox.features.features_from_point((lat, lon), tags, dist=distance)
     except Exception as e:
-        logging.error(f"Unexpected error in request with osmnx ot OSM: {e}")
-        #raise RuntimeError(f"Unexpected error in get_location: {e}")
-        #if error, we assume point is on land
-        is_inland_water = False
+        message = str(e)
+        if "No matching features" in message:
+            logger.info("No inland water features found near (%s, %s)", lat, lon)
+        else:
+            logging.warning(f"Unexpected error in request with osmnx or OSM: {e}")
+        # If the lookup fails or returns nothing, continue as if the point is on land.
         no_error = False
 
     # Check if the point is within any of the geometries in the GeoDataFrame
-    if no_error:
+    if no_error and not gdf.empty:
         contains_point = gdf['geometry'].apply(lambda geom: geom.contains(point))
         is_inland_water = contains_point.any()
         inland_water_name, inland_water_type = None, None
@@ -373,6 +377,42 @@ def fetch_land_use(lon, lat):
     data = response.json()
     return data
 
+
+def extract_current_land_use(land_use_data):
+    """Return the first available OSM land-use tag from an Overpass response."""
+    if not isinstance(land_use_data, dict):
+        return None
+
+    elements = land_use_data.get("elements")
+    if not isinstance(elements, list):
+        return None
+
+    for element in elements:
+        if not isinstance(element, dict):
+            continue
+        tags = element.get("tags")
+        if not isinstance(tags, dict):
+            continue
+        land_use = tags.get("landuse")
+        if land_use:
+            return land_use
+    return None
+
+
+def get_current_land_use_from_api(lat, lon, fallback=None):
+    """Fetch and safely extract land-use data for a point."""
+    try:
+        land_use_data = fetch_land_use(lon, lat)
+    except (RequestException, ValueError, TypeError) as exc:
+        logger.warning("Land-use lookup unavailable for (%s, %s): %s", lat, lon, exc)
+        return fallback
+
+    land_use = extract_current_land_use(land_use_data)
+    if land_use is None:
+        logger.info("No land-use feature matched (%s, %s)", lat, lon)
+        return fallback
+    return land_use
+
 @lru_cache(maxsize=100)
 def get_soil_from_api(lat, lon):
     """
@@ -392,4 +432,17 @@ def get_soil_from_api(lat, lon):
         return data["wrb_class_name"]
     except Timeout:
         return "not found"
-  
+
+
+def safe_get_soil_from_api(lat, lon, fallback=None):
+    """Fetch soil data without surfacing optional-lookup failures to callers."""
+    try:
+        soil = get_soil_from_api(lat, lon)
+    except (RequestException, ValueError, KeyError, TypeError) as exc:
+        logger.warning("Soil lookup unavailable for (%s, %s): %s", lat, lon, exc)
+        return fallback
+
+    if soil in (None, "", "not found"):
+        logger.info("No soil classification found for (%s, %s)", lat, lon)
+        return fallback
+    return soil

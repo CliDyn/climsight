@@ -11,6 +11,7 @@ import os
 import sys
 import logging
 import shutil
+import asyncio
 import xarray as xr
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -35,6 +36,63 @@ except ImportError as e:
     ) from e
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def _patch_arraylake_close_client() -> None:
+    """Patch Arraylake finalizer to avoid noisy loop-cleanup crashes on GC."""
+    try:
+        from arraylake import api_utils
+    except Exception:
+        return
+
+    if getattr(api_utils, "_climsight_safe_close_patch", False):
+        return
+
+    def _safe_close_client(key):
+        client = api_utils._GLOBAL_CLIENTS.pop(key, None)
+
+        if client is None or client.is_closed:
+            return
+
+        client_loop = key.loop
+        sync_loop = api_utils.get_loop()
+
+        try:
+            running_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            running_loop = None
+
+        if client_loop.is_closed():
+            return
+
+        if client_loop is sync_loop:
+            try:
+                api_utils.sync(api_utils.close_async_context, client, "calling from sync", timeout=1)
+            except NotImplementedError as exc:
+                if "running loop" not in str(exc):
+                    raise
+                if client_loop.is_running():
+                    asyncio.run_coroutine_threadsafe(
+                        api_utils.close_async_context(client, f"closing from loop {id(client_loop)}"),
+                        client_loop,
+                    )
+                else:
+                    client_loop.run_until_complete(
+                        api_utils.close_async_context(client, f"closing from loop {id(client_loop)}")
+                    )
+        elif client_loop is running_loop:
+            coro = api_utils.close_async_context(client, f"closing from loop {id(client_loop)}")
+            if client_loop.is_running():
+                task = client_loop.create_task(coro)
+                api_utils.background_tasks.add(task)
+            else:
+                client_loop.run_until_complete(coro)
+
+    api_utils.close_client = _safe_close_client
+    api_utils._climsight_safe_close_patch = True
+
+
+_patch_arraylake_close_client()
 
 # =============================================================================
 # EARTHMOVER (ARRAYLAKE) IMPLEMENTATION
@@ -334,11 +392,6 @@ def retrieve_era5_data(
     finally:
         if ds is not None:
             ds.close()
-        if client is not None:
-            try:
-                client.close()
-            except Exception:
-                pass  # Suppress async loop conflicts during cleanup
 
 def create_era5_retrieval_tool(arraylake_api_key: str):
     """

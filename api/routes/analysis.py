@@ -84,6 +84,7 @@ def _load_references() -> dict:
 # ---------------------------------------------------------------------------
 # WebSocket Endpoint
 # ---------------------------------------------------------------------------
+# starts here 
 @router.websocket("/sessions/{session_id}/agent/ws")
 async def analysis_websocket(ws: WebSocket, session_id: str):
     """
@@ -362,7 +363,7 @@ def _run_analysis(
     else:
         stream_handler.update_progress = lambda msg: None  # no-op fallback
 
-    # Run LLM request
+    # Run LLM request, request starts here 
     output, input_params, content_message, _ = llm_request(
         content_message, input_params, config, api_key, api_key_local,
         stream_handler, ipcc_rag_ready, ipcc_rag_db,

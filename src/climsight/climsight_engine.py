@@ -88,10 +88,10 @@ from geo_functions import (
    get_location_details,
    closest_shore_distance,
    get_elevation_from_api,
-   fetch_land_use,
-   get_soil_from_api,
+   get_current_land_use_from_api,
    is_point_onland,
-   is_point_in_inlandwater
+   is_point_in_inlandwater,
+   safe_get_soil_from_api,
  )
 from environmental_functions import (
    fetch_biodiversity,
@@ -373,23 +373,16 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         elevation = "Not known"
         logging.exception(f"elevation = Not known: {e}")
     ##  == land use        
-    logger.debug(f"fetch_land_use from: {lat}, {lon}")        
+    logger.debug(f"fetch_land_use from: {lat}, {lon}")
     try:
-        land_use_data = fetch_land_use(lon, lat)
-    except Exception as e:
-        land_use_data = "Not known"
-        logging.exception(f"land_use_data = Not known: {e}")
-
-    logger.debug(f"get current_land_use from land_use_data")              
-    try:
-        current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+        current_land_use = get_current_land_use_from_api(lat, lon, fallback="Not known")
     except Exception as e:
         current_land_use = "Not known"
-        logging.exception(f"{e}. Continue with: current_land_use = Not known")
+        logging.exception(f"current_land_use = Not known: {e}")
     ##  == soil
-    logger.debug(f"get current_land_use from land_use_data")              
+    logger.debug(f"get soil from api")
     try:
-        soil = get_soil_from_api(lat, lon)
+        soil = safe_get_soil_from_api(lat, lon, fallback="Not known")
     except Exception as e:
         soil = "Not known"
         logging.exception(f"soil = Not known: {e}")
@@ -420,8 +413,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
     try:
         population = x_year_mean_population(pop_path, country, year_step=year_step, start_year=start_year, end_year=end_year)
     except Exception as e:
-        logging.error(f"Unexpected error in filter_events_within_square: {e}")
-        raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
+        population = None
+        logging.error(f"Unexpected error in x_year_mean_population: {e}")
 
     ##  ===================  plotting      =========================   
     if show_add_info:
@@ -505,7 +498,8 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         Occuring species: {biodiv} \n
         Natural hazards: {nat_hazards} \n
         """  
-    content_message += f"Population in {country} data: {{population}} \n"
+    if population is not None:
+        content_message += f"Population in {country} data: {{population}} \n"
     content_message += data_agent_response['content_message']          
 
     input_params = {
@@ -522,8 +516,9 @@ def forming_request(config, lat, lon, user_message, data={}, show_add_info=True)
         "soil": soil,
         "biodiv": biodiv,
         "nat_hazards": promt_hazard_data,
-        "population": population,
     }               
+    if population is not None:
+        input_params["population"] = population
     input_params.update(data_agent_response['input_params'])
     
     return content_message, input_params, df_data, figs, data
@@ -732,29 +727,22 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             elevation = None
             logging.exception(f"elevation = Not known: {e}")
         ##  == land use        
-        logger.debug(f"fetch_land_use from: {lat}, {lon}")        
+        logger.debug(f"fetch_land_use from: {lat}, {lon}")
         try:
-            land_use_data = fetch_land_use(lon, lat)
+            current_land_use = get_current_land_use_from_api(lat, lon)
             if 'fetch_land_use' in references['references']:
                 for ref in references['references']['fetch_land_use']:
-                    references['used'].append(ref)            
-        except Exception as e:
-            land_use_data = None
-            logging.exception(f"land_use_data = None: {e}")
-
-        logger.debug(f"get current_land_use from land_use_data")              
-        try:
-            current_land_use = land_use_data["elements"][0]["tags"]["landuse"]
+                    references['used'].append(ref)
         except Exception as e:
             current_land_use = None
-            logging.exception(f"{e}. Continue with: current_land_use = None")
+            logging.exception(f"current_land_use = None: {e}")
         ##  == soil
-        logger.debug(f"get current_land_use from land_use_data")              
+        logger.debug(f"get soil from api")
         try:
-            soil = get_soil_from_api(lat, lon)
+            soil = safe_get_soil_from_api(lat, lon)
             if 'get_soil_from_api' in references['references']:
                 for ref in references['references']['get_soil_from_api']:
-                    references['used'].append(ref)              
+                    references['used'].append(ref)
         except Exception as e:
             soil = None
             logging.exception(f"soil = None: {e}")
@@ -799,9 +787,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                                                 year_step=config['year_step'], start_year=config['start_year'], end_year=config['end_year'])
         except Exception as e:
             population = None
-            logging.error(f"Unexpected error in filter_events_within_square: {e}")
-            raise RuntimeError(f"Unexpected error in filter_events_within_square: {e}")
-            ## !!!!!!!!! raise should be changed to logging (add exceptions for ploting below)  
+            logging.error(f"Unexpected error in x_year_mean_population: {e}")
 
         
         zero_agent_response = {}
@@ -962,29 +948,35 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             stream_handler.update_progress("Extracting ERA5 observational climatology...")
             era5_config = config.get("era5_climatology", {})
             era5_path = era5_config.get("path", "data/era5/era5_climatology_2015_2025.zarr")
-            era5_result = extract_era5_climatology_direct(
-                latitude=lat,
-                longitude=lon,
-                era5_path=era5_path,
-                variables=["t2m", "tp", "u10", "v10"],
-                save_to_dir=state.uuid_main_dir
-            )
-            if "error" not in era5_result:
-                era5_data = era5_result
-                state.era5_climatology_response = era5_result
-                if "reference" in era5_result:
-                    collected_references.append(era5_result["reference"])
-                # Track ERA5 climatology JSON as downloadable
-                era5_json_path = os.path.join(state.uuid_main_dir, "era5_climatology.json")
-                if os.path.exists(era5_json_path):
-                    state.downloadable_datasets.append({
-                        "label": "ERA5 Climatology (monthly, 2015-2025)",
-                        "path": era5_json_path,
-                        "source": "ERA5",
-                    })
-                logger.info(f"Extracted ERA5 climatology for ({lat}, {lon})")
+            if not os.path.exists(era5_path):
+                logger.info(
+                    "Skipping optional ERA5 climatology baseline because the dataset is not installed: %s",
+                    era5_path,
+                )
             else:
-                logger.warning(f"ERA5 climatology: {era5_result.get('error', 'unknown error')}")
+                era5_result = extract_era5_climatology_direct(
+                    latitude=lat,
+                    longitude=lon,
+                    era5_path=era5_path,
+                    variables=["t2m", "tp", "u10", "v10"],
+                    save_to_dir=state.uuid_main_dir
+                )
+                if "error" not in era5_result:
+                    era5_data = era5_result
+                    state.era5_climatology_response = era5_result
+                    if "reference" in era5_result:
+                        collected_references.append(era5_result["reference"])
+                    # Track ERA5 climatology JSON as downloadable
+                    era5_json_path = os.path.join(state.uuid_main_dir, "era5_climatology.json")
+                    if os.path.exists(era5_json_path):
+                        state.downloadable_datasets.append({
+                            "label": "ERA5 Climatology (monthly, 2015-2025)",
+                            "path": era5_json_path,
+                            "source": "ERA5",
+                        })
+                    logger.info(f"Extracted ERA5 climatology for ({lat}, {lon})")
+                else:
+                    logger.warning(f"ERA5 climatology: {era5_result.get('error', 'unknown error')}")
 
         # 2. Generate climate comparison plots (with ERA5 overlay)
         if state.df_list:
@@ -1223,6 +1215,22 @@ Examples:
         if state.general_rag_agent_response != "None" and state.general_rag_agent_response != "":
             state.content_message += "\n        RAG(text) response: {general_rag_response} "
             state.input_params['general_rag_response'] = state.general_rag_agent_response
+
+        # Warn the LLM when RAG databases are unavailable so it does not
+        # hallucinate citations or pretend it consulted scientific literature.
+        if (state.ipcc_rag_agent_response in ("None", "")
+                and state.general_rag_agent_response in ("None", "")):
+            state.content_message += (
+                "\n        IMPORTANT: No scientific literature database (RAG) was"
+                " available for this query. Do NOT cite specific IPCC reports or"
+                " scientific papers. Clearly state that this response is based on"
+                " general knowledge only and is not grounded in retrieved"
+                " scientific literature."
+            )
+            logger.warning(
+                "Both IPCC and general RAG databases unavailable — "
+                "combine_agent will flag response as ungrounded."
+            )
 
         #add zero_agent response to content_message and input_params                    
         if state.zero_agent_response != {}:

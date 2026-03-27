@@ -1160,7 +1160,7 @@ def data_analysis_agent(
             "messages": gstate.get("messages", []),
         }
 
-        result = agent_executor(agent_input)
+        result = agent_executor.invoke(agent_input)
 
         # Process intermediate steps for plot images
         plot_images: List[str] = []
