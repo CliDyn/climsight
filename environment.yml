@@ -69,7 +69,6 @@ dependencies:
 
     # pip-only packages (not available on conda-forge)
     - pip:
-        - langchain-classic
-        - langchain-anthropic
+        - langchain-anthropic<1.0.0
         - arraylake
         - aitta-client
