@@ -168,7 +168,7 @@ export default function App() {
             <Compass size={16} style={{ color: 'var(--accent)' }} />
           </div>
           <div>
-            <h1 style={{ fontSize: '0.9rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>ClimSight</h1>
+            <h1 style={{ fontSize: '0.9rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>ClimAssist</h1>
             <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500, lineHeight: 1 }}>
               Climate Intelligence Platform
             </p>

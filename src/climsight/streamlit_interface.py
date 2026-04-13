@@ -32,11 +32,81 @@ logger = logging.getLogger(__name__)
 
 data_pocket = DataContainer()
 
+def _check_email_access():
+    """Simple email/password gate to restrict access to authorized users.
+
+    Credentials are loaded from environment variables:
+      - LOGIN_CREDENTIALS: comma-separated "email:password" pairs
+        e.g. "katsina@climateassist.ng:mypass123,admin@example.com:pass456"
+      - If not set, falls back to AUTHORIZED_EMAILS (email-only, no password)
+      - If neither is set, allows everyone (dev mode)
+    """
+    if "email_verified" not in st.session_state:
+        st.session_state["email_verified"] = False
+    if st.session_state["email_verified"]:
+        return True
+
+    # Parse credentials from env
+    cred_str = os.environ.get("LOGIN_CREDENTIALS", "")
+    credentials = {}
+    if cred_str:
+        for pair in cred_str.split(","):
+            pair = pair.strip()
+            if ":" in pair:
+                email, pw = pair.split(":", 1)
+                credentials[email.strip().lower()] = pw.strip()
+
+    # Fallback: email-only list (no password required)
+    email_only = []
+    if not credentials:
+        email_str = os.environ.get("AUTHORIZED_EMAILS", "")
+        email_only = [e.strip().lower() for e in email_str.split(",") if e.strip()]
+
+    # If nothing configured, allow everyone (dev mode)
+    if not credentials and not email_only:
+        return True
+
+    # Show branded login screen
+    _logo_path = os.path.join(os.path.dirname(__file__), "assets", "katsina_logo.png")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if os.path.exists(_logo_path):
+            st.image(_logo_path, width=200)
+        st.markdown("## KT Climate Assist")
+        st.markdown("**Office of the Senior Special Assistant on Climate Change**")
+        st.markdown("*Katsina State Governor*")
+        st.markdown("---")
+        email = st.text_input("Email", key="login_email", placeholder="katsina@climateassist.ng")
+        if credentials:
+            password = st.text_input("Password", key="login_password", type="password")
+        if st.button("Sign In", type="primary", use_container_width=True):
+            email_clean = email.strip().lower()
+            if credentials:
+                if email_clean in credentials and password == credentials[email_clean]:
+                    st.session_state["user_email"] = email_clean
+                    st.session_state["email_verified"] = True
+                    st.rerun()
+                else:
+                    st.error("Invalid email or password.")
+            elif email_only:
+                if email_clean in email_only:
+                    st.session_state["user_email"] = email_clean
+                    st.session_state["email_verified"] = True
+                    st.rerun()
+                else:
+                    st.error("This email is not authorized. Contact the SSA Climate Change office.")
+        st.markdown("---")
+        st.caption("Authorized personnel only. Katsina State LGA climate desk officers and partners.")
+
+    return False
+
+
 def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, references=None):
     """
     Runs the Streamlit interface for ClimSight, allowing users to interact with the system.
     Args:
-        - config (dict): Configuration, default is an empty dictionary.   
+        - config (dict): Configuration, default is an empty dictionary.
         - api_key (string): API Key, default is an empty string.
         - skip_llm_call (bool): If True - skip final call to LLM
         - rag_activated (bool): whether or not to include the text based rag
@@ -44,12 +114,17 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     Returns:
         None
     """
+    # ---- Email access gate ----
+    if not _check_email_access():
+        st.stop()
+        return
+
     # Ensure sandbox exists for the current session.
     thread_id = ensure_thread_id(existing_thread_id=st.session_state.get("thread_id", ""))
     st.session_state["thread_id"] = thread_id
     sandbox_paths = get_sandbox_paths(thread_id)
     ensure_sandbox_dirs(sandbox_paths)
-  
+
     # Config
     try:
         climatemodel_name = config['climatemodel_name']
@@ -57,12 +132,12 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         lon_default = config['lon_default']
     except KeyError as e:
         logging.error(f"Missing configuration key: {e}")
-        raise RuntimeError(f"Missing configuration key: {e}")   
+        raise RuntimeError(f"Missing configuration key: {e}")
 
     if not isinstance(skip_llm_call, bool):
         logging.error(f"skip_llm_call must be bool ")
-        raise TypeError("skip_llm_call must be  bool")    
-    
+        raise TypeError("skip_llm_call must be  bool")
+
     if not isinstance(api_key, str):
         logging.error(f"api_key must be a string ")
         raise TypeError("api_key must be a string")
@@ -76,16 +151,20 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     # Check for Arraylake API key (for ERA5 data retrieval)
     arraylake_api_key = os.environ.get("ARRAYLAKE_API_KEY", "")
 
-    #read data while loading here 
+    #read data while loading here
     ##### like hist, future = load_data(config)
 
     clicked_coords = None
-  
 
-    st.title(
-        " :cyclone: \
-            :ocean: :globe_with_meridians:  Climate Foresight"
-    )
+    # ---- Katsina branding ----
+    _logo_path = os.path.join(os.path.dirname(__file__), "assets", "katsina_logo.png")
+    _hcol1, _hcol2 = st.columns([1, 8])
+    with _hcol1:
+        if os.path.exists(_logo_path):
+            st.image(_logo_path, width=70)
+    with _hcol2:
+        st.title("KT Climate Assist")
+        st.caption("Office of the Senior Special Assistant on Climate Change — Katsina State")
     # :umbrella_with_rain_drops: :earth_africa:  :tornado:
 
     # Define map and handle map clicks
@@ -164,52 +243,22 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     # Wrap the input fields and the submit button in a form
     with st.form(key='my_form'):
         user_message = st.text_input(
-            "Describe the activity that you would like to evaluate for this location:",
-            placeholder="Are the conditions suitable for setting up a solar panel field in this area over the next decade?",
+            "Ask a climate question about this location:",
+            placeholder="What are the climate risks for agriculture in this area over the next decade?",
         )
         col1, col2 = st.columns(2)
         lat = col1.number_input("Latitude", value=lat_default, format="%.4f")
         lon = col2.number_input("Longitude", value=lon_default, format="%.4f")
 
-        # Predefined options
-        options = ["gpt-5-nano","gpt-5-mini","gpt-5", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1"]
-        # Determine the default value and modify the options list if needed
-        default_model = config.get('llm_combine', {}).get('model_name')
-        if default_model:
-            if default_model not in options:
-                options.insert(0, default_model)
-                default_index = 0
-            else:
-                default_index = options.index(default_model)
-        else:
-            default_index = 1
-        col1, col2 = st.columns([1, 1])
-        with col2:
-            config['llm_combine']['model_name'] = st.selectbox(
-                "Model for synthesis:",
-                options,
-                index=default_index
-            )
-            if 'gpt' in config['llm_combine']['model_name']:
-                config['llm_combine']['model_type'] = "openai"
-            else:
-                config['llm_combine']['model_type'] = "local"
-        with col1:
-            # Always show additional information (removed toggle per user request)
-            show_add_info = True
-            # remove the llmModeKey_box from the form, as we tend to run the agent mode, direct mode is for development only
-            #llmModeKey_box = st.radio("Select LLM mode 👉", key="visibility", options=["Direct", "Agent (experimental)"])
+        # Always show additional information
+        show_add_info = True
 
         # Climate data source selector
-        # Get available providers
         available_sources = get_available_providers(config)
-
-        # Default source from config
         default_source = config.get('climate_data_source', 'nextGEMS')
         if default_source not in available_sources and available_sources:
             default_source = available_sources[0]
 
-        # Source descriptions for the dropdown
         source_descriptions = {
             'nextGEMS': 'nextGEMS (High resolution)',
             'ICCP': 'ICCP (AWI-CM3, medium resolution)',
@@ -217,54 +266,27 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             'DestinE': 'DestinE IFS-FESOM (High resolution, SSP3-7.0)'
         }
 
-        col1_src, col2_src = st.columns([1, 1])
-        with col1_src:
-            if available_sources:
-                display_options = [source_descriptions.get(s, s) for s in available_sources]
-                default_idx = available_sources.index(default_source) if default_source in available_sources else 0
-                selected_display = st.selectbox(
-                    "Climate Data Source:",
-                    display_options,
-                    index=default_idx,
-                    help="Select the climate model data source to use for the analysis."
-                )
-                # Map back to source name
-                selected_source = available_sources[display_options.index(selected_display)]
-                config['climate_data_source'] = selected_source
-            else:
-                st.warning("No climate data sources available.")
-                config['climate_data_source'] = 'nextGEMS'  # fallback
-
-            # Include the API key input within the form only if it's not found in the environment
-        #if (not api_key) and config['model_type'] == "openai":
-        if (not api_key) and config['llm_combine']['model_type'] == "openai":
-            api_key_input = st.text_input(
-                "OpenAI API key",
-                placeholder="Enter your OpenAI API key here",
-                type="password",
+        if available_sources:
+            display_options = [source_descriptions.get(s, s) for s in available_sources]
+            default_idx = available_sources.index(default_source) if default_source in available_sources else 0
+            selected_display = st.selectbox(
+                "Climate Data Source:",
+                display_options,
+                index=default_idx,
+                help="Select the climate model data source to use for the analysis."
             )
+            selected_source = available_sources[display_options.index(selected_display)]
+            config['climate_data_source'] = selected_source
+        else:
+            st.warning("No climate data sources available.")
+            config['climate_data_source'] = 'nextGEMS'
 
-        # Include Arraylake API key input if ERA5 data is enabled and key not in environment
+        # API keys are loaded from environment — no user input needed
+        api_key_input = ""
         arraylake_api_key_input = ""
-        if use_era5_data and not arraylake_api_key:
-            arraylake_api_key_input = st.text_input(
-                "Arraylake API key (for ERA5 data)",
-                placeholder="Enter your Arraylake API key here",
-                type="password",
-                help="Required for downloading ERA5 time series data from Earthmover/Arraylake.",
-            )
-
-        # Show DestinE token status
-        if use_destine_data:
-            from pathlib import Path
-            token_path = Path.home() / ".polytopeapirc"
-            if token_path.exists():
-                st.success("DestinE token found (~/.polytopeapirc)")
-            else:
-                st.warning("DestinE token not found. Run desp-authentication.py first.")
 
         # Replace the st.button with st.form_submit_button
-        submit_button = st.form_submit_button(label='Generate')
+        submit_button = st.form_submit_button(label='Analyze', type='primary')
         
     # RUN submit button - ANALYSIS LOGIC ONLY (NO DISPLAY HERE!)
     if submit_button and user_message:
@@ -687,7 +709,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
         col1, col2, col3, col4, col5 = st.columns([1, 2, 0.5, 2, 1])
         with col2:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename_pdf = f"climsight_report_{timestamp}.pdf"
+            filename_pdf = f"kt_climate_report_{timestamp}.pdf"
             
             st.download_button(
                 label="📥 Download PDF Report",
@@ -699,7 +721,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             )
         
         with col4:
-            filename_txt = f"climsight_report_{timestamp}.txt"
+            filename_txt = f"kt_climate_report_{timestamp}.txt"
             
             st.download_button(
                 label="📄 Download Text Report",

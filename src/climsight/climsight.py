@@ -3,6 +3,14 @@ import yaml
 import os
 import sys
 
+import streamlit as st
+
+st.set_page_config(
+    page_title="KT Climate Assist — Katsina State",
+    page_icon=":earth_africa:",
+    layout="wide",
+)
+
 from streamlit_interface import run_streamlit
 from terminal_interface import run_terminal
 
