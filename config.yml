@@ -17,13 +17,13 @@ climatemodel_name: "AWI_CM"
 llmModeKey: "agent_llm" #"agent_llm" #"direct_llm"
 analysis_mode: "smart"  # fast | smart | deep — sets default tools and budgets (overridable per-toggle)
 use_smart_agent: true
-use_era5_data: true  # Download ERA5 time series from CDS API (requires credentials)
-use_destine_data: true  # Download DestinE projections via HDA API (requires DESP credentials)
+use_era5_data: false  # Disabled for cloud deployment (requires CDS credentials)
+use_destine_data: false  # Disabled for cloud deployment (requires DESP credentials)
 use_powerful_data_analysis: true
 
 # ERA5 Climatology Configuration (pre-computed observational baseline)
 era5_climatology:
-  enabled: true  # Always use ERA5 climatology as ground truth baseline
+  enabled: false  # Disabled for cloud — ERA5 zarr not available
   path: "data/era5/era5_climatology_2015_2025.zarr"  # Path to pre-computed climatology
 
 # DestinE Climate DT Configuration (82 parameters via RAG + Polytope API)
@@ -33,11 +33,12 @@ destine_settings:
 
 # Climate Data Source Configuration
 # Options: "nextGEMS", "ICCP", "AWI_CM"
-climate_data_source: "nextGEMS"
+# AWI_CM is default for cloud — smallest dataset (~30 MB)
+climate_data_source: "AWI_CM"
 
 climate_data_sources:
   nextGEMS:
-    enabled: true
+    enabled: false  # Disabled for cloud — data too large (~2 GB)
     coordinate_system: "healpix"
     description: "nextGEMS high-resolution climate simulations (IFS-FESOM coupled model)"
     input_files:
@@ -67,7 +68,7 @@ climate_data_sources:
       Wind V: wind_v
 
   ICCP:
-    enabled: true
+    enabled: false  # Disabled for cloud — data not downloaded by default
     coordinate_system: "regular"
     description: "ICCP climate data on regular lat/lon grid"
     input_files:
@@ -145,7 +146,7 @@ climate_data_sources:
       time: "month"
 
   DestinE:
-    enabled: true
+    enabled: false  # Disabled for cloud — requires DESP credentials
     coordinate_system: "unstructured"
     description: "DestinE IFS-FESOM high-resolution climate simulations (SSP3-7.0)"
     data_path: "./data/DestinE/"

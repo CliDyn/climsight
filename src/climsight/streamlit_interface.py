@@ -32,21 +32,26 @@ logger = logging.getLogger(__name__)
 
 data_pocket = DataContainer()
 
+import hashlib
+
+def _make_login_token(email: str) -> str:
+    """Create a simple hash token for persistent login via URL query params."""
+    secret = os.environ.get("LOGIN_SECRET", "kt-climate-2026")
+    return hashlib.sha256(f"{email}:{secret}".encode()).hexdigest()[:16]
+
+
 def _check_email_access():
-    """Simple email/password gate to restrict access to authorized users.
+    """Email/password gate with persistent login across page refreshes.
 
     Credentials are loaded from environment variables:
       - LOGIN_CREDENTIALS: comma-separated "email:password" pairs
-        e.g. "katsina@climateassist.ng:mypass123,admin@example.com:pass456"
-      - If not set, falls back to AUTHORIZED_EMAILS (email-only, no password)
+      - Falls back to AUTHORIZED_EMAILS (email-only, no password)
       - If neither is set, allows everyone (dev mode)
-    """
-    if "email_verified" not in st.session_state:
-        st.session_state["email_verified"] = False
-    if st.session_state["email_verified"]:
-        return True
 
-    # Parse credentials from env
+    Login persists via URL query params (?token=...) so users don't
+    have to re-enter credentials on every page refresh.
+    """
+    # --- Parse credentials from env ---
     cred_str = os.environ.get("LOGIN_CREDENTIALS", "")
     credentials = {}
     if cred_str:
@@ -56,7 +61,6 @@ def _check_email_access():
                 email, pw = pair.split(":", 1)
                 credentials[email.strip().lower()] = pw.strip()
 
-    # Fallback: email-only list (no password required)
     email_only = []
     if not credentials:
         email_str = os.environ.get("AUTHORIZED_EMAILS", "")
@@ -66,7 +70,27 @@ def _check_email_access():
     if not credentials and not email_only:
         return True
 
-    # Show branded login screen
+    # --- Check session state (in-memory, survives reruns) ---
+    if st.session_state.get("email_verified"):
+        return True
+
+    # --- Check URL token (survives page refresh / new tabs) ---
+    try:
+        qp = st.query_params
+        token_in_url = qp.get("token", "")
+        email_in_url = qp.get("user", "")
+        if token_in_url and email_in_url:
+            all_emails = list(credentials.keys()) + email_only
+            if email_in_url.lower() in all_emails:
+                expected = _make_login_token(email_in_url.lower())
+                if token_in_url == expected:
+                    st.session_state["user_email"] = email_in_url.lower()
+                    st.session_state["email_verified"] = True
+                    return True
+    except Exception:
+        pass  # query_params may not be available in older Streamlit
+
+    # --- Show branded login screen ---
     _logo_path = os.path.join(os.path.dirname(__file__), "assets", "katsina_logo.png")
 
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -82,20 +106,32 @@ def _check_email_access():
             password = st.text_input("Password", key="login_password", type="password")
         if st.button("Sign In", type="primary", use_container_width=True):
             email_clean = email.strip().lower()
+            valid = False
             if credentials:
                 if email_clean in credentials and password == credentials[email_clean]:
-                    st.session_state["user_email"] = email_clean
-                    st.session_state["email_verified"] = True
-                    st.rerun()
+                    valid = True
                 else:
                     st.error("Invalid email or password.")
             elif email_only:
                 if email_clean in email_only:
-                    st.session_state["user_email"] = email_clean
-                    st.session_state["email_verified"] = True
-                    st.rerun()
+                    valid = True
                 else:
                     st.error("This email is not authorized. Contact the SSA Climate Change office.")
+
+            if valid:
+                st.session_state["user_email"] = email_clean
+                st.session_state["email_verified"] = True
+                # Persist in URL (survives page refresh). Use from_dict
+                # to set both params atomically — individual assignment
+                # can trigger premature reruns.
+                try:
+                    st.query_params.from_dict(
+                        {"user": email_clean,
+                         "token": _make_login_token(email_clean)}
+                    )
+                except Exception:
+                    pass  # older Streamlit — fall back to session only
+                st.rerun()
         st.markdown("---")
         st.caption("Authorized personnel only. Katsina State LGA climate desk officers and partners.")
 

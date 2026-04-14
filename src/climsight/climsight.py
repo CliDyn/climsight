@@ -11,6 +11,28 @@ st.set_page_config(
     layout="wide",
 )
 
+# --- Auto-download data on first run (Streamlit Cloud) ---
+# Must run before any module that tries to load shapefiles or climate data.
+try:
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
+    from ensure_data import ensure_data
+
+    _orig_cwd = os.getcwd()
+    os.chdir(_repo_root)
+    _land_shp = os.path.join("data", "natural_earth", "land", "ne_10m_land.shp")
+    if not os.path.exists(_land_shp):
+        _status = st.status("Preparing climate data (first run only)...", expanded=True)
+        ensure_data(status_callback=lambda msg: _status.update(label=msg))
+        _status.update(label="Data ready!", state="complete", expanded=False)
+    else:
+        ensure_data()  # no-op fast path
+    os.chdir(_orig_cwd)
+except Exception as _e:
+    st.warning(f"Data auto-download issue: {_e}")
+# --- end data download ---
+
 from streamlit_interface import run_streamlit
 from terminal_interface import run_terminal
 
