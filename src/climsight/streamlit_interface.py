@@ -2,6 +2,7 @@
     Streamlit App Wrapper Module 
 """
 #general 
+import base64
 import logging
 import yaml
 import os
@@ -41,10 +42,85 @@ data_pocket = DataContainer()
 
 import hashlib
 
+APP_DIR = os.path.dirname(__file__)
+ASSETS_DIR = os.path.join(APP_DIR, "assets")
+
 def _make_login_token(email: str) -> str:
     """Create a simple hash token for persistent login via URL query params."""
     secret = os.environ.get("LOGIN_SECRET", "kt-climate-2026")
     return hashlib.sha256(f"{email}:{secret}".encode()).hexdigest()[:16]
+
+
+def _get_logo_path() -> str:
+    """Resolve the branded logo path across local and packaged layouts."""
+    candidate_paths = (
+        os.path.join(ASSETS_DIR, "kt-climate-logo.png"),
+        os.path.abspath(os.path.join(APP_DIR, "..", "..", "kt-climate-logo.png")),
+        os.path.join(ASSETS_DIR, "katsina_logo.png"),
+    )
+    for path in candidate_paths:
+        if os.path.exists(path):
+            return path
+    return ""
+
+
+@st.cache_data(show_spinner=False)
+def _get_logo_data_uri() -> str:
+    """Load the logo once and embed it directly for crisp browser-side scaling."""
+    logo_path = _get_logo_path()
+    if not logo_path:
+        return ""
+    with open(logo_path, "rb") as image_file:
+        encoded = base64.b64encode(image_file.read()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
+
+
+def _render_logo(center: bool = False, max_width_px: int = 220, bottom_margin_rem: float = 0.75) -> bool:
+    """Render the app logo with responsive sizing."""
+    data_uri = _get_logo_data_uri()
+    if not data_uri:
+        return False
+    justify = "center" if center else "flex-start"
+    st.markdown(
+        f"""
+        <div style="display:flex; justify-content:{justify}; width:100%; margin:0 0 {bottom_margin_rem}rem 0;">
+            <img
+                src="{data_uri}"
+                alt="KT Climate Assist logo"
+                style="width:min(100%, {max_width_px}px); height:auto; display:block;"
+            />
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    return True
+
+
+def _render_main_branding() -> None:
+    """Render the main page brand header with mobile-friendly wrapping."""
+    data_uri = _get_logo_data_uri()
+    if not data_uri:
+        st.title("KT Climate Assist")
+        st.caption("Office of the Senior Special Assistant on Climate Change — Katsina State")
+        return
+    st.markdown(
+        f"""
+        <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:0.5rem;">
+            <img
+                src="{data_uri}"
+                alt="KT Climate Assist logo"
+                style="width:clamp(76px, 10vw, 110px); height:auto; display:block; flex:0 0 auto;"
+            />
+            <div style="flex:1 1 260px; min-width:0;">
+                <h1 style="margin:0; font-size:clamp(1.8rem, 4vw, 2.6rem); line-height:1.1;">KT Climate Assist</h1>
+                <p style="margin:0.35rem 0 0 0; font-size:0.98rem; opacity:0.8;">
+                    Office of the Senior Special Assistant on Climate Change — Katsina State
+                </p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def _clear_cached_report():
@@ -111,49 +187,49 @@ def _check_email_access():
         pass  # query_params may not be available in older Streamlit
 
     # --- Show branded login screen ---
-    _logo_path = os.path.join(os.path.dirname(__file__), "assets", "katsina_logo.png")
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if os.path.exists(_logo_path):
-            st.image(_logo_path, width=200)
-        st.markdown("## KT Climate Assist")
-        st.markdown("**Office of the Senior Special Assistant on Climate Change**")
-        st.markdown("*Katsina State Governor*")
-        st.markdown("---")
-        email = st.text_input("Email", key="login_email", placeholder="katsina@climateassist.ng")
+    _render_logo(center=True, max_width_px=220, bottom_margin_rem=0.5)
+    st.markdown("<h2 style='text-align:center; margin-bottom:0.25rem;'>KT Climate Assist</h2>", unsafe_allow_html=True)
+    st.markdown(
+        "<p style='text-align:center; margin:0 0 1rem 0; opacity:0.85;'>"
+        "Office of the Senior Special Assistant on Climate Change"
+        "<br><em>Katsina State Governor</em>"
+        "</p>",
+        unsafe_allow_html=True,
+    )
+    st.markdown("---")
+    email = st.text_input("Email", key="login_email", placeholder="katsina@climateassist.ng")
+    if credentials:
+        password = st.text_input("Password", key="login_password", type="password")
+    if st.button("Sign In", type="primary", use_container_width=True):
+        email_clean = email.strip().lower()
+        valid = False
         if credentials:
-            password = st.text_input("Password", key="login_password", type="password")
-        if st.button("Sign In", type="primary", use_container_width=True):
-            email_clean = email.strip().lower()
-            valid = False
-            if credentials:
-                if email_clean in credentials and password == credentials[email_clean]:
-                    valid = True
-                else:
-                    st.error("Invalid email or password.")
-            elif email_only:
-                if email_clean in email_only:
-                    valid = True
-                else:
-                    st.error("This email is not authorized. Contact the SSA Climate Change office.")
+            if email_clean in credentials and password == credentials[email_clean]:
+                valid = True
+            else:
+                st.error("Invalid email or password.")
+        elif email_only:
+            if email_clean in email_only:
+                valid = True
+            else:
+                st.error("This email is not authorized. Contact the SSA Climate Change office.")
 
-            if valid:
-                st.session_state["user_email"] = email_clean
-                st.session_state["email_verified"] = True
-                # Persist in URL (survives page refresh). Use from_dict
-                # to set both params atomically — individual assignment
-                # can trigger premature reruns.
-                try:
-                    st.query_params.from_dict(
-                        {"user": email_clean,
-                         "token": _make_login_token(email_clean)}
-                    )
-                except Exception:
-                    pass  # older Streamlit — fall back to session only
-                st.rerun()
-        st.markdown("---")
-        st.caption("Authorized personnel only. Katsina State LGA climate desk officers and partners.")
+        if valid:
+            st.session_state["user_email"] = email_clean
+            st.session_state["email_verified"] = True
+            # Persist in URL (survives page refresh). Use from_dict
+            # to set both params atomically — individual assignment
+            # can trigger premature reruns.
+            try:
+                st.query_params.from_dict(
+                    {"user": email_clean,
+                     "token": _make_login_token(email_clean)}
+                )
+            except Exception:
+                pass  # older Streamlit — fall back to session only
+            st.rerun()
+    st.markdown("---")
+    st.caption("Authorized personnel only. Katsina State LGA climate desk officers and partners.")
 
     return False
 
@@ -213,14 +289,7 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
     clicked_coords = None
 
     # ---- Katsina branding ----
-    _logo_path = os.path.join(os.path.dirname(__file__), "assets", "katsina_logo.png")
-    _hcol1, _hcol2 = st.columns([1, 8])
-    with _hcol1:
-        if os.path.exists(_logo_path):
-            st.image(_logo_path, width=70)
-    with _hcol2:
-        st.title("KT Climate Assist")
-        st.caption("Office of the Senior Special Assistant on Climate Change — Katsina State")
+    _render_main_branding()
     # :umbrella_with_rain_drops: :earth_africa:  :tornado:
 
     # Define map and handle map clicks
