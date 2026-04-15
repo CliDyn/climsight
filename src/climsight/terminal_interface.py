@@ -13,7 +13,7 @@ from rag import load_rag
 
 # climsight modules
 from stream_handler import StreamHandler
-from climsight_engine import llm_request, forming_request, location_request
+from climsight_engine import ClimSightLLMError, llm_request, forming_request, location_request
 from data_container import DataContainer
 
 from extract_climatedata_functions import plot_climate_data
@@ -226,14 +226,19 @@ def run_terminal(config, api_key='', skip_llm_call=False, lon=None, lat=None, us
         stream_handler.update_progress = print_progress
                
         if not skip_llm_call:
-            output, input_params, content_message, combine_agent_prompt_text = llm_request(content_message, 
-                                                                input_params, 
-                                                                config, 
-                                                                api_key, api_key_local, 
-                                                                stream_handler, 
-                                                                ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, 
-                                                                data_pocket,
-                                                                references=references)   
+            try:
+                output, input_params, content_message, combine_agent_prompt_text = llm_request(content_message, 
+                                                                    input_params, 
+                                                                    config, 
+                                                                    api_key, api_key_local, 
+                                                                    stream_handler, 
+                                                                    ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, 
+                                                                    data_pocket,
+                                                                    references=references)
+            except ClimSightLLMError as e:
+                print_verbose(verbose, f"LLM request failed: {e}")
+                logger.warning(f"LLM request failed: {e}")
+                return str(e), input_params, content_message, ""
             figs = data_pocket.figs
             data = data_pocket.data
                 

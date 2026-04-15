@@ -14,6 +14,7 @@ loaded again from a YAML file.
 import yaml
 import os
 import logging
+import openai
 # import classes for climsight
 from stream_handler import StreamHandler
 import pandas as pd
@@ -126,6 +127,48 @@ logging.basicConfig(
    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
    datefmt='%Y-%m-%d %H:%M:%S'
 )
+
+
+class ClimSightLLMError(RuntimeError):
+    """User-facing error raised when an upstream LLM provider fails."""
+
+
+def get_llm_service_error_message(exc: Exception) -> Optional[str]:
+    """Map upstream LLM/API exceptions to short user-facing messages."""
+    if isinstance(exc, openai.RateLimitError):
+        error_text = str(exc).lower()
+        if "insufficient_quota" in error_text or "quota" in error_text:
+            return (
+                "OpenAI rejected the request because the API quota was exceeded. "
+                "Check the project's billing and usage limits, then try again."
+            )
+        return (
+            "OpenAI rate-limited the request. Please wait a minute and try again, "
+            "or reduce concurrent requests."
+        )
+    if isinstance(exc, openai.AuthenticationError):
+        return "OpenAI authentication failed. Check `OPENAI_API_KEY` and try again."
+    if isinstance(exc, openai.PermissionDeniedError):
+        return (
+            "OpenAI denied access to the configured model. Check the model name and "
+            "account permissions."
+        )
+    if isinstance(exc, openai.BadRequestError):
+        return (
+            "OpenAI rejected the request as invalid. Check the configured model and "
+            "request parameters."
+        )
+    if isinstance(exc, openai.APIConnectionError):
+        return "ClimSight could not reach OpenAI. Check network access and try again."
+    if isinstance(exc, openai.APITimeoutError):
+        return "The OpenAI request timed out. Please try again."
+    if isinstance(exc, openai.InternalServerError):
+        return "OpenAI reported a temporary server error. Please try again shortly."
+    if isinstance(exc, openai.APIStatusError):
+        status_code = getattr(exc, "status_code", None)
+        status_suffix = f" (HTTP {status_code})" if status_code else ""
+        return f"OpenAI returned an upstream error{status_suffix}. Please try again later."
+    return None
 
 def normalize_longitude(lon):
     if lon < -180 or lon > 180:
@@ -546,13 +589,20 @@ def llm_request(content_message, input_params, config, api_key, api_key_local, s
     if not references:
         references = {'references': {}, 'used': []}
     combine_agent_prompt_text = ""
-    if config['llmModeKey'] == "direct_llm":
-        output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
-    elif config['llmModeKey'] == "agent_llm":
-        output, input_params, content_message, combine_agent_prompt_text = agent_llm_request(content_message, input_params, config, api_key, api_key_local,stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
-    else:
-        logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
-        raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+    try:
+        if config['llmModeKey'] == "direct_llm":
+            output = direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db)
+        elif config['llmModeKey'] == "agent_llm":
+            output, input_params, content_message, combine_agent_prompt_text = agent_llm_request(content_message, input_params, config, api_key, api_key_local,stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db, data_pocket, references)
+        else:
+            logging.error(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+            raise TypeError(f"Wrong llmModeKey in config file: {config['llmModeKey']}")
+    except Exception as exc:
+        user_message = get_llm_service_error_message(exc)
+        if user_message:
+            logger.exception("LLM request failed with an upstream provider error: %s", exc)
+            raise ClimSightLLMError(user_message) from exc
+        raise
     return output, input_params, content_message, combine_agent_prompt_text
 
 def direct_llm_request(content_message, input_params, config, api_key, stream_handler, ipcc_rag_ready, ipcc_rag_db, general_rag_ready, general_rag_db):

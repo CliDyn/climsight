@@ -18,7 +18,14 @@ from rag import load_rag
 # climsight modules
 from stream_handler import StreamHandler
 from data_container import DataContainer
-from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
+from climsight_engine import (
+    ClimSightLLMError,
+    get_llm_service_error_message,
+    normalize_longitude,
+    llm_request,
+    forming_request,
+    location_request,
+)
 from extract_climatedata_functions import plot_climate_data
 from embedding_utils import create_embeddings
 from climate_data_providers import get_available_providers
@@ -38,6 +45,19 @@ def _make_login_token(email: str) -> str:
     """Create a simple hash token for persistent login via URL query params."""
     secret = os.environ.get("LOGIN_SECRET", "kt-climate-2026")
     return hashlib.sha256(f"{email}:{secret}".encode()).hexdigest()[:16]
+
+
+def _clear_cached_report():
+    """Remove the last rendered report after a failed analysis."""
+    for key in (
+        "last_output",
+        "last_input_params",
+        "last_figs",
+        "last_references",
+        "last_show_add_info",
+        "last_climatemodel_name",
+    ):
+        st.session_state.pop(key, None)
 
 
 def _check_email_access():
@@ -405,7 +425,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     logger.info("RAG is activated and skipllmcall is False. Loading IPCC RAG database...")
                     ipcc_rag_ready, ipcc_rag_db = load_rag(config, openai_api_key=api_key, db_type='ipcc')
                 except Exception as e:
-                    st.error(f"Loading of the IPCC RAG database failed unexpectedly, please check the logs. {e}")
+                    llm_error = get_llm_service_error_message(e)
+                    if llm_error:
+                        st.error(f"IPCC RAG is unavailable: {llm_error}")
+                    else:
+                        st.error(f"Loading of the IPCC RAG database failed unexpectedly, please check the logs. {e}")
                     logger.warning(f"IPCC RAG database initialization skipped or failed: {e}")
                     ipcc_rag_ready = False
                     ipcc_rag_db = None
@@ -413,7 +437,11 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
                     logger.info("RAG is activated and skipllmcall is False. Loading general RAG database...")
                     general_rag_ready, general_rag_db = load_rag(config, openai_api_key=api_key, db_type='general')
                 except Exception as e:
-                    st.error(f"Loading of the (general) RAG database failed unexpectedly, please check the logs. {e}")
+                    llm_error = get_llm_service_error_message(e)
+                    if llm_error:
+                        st.error(f"General RAG is unavailable: {llm_error}")
+                    else:
+                        st.error(f"Loading of the (general) RAG database failed unexpectedly, please check the logs. {e}")
                     logger.warning(f"(General) RAG database initialization skipped or failed: {e}")
                     general_rag_ready = False
                     general_rag_db = None
@@ -473,45 +501,57 @@ def run_streamlit(config, api_key='', skip_llm_call=False, rag_activated=True, r
             # Create temporary containers for streaming (not for final display)
             temp_result_container = st.empty()
             temp_reference_container = st.empty()
+            llm_failed = False
             
             # Initialize the spinner outside, but we'll use our own progress messages
-            with st.spinner("Processing your request..."):
-                # Create StreamHandler with temporary components
-                stream_handler = StreamHandler(temp_result_container, temp_reference_container)
+            try:
+                with st.spinner("Processing your request..."):
+                    # Create StreamHandler with temporary components
+                    stream_handler = StreamHandler(temp_result_container, temp_reference_container)
 
-                # Add a method to update the progress area
-                def update_progress_ui(message):
-                    try:
-                        progress_area.info(message)
-                    except Exception as e:
-                        # Streamlit context not available (e.g., running in worker thread)
-                        # This is expected when agents run in parallel
-                        import logging
-                        logger = logging.getLogger(__name__)
-                        if "NoSessionContext" in str(type(e).__name__):
-                            logger.debug(f"Progress update (no UI context): {message}")
-                        else:
-                            logger.error(f"Error displaying progress: {e}")
+                    # Add a method to update the progress area
+                    def update_progress_ui(message):
+                        try:
+                            progress_area.info(message)
+                        except Exception as e:
+                            # Streamlit context not available (e.g., running in worker thread)
+                            # This is expected when agents run in parallel
+                            import logging
+                            logger = logging.getLogger(__name__)
+                            if "NoSessionContext" in str(type(e).__name__):
+                                logger.debug(f"Progress update (no UI context): {message}")
+                            else:
+                                logger.error(f"Error displaying progress: {e}")
 
-                # Attach this method to your StreamHandler
-                stream_handler.update_progress = update_progress_ui
+                    # Attach this method to your StreamHandler
+                    stream_handler.update_progress = update_progress_ui
 
-                # Now call llm_request with this enhanced stream_handler
-                if not skip_llm_call:
-                    output, input_params, content_message, combine_agent_prompt_text = llm_request(
-                        content_message, input_params, config, api_key, api_key_local, 
-                        stream_handler, ipcc_rag_ready, ipcc_rag_db, 
-                        general_rag_ready, general_rag_db, data_pocket,
-                        references=references
-                    )
-            
-            # Clear the progress area and temporary containers after completion
-            progress_area.empty()
-            temp_result_container.empty()
-            temp_reference_container.empty()
+                    # Now call llm_request with this enhanced stream_handler
+                    if not skip_llm_call:
+                        output, input_params, content_message, combine_agent_prompt_text = llm_request(
+                            content_message, input_params, config, api_key, api_key_local, 
+                            stream_handler, ipcc_rag_ready, ipcc_rag_db, 
+                            general_rag_ready, general_rag_db, data_pocket,
+                            references=references
+                        )
+            except ClimSightLLMError as e:
+                llm_failed = True
+                _clear_cached_report()
+                logger.warning(f"LLM request failed: {e}")
+                st.error(str(e))
+            except Exception as e:
+                llm_failed = True
+                _clear_cached_report()
+                logger.exception("Unexpected failure while processing Streamlit request.")
+                st.error("The analysis failed unexpectedly. Please retry and check `climsight.log` if it persists.")
+            finally:
+                # Clear the progress area and temporary containers after completion
+                progress_area.empty()
+                temp_result_container.empty()
+                temp_reference_container.empty()
             
             # Store results in session state
-            if not skip_llm_call and 'output' in locals() and output:
+            if not llm_failed and not skip_llm_call and 'output' in locals() and output:
                 st.session_state['last_output'] = output
                 st.session_state['last_input_params'] = input_params
                 st.session_state['last_figs'] = data_pocket.figs
