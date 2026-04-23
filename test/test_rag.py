@@ -21,7 +21,7 @@ from langchain_core.documents import Document
 class TestLoadRag(unittest.TestCase):
     @patch('rag.is_valid_rag_db', return_value=True) # simulate case where db is valid
     @patch('rag.Chroma')
-    @patch('embedding_utils.OpenAIEmbeddings')
+    @patch('rag.OpenAIEmbeddings')
     def test_load_rag_when_ready(self, mock_openai_embeddings, mock_chroma, mock_is_valid_rag_db):
         # Mock the embeddings and chroma instances
         mock_embedding_instance = MagicMock()

@@ -3,6 +3,7 @@
 
 import os
 import logging
+import tqdm
 import yaml
 import re
 
@@ -20,7 +21,6 @@ from langchain_core.documents.base import Document
 # Import the new embedding utility
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-from climsight.embedding_utils import create_embeddings
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -141,22 +141,18 @@ def split_docs(documents, chunk_size=2000, chunk_overlap=200, separators=[" ", "
     return docs
 
 
-def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, aitta_url, model_type, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
+def chunk_documents(document_path, chunk_size=2000, chunk_overlap=200, separators=[" ", ",", "\n"]):
     """
-    Chunks and embeds documents from the specified directory using provided embedding function.
+    Chunks documents from the specified directory.
 
     Args:
     - document_path (str): The path to the directory containing the documents.
-    - embedding_model (str): The embedding model name to use for generating embeddings.
-    - openai_api_key (str): OpenAI API key for OpenAI models.
-    - aitta_url (str): AITTA API URL for open models.
-    - model_type (str): The type of embedding model backend (e.g., 'openai', 'aitta').
     - chunk_size (int): maximum number of characters per chunk. Default: 2000.
     - chunk_overlap (int): number of characters to overlap per chunk. Default: 200.
     - separators (list): list of characters where text can be split. Default: [" ", ",", "\n"]
 
     Returns:
-    - list: A list of documents with embeddings.
+    - list: A list of chunked documents.
     """
     # load documents
     file_names = get_file_names(document_path)
@@ -167,7 +163,7 @@ def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, ai
         all_documents.extend(documents)  # save all of them into one
 
     if not all_documents:
-        logger.info("No documents found for chunking and embedding.")
+        logger.info("No documents found for chunking.")
         return []
 
     # Chunk documents
@@ -180,27 +176,7 @@ def chunk_and_embed_documents(document_path, embedding_model, openai_api_key, ai
 
     logger.info(f"Chunked documents into {len(chunked_docs)} pieces.")
 
-    # Create embedding model using the utility function
-    try:
-        aitta_api_key = os.getenv('AITTA_API_KEY')
-        embedding_item = create_embeddings(
-            embedding_model=embedding_model,
-            openai_api_key=openai_api_key,
-            aitta_api_key=aitta_api_key,
-            aitta_url=aitta_url,
-            model_type=model_type
-        )
-        # embedding documents 
-        embedded_docs = []
-        for doc in chunked_docs:
-            embedding = embedding_item.embed_documents([doc.page_content])[0]  # embed_documents returns a list, so we take the first element
-            embedded_docs.append({"text": doc.page_content, "embedding": embedding, "metadata": doc.metadata})
-    except Exception as e:
-        logger.error(f"Failed to embed document chunks: {e}")
-        return []
-
-    logger.info(f"Embedded {len(embedded_docs)} document chunks.")
-    return embedded_docs
+    return chunked_docs
 
 
 def initialize_rag(config):
@@ -222,9 +198,9 @@ def initialize_rag(config):
     if embedding_model_type == 'openai':
         embedding_model = rag_settings.get('embedding_model_openai')
         chroma_path = rag_settings.get('chroma_path_ipcc_openai')
-    elif embedding_model_type == 'aitta':
-        embedding_model = rag_settings.get('embedding_model_aitta')
-        chroma_path = rag_settings.get('chroma_path_ipcc_aitta')
+    elif embedding_model_type == 'local':
+        embedding_model = rag_settings.get('embedding_model_local')
+        chroma_path = rag_settings.get('chroma_path_ipcc_local')
     # Add more types here as needed
     # elif embedding_model_type == 'mistral':
     #     embedding_model = rag_settings.get('embedding_model_mistral')
@@ -233,8 +209,7 @@ def initialize_rag(config):
         raise ValueError(f"Unknown embedding_model_type: {embedding_model_type}")
 
     openai_api_key = os.getenv('OPENAI_API_KEY')
-    aitta_api_key = os.getenv('AITTA_API_KEY')
-    aitta_url = rag_settings.get('aitta_url', os.getenv('AITTA_URL', 'https://api-climatedt-aitta.2.rahtiapp.fi'))
+    local_api_key = os.getenv('OPENAI_API_KEY_LOCAL')
     document_path = rag_settings['document_path']
     chunk_size = rag_settings['chunk_size']
     chunk_overlap = rag_settings['chunk_overlap']
@@ -244,8 +219,8 @@ def initialize_rag(config):
     if embedding_model_type == 'openai' and not openai_api_key:
         logger.warning("No OpenAI API Key found. Skipping RAG initialization.")
         return False
-    if embedding_model_type == 'aitta' and not aitta_api_key:
-        logger.warning("No AITTA API Key found. Skipping RAG initialization.")
+    if embedding_model_type == 'local' and not local_api_key:
+        logger.warning("No local API Key found. Skipping RAG initialization.")
         return False
 
     # check if documents are present and valid
@@ -255,24 +230,24 @@ def initialize_rag(config):
 
     # Perform chunking and embedding
     try:
-        langchain_ef = create_embeddings(
-            embedding_model=embedding_model,
-            openai_api_key=openai_api_key,
-            aitta_api_key=aitta_api_key,
-            aitta_url=aitta_url,
-            model_type=embedding_model_type
-        )
-        documents = chunk_and_embed_documents(document_path, embedding_model, openai_api_key, aitta_url, embedding_model_type, chunk_size, chunk_overlap, separators)
-        converted_documents = [
-            Document(page_content=doc['text'], metadata=doc['metadata'])
-            for doc in documents
-        ]
-        rag_db = Chroma.from_documents(
-            documents=converted_documents,
+        if config['rag_settings']['embedding_model_type'] == 'local':
+            langchain_ef = OpenAIEmbeddings(
+                api_key=local_api_key,
+                base_url=rag_settings.get('local_endpoint_url'),
+                model=embedding_model,
+                tiktoken_enabled=False
+            )
+        else:
+            langchain_ef = OpenAIEmbeddings(api_key=openai_api_key, model=embedding_model)
+        documents = chunk_documents(document_path, chunk_size, chunk_overlap, separators)
+        rag_db = Chroma(
+            collection_name="ipcc_collection",
             persist_directory=chroma_path,
-            embedding=langchain_ef,
-            collection_name="ipcc_collection"
+            embedding_function=langchain_ef
         )
+        batch_size = 32
+        for i in tqdm.tqdm(range(0, len(documents), batch_size)):
+            rag_db.add_documents(documents[i:i+batch_size])
         rag_ready = True
         logger.info(f"RAG ready: {rag_ready}")
         logger.info("RAG database has been initialized and documents embedded.")

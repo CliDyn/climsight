@@ -278,7 +278,7 @@ def _run_analysis(
         if "llm_combine" not in config:
             config["llm_combine"] = {}
         config["llm_combine"]["model_name"] = model_name
-        if "gpt" in model_name or "o1" in model_name or "o3" in model_name:
+        if model_name.startswith("gpt") or "o1" in model_name or "o3" in model_name:
             config["llm_combine"]["model_type"] = "openai"
         else:
             config["llm_combine"]["model_type"] = "local"

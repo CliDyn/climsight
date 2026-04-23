@@ -1,13 +1,13 @@
 #model_names: gpt-4o, o1-preview, o1-mini
-#model_type: "openai" #"openai / local / aitta
+#model_type: "openai" #"openai / local
 llm_rag:
-  model_type: "openai" 
+  model_type: "openai"
   model_name: "gpt-5-mini"  # used only for RAGs
 llm_smart: #used  only in smart_agent
-  model_type: "openai" 
+  model_type: "openai"
   model_name: "gpt-5.2" # used only for smart agent
 llm_combine: #used  only in combine_agent and intro
-  model_type: "openai" 
+  model_type: "openai"
   model_name: "gpt-5.2" # used only for combine agent ("mkchaou/climsight-calm_ft_Q3_13k")
 llm_dataanalysis: #used only in data_analysis_agent
   model_type: "openai"
@@ -20,6 +20,7 @@ use_smart_agent: true
 use_era5_data: true  # Download ERA5 time series from CDS API (requires credentials)
 use_destine_data: true  # Download DestinE projections via HDA API (requires DESP credentials)
 use_powerful_data_analysis: true
+llm_local_endpoint_url: "http://localhost:8000/v1"
 
 # ERA5 Climatology Configuration (pre-computed observational baseline)
 era5_climatology:
@@ -210,23 +211,22 @@ ecocrop:
     data_path: "./data/ecocrop/ecocrop_database/"
 rag_settings:
     rag_activated: True
-    # Which embedding backend to use: openai, aitta, mistral, etc.
-    embedding_model_type: "openai"  # options: openai, aitta, mistral
+    # Which embedding backend to use: openai, local, mistral, etc.
+    embedding_model_type: "openai"  # options: openai, local, mistral
+    local_endpoint_url: "http://localhost:8000/v1"
     # Embedding model name for each backend
     embedding_model_openai: "text-embedding-3-large"
-    embedding_model_aitta: "lightonai/modernbert-embed-large"
+    embedding_model_local: "lightonai/modernbert-embed-large"
     # Add more as needed, e.g.:
     # embedding_model_mistral: "mistral-embed-xyz"
     # Chroma DB paths for each backend
     chroma_path_ipcc_openai: "rag_db/ipcc_reports_openai"
-    chroma_path_ipcc_aitta: "rag_db/ipcc_reports_aitta"
+    chroma_path_ipcc_local: "rag_db/ipcc_reports_local"
     # chroma_path_ipcc_mistral: "rag_db/ipcc_reports_mistral"
     chroma_path_general_openai: "rag_db/general_reports_openai"
-    chroma_path_general_aitta: "rag_db/general_reports_aitta"
+    chroma_path_general_local: "rag_db/general_reports_local"
     # chroma_path_general_mistral: "rag_db/general_reports_mistral"
-    # AITTA configuration for open models (optional, only needed for aitta)
-    aitta_url: "https://api-climatedt-aitta.2.rahtiapp.fi"
-    document_path: './data/general_reports/' # or ipcc_text_reports
+    document_path: './data/ipcc_text_reports/' # or general_reports
     chunk_size: 2000
     chunk_overlap: 200
     separators: [" ", ",", "\n"]
