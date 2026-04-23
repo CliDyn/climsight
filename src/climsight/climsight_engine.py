@@ -69,7 +69,7 @@ from sandbox_utils import (
     write_climate_data_manifest,
 )
 # import smart_agent
-from smart_agent import get_aitta_chat_model, smart_agent
+from smart_agent import smart_agent
 # import data_analysis_agent
 from data_analysis_agent import data_analysis_agent
 # import predefined data preparation functions
@@ -663,7 +663,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
     logger.info(f"start agent_request")
     if config['llm_combine']['model_type'] == "local":
         llm_combine_agent = ChatOpenAI(
-            openai_api_base="http://localhost:8000/v1",
+            openai_api_base=config['llm_local_endpoint_url'],
             model_name=config['llm_combine']['model_name'],  # Match the exact model name you used
             openai_api_key=api_key_local,
             max_tokens=16000,
@@ -688,12 +688,6 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
                 max_tokens=16000,
             )   
         llm_intro = llm_combine_agent            
-    elif config['llm_combine']['model_type'] == 'aitta':
-        llm_combine_agent = get_aitta_chat_model(
-            config['llm_combine']['model_name'],
-            max_completion_tokens=4096
-        )
-        llm_intro = llm_combine_agent        
 
     # Data analysis LLM (separate from combine step).
     llm_dataanalysis_cfg = config.get("llm_dataanalysis")
@@ -701,7 +695,7 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
         raise RuntimeError("Missing llm_dataanalysis configuration.")
     if llm_dataanalysis_cfg.get("model_type") == "local":
         llm_dataanalysis_agent = ChatOpenAI(
-            openai_api_base="http://localhost:8000/v1",
+            openai_api_base=config["llm_local_endpoint_url"],
             model_name=llm_dataanalysis_cfg.get("model_name"),
             openai_api_key=api_key_local,
             max_tokens=16000,
@@ -711,11 +705,6 @@ def agent_llm_request(content_message, input_params, config, api_key, api_key_lo
             openai_api_key=api_key,
             model_name=llm_dataanalysis_cfg.get("model_name"),
             max_tokens=16000,
-        )
-    elif llm_dataanalysis_cfg.get("model_type") == "aitta":
-        llm_dataanalysis_agent = get_aitta_chat_model(
-            llm_dataanalysis_cfg.get("model_name"),
-            max_completion_tokens=4096
         )
     else:
         llm_dataanalysis_agent = llm_combine_agent
@@ -1187,7 +1176,7 @@ Examples:
             # Pass the dictionary to invoke
             input = {"user_text": state.user}
             response = chain.invoke(input)
-        elif config['llm_combine']['model_type'] in ("local", "aitta"):
+        elif config['llm_combine']['model_type'] == "local":
             prompt_text = intro_prompt.format(user_text=state.user)
             response_raw = llm_intro.invoke(prompt_text)
             import re, json
@@ -1275,7 +1264,7 @@ Examples:
             state.content_message += "\n ECOCROP Search Response: {ecocrop_search_response} "
             logger.info(f"Ecocrop_search_response: {state.ecocrop_search_response}")
       
-        if config['llm_combine']['model_type'] in ("local", "aitta"):
+        if config['llm_combine']['model_type'] == "local":
             system_message_prompt = SystemMessagePromptTemplate.from_template(config['system_role'])
         elif config['llm_combine']['model_type'] == "openai":         
             if "o1" in config['llm_combine']['model_name']:

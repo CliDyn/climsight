@@ -10,6 +10,8 @@ const MODEL_OPTIONS = [
     'gpt-4.1-nano',
     'gpt-4.1-mini',
     'gpt-4.1',
+    'openai/gpt-oss-120b',
+    'meta-llama/Llama-3.3-70B-Instruct',
 ];
 
 const CLIMATE_SOURCES = [

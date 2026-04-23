@@ -14,8 +14,6 @@ from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 from langchain_core.documents.base import Document
 
-from embedding_utils import create_embeddings
-
 logger = logging.getLogger(__name__)
 logging.basicConfig(
    filename='climsight.log',
@@ -43,14 +41,14 @@ def is_valid_rag_db(rag_db_path):
 
     chroma_file = os.path.join(rag_db_path, 'chroma.sqlite3')
     if not os.path.exists(chroma_file):
+        print(f"RAG DB validation failed: '{chroma_file}' does not exist.")
         return False
     folder_name = get_folder_name(rag_db_path)
     if folder_name is None:
+        print(f"RAG DB validation failed: '{rag_db_path}' is not a recognized type.")
         return False
-    folder_path = os.path.join(rag_db_path, folder_name)
-    if os.path.isdir(folder_path) and os.listdir(folder_path): # check if folder is non-empty
-        return True
-    return False
+    print(f"RAG DB validation: '{chroma_file}' exists.")
+    return True
 
 
 def load_rag(config, openai_api_key=None, db_type='ipcc'):
@@ -73,19 +71,15 @@ def load_rag(config, openai_api_key=None, db_type='ipcc'):
     if embedding_model_type == 'openai':
         embedding_model = rag_settings.get('embedding_model_openai')
         chroma_path = rag_settings.get(f'chroma_path_{db_type}_openai')
-    elif embedding_model_type == 'aitta':
-        embedding_model = rag_settings.get('embedding_model_aitta')
-        chroma_path = rag_settings.get(f'chroma_path_{db_type}_aitta')
+    elif embedding_model_type == 'local':
+        embedding_model = rag_settings.get('embedding_model_local')
+        chroma_path = rag_settings.get(f'chroma_path_{db_type}_local')
     # Add more types here as needed
     # elif embedding_model_type == 'mistral':
     #     embedding_model = rag_settings.get('embedding_model_mistral')
     #     chroma_path = rag_settings.get(f'chroma_path_{db_type}_mistral')
     else:
         raise ValueError(f"Unknown embedding_model_type: {embedding_model_type}")
-
-    # Use the openai_api_key parameter as-is (do not overwrite)
-    aitta_api_key = os.getenv('AITTA_API_KEY')
-    aitta_url = rag_settings.get('aitta_url', os.getenv('AITTA_URL', 'https://api-climatedt-aitta.2.rahtiapp.fi'))
 
     rag_ready = False
     valid_rag_db = is_valid_rag_db(chroma_path)
@@ -95,13 +89,18 @@ def load_rag(config, openai_api_key=None, db_type='ipcc'):
         return rag_ready, rag_db
 
     try:
-        langchain_ef = create_embeddings(
-            model_type=embedding_model_type,
-            embedding_model=embedding_model,
-            openai_api_key=openai_api_key,
-            aitta_api_key=aitta_api_key,
-            aitta_url=aitta_url
-        )
+        if config['rag_settings']['embedding_model_type'] == 'local':
+            langchain_ef = OpenAIEmbeddings(
+                api_key=os.getenv('OPENAI_API_KEY_LOCAL'),  # type: ignore,
+                base_url=config['rag_settings']['local_endpoint_url'],
+                model=config['rag_settings']['embedding_model_local'],
+                tiktoken_enabled=False
+            )
+        else:
+            langchain_ef = OpenAIEmbeddings(
+                api_key=openai_api_key,
+                model=config['rag_settings']['embedding_model_openai'],
+            )
         rag_db = Chroma(persist_directory=chroma_path, embedding_function=langchain_ef, collection_name="ipcc_collection")
         logger.info(f"RAG database loaded with {rag_db._collection.count()} documents.")
         rag_ready = True
@@ -176,7 +175,10 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
             return state
 
         # First, retrieve documents to get sources
-        docs = retriever.get_relevant_documents(input_params['user_message'])
+        try:
+            docs = retriever.get_relevant_documents(input_params['user_message'])
+        except Exception as e:
+            docs = retriever.invoke(input_params['user_message'])
         sources_list = extract_sources(docs)
         # Get unique sources (filenames)
         unique_sources = list(set(sources_list))
@@ -186,11 +188,20 @@ def query_rag(input_params, config, openai_api_key, rag_ready, rag_db):
         context = format_docs(docs)
 
         # Build the chain with pre-retrieved context
+        rag_llm = ChatOpenAI(
+            config['llm_rag']['model_name'],
+            api_key=openai_api_key,
+            base_url=(
+                config['rag_settings']['local_endpoint_url']
+                if config['llm_rag']['model_type'] == 'local'
+                else None
+            )
+        )
         rag_chain = (
             {"context": lambda _: context, "location": RunnableLambda(get_loci), "question": RunnablePassthrough()}
             | RunnableLambda(inspect)
             | custom_rag_prompt
-            | ChatOpenAI(model=config['llm_rag']['model_name'], api_key=openai_api_key)
+            | rag_llm
             | StrOutputParser()
         )
         rag_response = rag_chain.invoke(input_params['user_message'])

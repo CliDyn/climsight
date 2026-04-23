@@ -20,7 +20,6 @@ from stream_handler import StreamHandler
 from data_container import DataContainer
 from climsight_engine import normalize_longitude, llm_request, forming_request, location_request
 from extract_climatedata_functions import plot_climate_data
-from embedding_utils import create_embeddings
 from climate_data_providers import get_available_providers
 from sandbox_utils import ensure_thread_id, ensure_sandbox_dirs, get_sandbox_paths, clean_sandbox
 

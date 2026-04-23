@@ -42,29 +42,12 @@ from tools.image_viewer import create_image_viewer_tool
 #Import for working Path
 import uuid
 from pathlib import Path
-try:
-    from aitta_client import Model, Client
-    from aitta_client.authentication import APIKeyAccessTokenSource
-except:
-    pass
 
 # Import AgentState from climsight_classes
 from climsight_classes import AgentState
 import calendar
 import pandas as pd
 
-def get_aitta_chat_model(model_name, **kwargs):
-    aitta_url = 'https://api-climatedt-aitta.2.rahtiapp.fi'
-    aitta_api_key = os.environ['AITTA_API_KEY']
-    client = Client(aitta_url, APIKeyAccessTokenSource(aitta_api_key, aitta_url))
-    model = Model.load(model_name, client)
-    access_token = client.access_token_source.get_access_token()
-    return ChatOpenAI(
-        openai_api_key=access_token,
-        openai_api_base=model.openai_api_url,
-        model_name=model.id,
-        **kwargs
-    )
 
 def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handler):
 #def smart_agent(state: AgentState, config, api_key):
@@ -104,7 +87,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         "   - ONLY use when the query explicitly mentions agriculture, crops, or food production.\n"
         "   - Do NOT use for general climate, infrastructure, or energy queries.\n\n"
     )
-    if config['llm_smart']['model_type'] in ("local", "aitta"):
+    if config['llm_smart']['model_type'] == "local":
         prompt += (
             "**Tool use order:** Call tools one at a time, sequentially.\n\n"
         )
@@ -144,7 +127,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         # Initialize the LLM
         if config['llm_smart']['model_type'] == "local":
             llm = ChatOpenAI(
-                openai_api_base="http://localhost:8000/v1",
+                openai_api_base=config['llm_local_endpoint_url'],
                 model_name=config['llm_smart']['model_name'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
@@ -155,9 +138,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['llm_smart']['model_name'],
                 temperature=temperature
             )
-        elif config['llm_smart']['model_type'] == "aitta":
-            llm = get_aitta_chat_model(
-                config['llm_smart']['model_name'], temperature = temperature)
         # Define your custom prompt template
         template = (
             "Read the provided Wikipedia article: {wikipage}\n\n"
@@ -287,7 +267,15 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         data_rag = config['rag_articles']['data_path']
         
         # Load the persisted vector store
-        embeddings = OpenAIEmbeddings(api_key=api_key)
+        if config['rag_settings']['embedding_model_type'] == 'local':
+            embeddings = OpenAIEmbeddings(
+                api_key=api_key_local,  # type: ignore,
+                base_url=config['rag_settings']['local_endpoint_url'],
+                model=config['rag_settings']['embedding_model_local'],
+                tiktoken_enabled=False
+            )
+        else:
+            embeddings = OpenAIEmbeddings(api_key=api_key)
         vectorstore = Chroma(
             persist_directory=data_rag,
             embedding_function=embeddings
@@ -345,7 +333,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         # Initialize the LLM
         if config['llm_smart']['model_type'] == "local":
             llm = ChatOpenAI(
-                openai_api_base="http://localhost:8000/v1",
+                openai_api_base=config['llm_local_endpoint_url'],
                 model_name=config['llm_smart']['model_name'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = temperature,
@@ -356,9 +344,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['llm_smart']['model_name'],
                 temperature=temperature
             )        
-        elif config['llm_smart']['model_type'] == "aitta":
-            llm = get_aitta_chat_model(
-                config['llm_smart']['model_name'], temperature = temperature)
         
         # Create the chain with the prompt and LLM
         chain = prompt | llm
@@ -408,7 +393,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
         # Initialize the LLM
         if config['llm_smart']['model_type'] == "local":
             llm = ChatOpenAI(
-                openai_api_base="http://localhost:8000/v1",
+                openai_api_base=config['llm_local_endpoint_url'],
                 model_name=config['llm_smart']['model_name'],  # Match the exact model name you used
                 openai_api_key=api_key_local,
                 temperature  = 0,
@@ -419,8 +404,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
                 model_name=config['llm_smart']['model_name'],
                 temperature=0.0
             )        
-        elif config['llm_smart']['model_type'] == "aitta":
-            llm = get_aitta_chat_model(config['llm_smart']['model_name'], temperature = 0)
 
         # Create the prompt template
         prompt = ChatPromptTemplate.from_template("""
@@ -474,7 +457,7 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
     # Initialize the LLM
     if config['llm_smart']['model_type'] == "local":
         llm = ChatOpenAI(
-            openai_api_base="http://localhost:8000/v1",
+            openai_api_base=config['llm_local_endpoint_url'],
             model_name=config['llm_smart']['model_name'],
             openai_api_key=api_key_local,
             temperature  = 0,
@@ -485,9 +468,6 @@ def smart_agent(state: AgentState, config, api_key, api_key_local, stream_handle
             model_name=config['llm_smart']['model_name'],
             temperature=0.0
         )
-
-    elif config['llm_smart']['model_type'] == "aitta":
-        llm = get_aitta_chat_model(config['llm_smart']['model_name'], temperature = 0)
 
     # List of tools
     tools = [rag_tool, ecocrop_tool, wikipedia_tool]

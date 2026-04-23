@@ -75,7 +75,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-aitta = ["aitta-client"]
 dev = ["pytest", "flake8"]
 
 [build-system]
